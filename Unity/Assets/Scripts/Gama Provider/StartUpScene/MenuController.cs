@@ -53,7 +53,7 @@ public class MenuController : MonoBehaviour
         PlayerPrefs.SetString("MIDDLEWARE", useMiddleWare ? "Y" : "N") ;
         string port = useMiddleWare ? portWithMiddleware : portWithoutMiddleware;
         PlayerPrefs.SetString("PORT", port);
-        SceneManager.LoadScene("Main Scene");
+        SceneManager.LoadScene("Main Scene - Flood");
     }
 
     public void IPBtn()
