@@ -170,6 +170,8 @@ global {
 	float price_computation (point target) {
 		return (start_point distance_to target) with_precision 1;
 	}
+	
+	action after_creating_dyke;
 
 	action action_management {
 		switch action_type {
@@ -182,6 +184,7 @@ global {
 						create dyke with: (shape: line([start_point, #user_location]));
 						budget <- (budget - price) with_precision 1;
 						score <- score - price;
+						do after_creating_dyke;
 					}
 					start_point <- nil;
 					target_point <- nil;
