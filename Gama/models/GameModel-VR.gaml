@@ -6,7 +6,10 @@ global {
 	action after_creating_dyke {
 		ask unity_linker {
 			
-			do add_geometries_to_send(dyke ,dike);
+			list<geometry> geoms <- dyke collect (each.shape + 10.0);
+			do add_geometries_to_send( geoms,up_dyke);	
+			do send_world;
+			do send_current_message;
 		}
 	}
 	
@@ -18,7 +21,7 @@ species unity_linker parent: abstract_unity_linker {
 	int min_num_players  <- 10;
 	list<point> init_locations <- define_init_locations();
 	unity_property up_people;
-	unity_property dike;
+	unity_property up_dyke;
 
 	list<point> define_init_locations {
 		return [world.location];
@@ -36,20 +39,21 @@ species unity_linker parent: abstract_unity_linker {
 		//define a unity_aspect called tree_aspect that will display in Unity the agents with the SM_arbres_001 prefab, with a scale of 2.0, no y-offset, 
 		//a rotation coefficient of 1.0 (no change of rotation from the prefab), no rotation offset, and we use the default precision. 
 		unity_aspect car_aspect <- prefab_aspect("Prefabs/Visual Prefabs/City/Vehicles/Car",100,0.2,1.0,-90.0, precision);
-		unity_aspect dike_aspect <- prefab_aspect("Prefab/Visual Prefabs/Basic shape/Yellow Cube", 30, 0.2, 1.0, -90.0, precision);
+		unity_aspect dyke_aspect <- geometry_aspect(10.0, #green, precision);
+	
 		//define the up_car unity property, with the name "car", no specific layer, the car_aspect unity aspect, no interaction, and the agents location are not sent back 
 		//to GAMA. 
 		up_people<- geometry_properties("car", nil, car_aspect, #no_interaction, false);
-		dike <- geometry_properties("dike", "dike", dike_aspect, #no_interaction, false);
+		up_dyke <- geometry_properties("dyke", "dyke", dyke_aspect, #no_interaction, false);
 		// add the up_tree unity_property to the list of unity_properties
 		unity_properties << up_people;
-		unity_properties << dike;
+		unity_properties << up_dyke;
 		
 	}
 	
 	reflex send_agents when: not empty(unity_player) {
 		do add_geometries_to_send(people where (each.my_path != nil),up_people);
-		do add_geometries_to_send(dyke ,dike);	
+		do add_geometries_to_send(dyke collect (each.shape + 10.0) ,up_dyke);	
 	}
 	
 

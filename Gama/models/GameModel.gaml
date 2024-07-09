@@ -203,11 +203,9 @@ global {
 			}
 			match 3{
 				list<dyke> d <- dyke overlapping (#user_location buffer 20);
-				write "d: " + d;
 						
 				if (not empty(d)) {
 					ask d closest_to #user_location {
-						write "ldldld";
 						is_broken<-false;
 						height<- height+20.0;
 						ask dyke where not each.is_broken {
