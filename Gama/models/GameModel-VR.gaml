@@ -8,6 +8,9 @@ global {
 			
 			list<geometry> geoms <- dyke collect (each.shape + 10.0);
 			do add_geometries_to_send( geoms,up_dyke);	
+			
+			
+			
 			do send_world;
 			do send_current_message;
 		}
@@ -23,6 +26,9 @@ species unity_linker parent: abstract_unity_linker {
 	unity_property up_people;
 	unity_property up_dyke;
 
+	action add_to_send_world(map map_to_send) {
+		map_to_send["score"] <- score;
+	}
 	list<point> define_init_locations {
 		return [world.location];
 	}
