@@ -18,7 +18,8 @@ public class WorldJSONInfo
     public int numTokens;
     public bool isInit;
 
-    public int score;
+    public double score;
+    public double budget;
     public static WorldJSONInfo CreateFromJSON(string jsonString)
     {
         return JsonUtility.FromJson<WorldJSONInfo>(jsonString);

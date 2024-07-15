@@ -28,6 +28,7 @@ species unity_linker parent: abstract_unity_linker {
 
 	action add_to_send_world(map map_to_send) {
 		map_to_send["score"] <- score;
+		map_to_send["budget"] <- budget;
 	}
 	list<point> define_init_locations {
 		return [world.location];

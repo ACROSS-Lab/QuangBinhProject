@@ -314,7 +314,8 @@ public class GAMAGeometryLoader: ConnectionWithGama
                 if (infoWorld == null)
                 {
                     infoWorld = WorldJSONInfo.CreateFromJSON(content);
-                   
+                    Debug.Log("Current poinstLoc infoWorld score: " + infoWorld.score);
+                    Debug.Log("Current poinstLoc infoWorld budget: " + infoWorld.budget);
                 }
                 break;
         }

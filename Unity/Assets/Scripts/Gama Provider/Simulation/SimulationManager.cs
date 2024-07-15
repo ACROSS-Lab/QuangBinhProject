@@ -744,6 +744,8 @@ public class SimulationManager : MonoBehaviour
             case "pointsLoc":
                 if (infoWorld == null) {                    
                     infoWorld = WorldJSONInfo.CreateFromJSON(content);
+                    Debug.Log("Current info world score: "  + infoWorld.score);
+                    Debug.Log("Current info world budget: " + infoWorld.budget);
                 }
                 break;
             case "endOfGame":
