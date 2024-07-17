@@ -34,6 +34,58 @@ species unity_linker parent: abstract_unity_linker {
 		return [world.location];
 	}
 	
+	action update_score(float diff_value)
+	{
+		score <- world.update_score_global(diff_value);
+	}
+	
+	action update_budget(float diff_value)
+	{
+		budget <- world.update_budget_global(diff_value);
+	}
+	
+	list<float> convert_string_to_array_of_float(string my_string)
+	{
+    	
+    	return (my_string split_with ",") collect float(each);
+    	/*list<float> float_array <- [];
+    	
+    	
+    	string temp_string <- "";
+
+    	int length <- length(my_string);
+    	loop i from: 0 to: (length - 1) 
+    	{
+        	if (my_string at i = ',') 
+        	{
+            	float_array <- float_array + (temp_string as float);
+            	temp_string <- "";
+        	} 
+        	else 
+        	{
+            	temp_string <- temp_string + my_string at i;
+        	}
+    	}
+
+    	float_array <- float_array + (temp_string as float);
+    	
+    	return float_array;*/
+	}
+	
+	action action_management_with_unity(string unity_start_point, string unity_end_point)
+	{
+		write sample(unity_start_point);
+		write sample(unity_end_point);
+		
+		list<float> unity_start_point_float <- convert_string_to_array_of_float(unity_start_point);
+		list<float> unity_end_point_float <- convert_string_to_array_of_float(unity_end_point);
+		write sample(unity_start_point_float);
+		write sample(unity_end_point_float);
+		point converted_start_point <- {unity_start_point_float[0], unity_start_point_float[1], unity_start_point_float[2]};
+		point converted_end_point <- {unity_end_point_float[0], unity_end_point_float[1], unity_end_point_float[2]};
+		return world.action_management_with_unity_global(converted_start_point, converted_end_point);
+	}
+	
 	init {
 		//define the unity properties
 		do define_properties;

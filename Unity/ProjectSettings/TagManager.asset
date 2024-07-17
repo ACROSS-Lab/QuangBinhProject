@@ -16,6 +16,7 @@ TagManager:
   - HUD
   - textPN
   - locomotion
+  - dyke
   layers:
   - Default
   - TransparentFX

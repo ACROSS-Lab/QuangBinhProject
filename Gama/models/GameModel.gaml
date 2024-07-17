@@ -44,7 +44,7 @@ global {
 	float current_coeff;
 	point target_point;
 	bool ok_build_dyke <- true;
-	point start_point <- nil;
+	point start_point <- nil; 
 	bool update_drowning <- false update: true;
 	map<string, float> benchmark_map;
 	bool benchmark_mode <- false;
@@ -93,6 +93,16 @@ global {
 			return gama.machine_time;
 		}
 		return 0.0;
+	}
+	
+	float update_score_global(float diff_value)
+	{
+		return score + diff_value;
+	}
+	
+	float update_budget_global(float diff_value)
+	{
+		return budget + diff_value;
 	}
 
 	action start_player_turn {
@@ -168,10 +178,21 @@ global {
 	}
 
 	float price_computation (point target) {
+		write sample(start_point);
+		write sample(target);
 		return (start_point distance_to target) with_precision 1;
 	}
 	
 	action after_creating_dyke;
+
+	action create_dyke(float price)
+	{
+		create dyke with: (shape: line([start_point, #user_location]));
+						budget <- update_budget_global(-price) with_precision 1;
+						score <- update_score_global(-price);
+						do after_creating_dyke;
+	}
+
 
 	action action_management {
 		switch action_type {
@@ -182,8 +203,8 @@ global {
 					float price <- price_computation(#user_location);
 					if (ok_build_dyke) {
 						create dyke with: (shape: line([start_point, #user_location]));
-						budget <- (budget - price) with_precision 1;
-						score <- score - price;
+						budget <- update_budget_global(-price) with_precision 1;
+						score <- update_score_global(-price);
 						do after_creating_dyke;
 					}
 					start_point <- nil;
@@ -218,7 +239,38 @@ global {
 					}
 				}
 			} 
-			} }
+		} 
+	}
+	
+	action action_management_with_unity_global(point unity_start_point, point unity_end_point) {
+		write "draw dike";
+		start_point <- unity_start_point;
+		float price <- price_computation(unity_end_point);
+		
+		ok_build_dyke <- price <= budget;
+		
+		geometry l <- line([start_point, target_point]);
+		if ((cell overlapping l) first_with (each.is_river)) != nil {
+			ok_build_dyke <- false;
+		}
+
+		if ok_build_dyke and (not empty(building overlapping l)) {
+			ok_build_dyke <- false;
+		}
+		
+		if (ok_build_dyke) {
+			create dyke with: (shape: line([start_point, unity_end_point]));
+			budget <- update_budget_global(-price) with_precision 1;
+			score <- update_score_global(-price);
+			do after_creating_dyke;
+		}
+
+		start_point <- nil;
+		target_point <- nil;
+		ok_build_dyke <- false;
+		
+		
+	}
 
 	int cpt <- 0;
 
@@ -446,7 +498,7 @@ species building {
 		ask my_cells where (each.flooding_level > 1.0) {
 			myself.drowned <- true;
 			myself.colorbuilding <- #red;
-			score <- score - 5.0;
+			score <- world.update_score_global(-5.0);
 			break;
 		}
 		ask world {
@@ -501,7 +553,7 @@ species people skills: [moving] {
 		if my_path != nil {
 			do follow(path: my_path, move_weights: new_weights);
 			if (location = target) {
-				score <- score + 100;
+				score <- world.update_score_global(float(100));
 				evacuated <- evacuated + 1;
 				target <- nil;
 				do die;
@@ -520,7 +572,7 @@ species people skills: [moving] {
 		cell a_cell <- cell(location);
 		if (a_cell != nil and a_cell.flooding_level > 0.2 and flip(0.5)) {
 			casualties <- casualties + 1;
-			score <- score - 10;
+			score <- world.update_score_global(float(-10));
 			do die;
 		}
 		ask world {
