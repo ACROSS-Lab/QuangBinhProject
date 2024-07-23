@@ -746,6 +746,7 @@ public class SimulationManager : MonoBehaviour
                     infoWorld = WorldJSONInfo.CreateFromJSON(content);
                     Debug.Log("Current info world score: "  + infoWorld.score);
                     Debug.Log("Current info world budget: " + infoWorld.budget);
+                    Debug.Log("Current info world ok_to_build_dyke: " + infoWorld.ok_build_dyke_with_unity);
                 }
                 break;
             case "endOfGame":

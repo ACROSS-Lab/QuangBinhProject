@@ -72,7 +72,7 @@ species unity_linker parent: abstract_unity_linker {
     	return float_array;*/
 	}
 	
-	action action_management_with_unity(string unity_start_point, string unity_end_point)
+	unknown action_management_with_unity(string unity_start_point, string unity_end_point)
 	{
 		write sample(unity_start_point);
 		write sample(unity_end_point);
@@ -83,7 +83,11 @@ species unity_linker parent: abstract_unity_linker {
 		write sample(unity_end_point_float);
 		point converted_start_point <- {unity_start_point_float[0], unity_start_point_float[1], unity_start_point_float[2]};
 		point converted_end_point <- {unity_end_point_float[0], unity_end_point_float[1], unity_end_point_float[2]};
-		return world.action_management_with_unity_global(converted_start_point, converted_end_point);
+		
+		let l <- world.action_management_with_unity_global(converted_start_point, converted_end_point);
+		write sample(ok_build_dyke_with_unity);
+		do send_message players: unity_player as list mes: ["ok_build_dyke_with_unity":: ok_build_dyke_with_unity];
+		return l;
 	}
 	
 	init {

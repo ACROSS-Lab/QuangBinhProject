@@ -44,6 +44,7 @@ global {
 	float current_coeff;
 	point target_point;
 	bool ok_build_dyke <- true;
+	bool ok_build_dyke_with_unity <- true;
 	point start_point <- nil; 
 	bool update_drowning <- false update: true;
 	map<string, float> benchmark_map;
@@ -247,29 +248,28 @@ global {
 		start_point <- unity_start_point;
 		float price <- price_computation(unity_end_point);
 		
-		ok_build_dyke <- price <= budget;
+		ok_build_dyke_with_unity <- price <= budget;
 		
-		geometry l <- line([start_point, target_point]);
+		geometry l <- line([start_point, unity_end_point]);
 		if ((cell overlapping l) first_with (each.is_river)) != nil {
-			ok_build_dyke <- false;
+			ok_build_dyke_with_unity <- false;
 		}
 
-		if ok_build_dyke and (not empty(building overlapping l)) {
-			ok_build_dyke <- false;
+		if ok_build_dyke_with_unity and (not empty(building overlapping l)) {
+			ok_build_dyke_with_unity <- false;
 		}
 		
-		if (ok_build_dyke) {
+		if (ok_build_dyke_with_unity) {
 			create dyke with: (shape: line([start_point, unity_end_point]));
 			budget <- update_budget_global(-price) with_precision 1;
 			score <- update_score_global(-price);
+			write "dike has been created";
 			do after_creating_dyke;
 		}
 
 		start_point <- nil;
 		target_point <- nil;
-		ok_build_dyke <- false;
-		
-		
+		//ok_build_dyke_with_unity <- false;
 	}
 
 	int cpt <- 0;

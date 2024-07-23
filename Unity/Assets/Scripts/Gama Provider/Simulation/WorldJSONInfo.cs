@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 
 [System.Serializable]
@@ -20,6 +21,7 @@ public class WorldJSONInfo
 
     public double score;
     public double budget;
+    public double ok_build_dyke_with_unity;
     public static WorldJSONInfo CreateFromJSON(string jsonString)
     {
         return JsonUtility.FromJson<WorldJSONInfo>(jsonString);
