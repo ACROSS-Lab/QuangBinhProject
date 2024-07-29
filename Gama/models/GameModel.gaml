@@ -31,7 +31,7 @@ global {
 	list<string> actions <- ["build dyke", "destroy dyke", "end of turn"];
 	float budget;
 	float score;
-	float limitscore <- 32000.0;
+	float limitscore <- 3200000000.0;
 	float budget_year <- 3000.0;
 	bool need_to_recompute_graph <- false;
 	list<file> images <- [file("../includes/pencil.jpg"), file("../includes/eraser1.png"), file("../includes/gstart_icon.jpg"),file("../includes/build_icon.png")];
@@ -781,11 +781,11 @@ experiment game_with_mode parent: game {
 		string difficulty <- result["Choose a difficulty"];
 		switch difficulty {
 			match "easy" {
-				create simulation with: (nb_of_people: 200, budget_year: 4000, the_alert_strategy: "CLOSEST", my_csv_file: csv_file("../includes/FLoodDataH.csv"), limitscore: 20000);
+				create simulation with: (nb_of_people: 200, budget_year: 4000, the_alert_strategy: "CLOSEST", my_csv_file: csv_file("../includes/FLoodDataH.csv"), limitscore: 2000000000);
 			}
 
 			match "normal" {
-				create simulation with: (nb_of_people: 400, budget_year: 3500, the_alert_strategy: "CLOSEST", my_csv_file: csv_file("../includes/FLoodDataH.csv"), limitscore: 32000);
+				create simulation with: (nb_of_people: 400, budget_year: 3500, the_alert_strategy: "CLOSEST", my_csv_file: csv_file("../includes/FLoodDataH.csv"), limitscore: 300000000);
 			}
 
 			match "hard" {

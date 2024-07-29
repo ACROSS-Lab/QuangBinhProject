@@ -79,6 +79,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   primaryRightHandButton: {fileID: 3951697458631832198, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   TryReconnectButton: {fileID: 6120076715984773150, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+  TriggerButton: {fileID: 83097790271614945, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   player: {fileID: 0}
   Ground: {fileID: 0}
   GamaCRSCoefX: 1
@@ -132,6 +133,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UseHeartbeat: 1
   DesktopMode: 1
+  fixedProperties: 0
+  DefaultIP: localhost
+  DefaultPort: 8080
   UseMiddlewareDM: 1
   numErrorsBeforeDeconnection: 10
   MessageSeparator: '|||'

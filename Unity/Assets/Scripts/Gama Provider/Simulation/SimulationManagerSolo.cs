@@ -10,16 +10,56 @@ using UnityEngine.InputSystem;
 public class SimulationManagerSolo : SimulationManager
 {
     protected bool isNight = false;
-
-    
-
     protected override void TriggerMainButton()
     {
-        isNight = !isNight;
-        Light[] lights = FindObjectsOfType(typeof(Light)) as Light[];
-        foreach (Light light in lights)
+        //isNight = !isNight;
+        //Light[] lights = FindObjectsOfType(typeof(Light)) as Light[];
+        //foreach (Light light in lights)
+        //{
+        //    light.intensity = isNight ? 0 : 1.0f;
+        //}
+
         {
-            light.intensity = isNight ? 0 : 1.0f;
+                
+            _dykePointCnt++;
+            Debug.Log("Dyke point count: " + _dykePointCnt);
+
+            switch (_dykePointCnt)
+            {
+                case 1:
+                {
+                    if (rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit))
+                    {
+                        GameObject hitGameObject = raycastHit.collider.gameObject;
+                        _startPoint = raycastHit.point;
+                        Debug.Log("hitGameObject: " + hitGameObject.name);
+                        Debug.Log(
+                            "startPoint of dyke: " + _startPoint.x + " " + _startPoint.y + " " + _startPoint.z);
+                    }
+
+                    //_startPoint = 
+                    break;
+                }
+                case 2:
+                {
+                    if (rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit))
+                    {
+                        GameObject hitGameObject = raycastHit.collider.gameObject;
+                        _endPoint = raycastHit.point;
+                        Debug.Log("hitGameObject: " + hitGameObject.name);
+                        Debug.Log(
+                            "endPoint of dyke: " + _endPoint.x + " " + _endPoint.y + " " + _endPoint.z);
+                        
+                        _apiTest.TestDrawDykeWithParams(_startPoint, _endPoint);
+
+                        _dykePointCnt = 0;
+                    }
+
+                    break;
+                }
+                default:
+                    break;
+            }
         }
     }
 
@@ -64,11 +104,11 @@ public class SimulationManagerSolo : SimulationManager
 
     protected override void SelectInteraction(SelectEnterEventArgs ev)
     {
-
+        Debug.Log(ev.interactableObject.transform.gameObject.name);
         if (remainingTime <= 0.0)
         {
             GameObject grabbedObject = ev.interactableObject.transform.gameObject;
-
+            
             if (("selectable").Equals(grabbedObject.tag))
             {
                 Dictionary<string, string> args = new Dictionary<string, string> {
@@ -95,7 +135,46 @@ public class SimulationManagerSolo : SimulationManager
 
             }
 
+            /*else
+            {
+                
+                _dykePointCnt++;
+                Debug.Log("Dyke point count: " + _dykePointCnt);
 
+                switch (_dykePointCnt)
+                {
+                    case 1:
+                    {
+                        if (rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit))
+                        {
+                            GameObject hitGameObject = raycastHit.collider.gameObject;
+                            _startPoint = raycastHit.point;
+                            Debug.Log("hitGameObject: " + hitGameObject.name);
+                            Debug.Log(
+                                "startPoint of dyke: " + _startPoint.x + " " + _startPoint.y + " " + _startPoint.z);
+                        }
+
+                        //_startPoint = 
+                        break;
+                    }
+                    case 2:
+                    {
+                        if (rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit))
+                        {
+                            GameObject hitGameObject = raycastHit.collider.gameObject;
+                            _endPoint = raycastHit.point;
+                            Debug.Log("hitGameObject: " + hitGameObject.name);
+                            Debug.Log(
+                                "startPoint of dyke: " + _endPoint.x + " " + _endPoint.y + " " + _endPoint.z);
+                        }
+
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+            */
         }
 
     }

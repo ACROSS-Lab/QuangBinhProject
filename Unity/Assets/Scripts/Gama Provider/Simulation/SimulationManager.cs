@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using QuickTest;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.XR.Interaction.Toolkit; 
@@ -8,8 +9,11 @@ using UnityEngine.InputSystem;
 
 public class SimulationManager : MonoBehaviour
 {
+    [SerializeField] protected XRRayInteractor leftXRRayInteractor;
+    [SerializeField] protected XRRayInteractor rightXRRayInteractor;
     [SerializeField] protected InputActionReference primaryRightHandButton = null;
     [SerializeField] protected InputActionReference TryReconnectButton = null;
+    [SerializeField] protected InputActionReference TriggerButton = null;
 
     [Header("Base GameObjects")] 
     [SerializeField] protected GameObject player;
@@ -78,7 +82,12 @@ public class SimulationManager : MonoBehaviour
     protected float TimerSendPosition = 0.0f;
 
     protected List<GameObject> locomotion;
+    protected APITest _apiTest;
 
+    protected int _dykePointCnt = 0;
+    
+    protected Vector3 _startPoint;
+    protected Vector3 _endPoint;
 
 
 
@@ -93,7 +102,7 @@ public class SimulationManager : MonoBehaviour
         playerMovement(false);
         toFollow = new List<GameObject>();
 
-
+        _apiTest = player.AddComponent<APITest>();
     }
 
     
@@ -199,6 +208,13 @@ public class SimulationManager : MonoBehaviour
             Debug.Log("TryReconnectButton activated");
             TryReconnect();
         }
+
+        /*if (TriggerButton != null && TriggerButton.action.triggered)
+        {
+            Debug.Log("Trigger Button activated");
+            _apiTest.TestDrawDykeWithParams(_startPoint, _endPoint);
+            _dykePointCnt = 0;
+        }*/
 
         OtherUpdate();
     }
@@ -744,9 +760,9 @@ public class SimulationManager : MonoBehaviour
             case "pointsLoc":
                 if (infoWorld == null) {                    
                     infoWorld = WorldJSONInfo.CreateFromJSON(content);
-                    Debug.Log("Current info world score: "  + infoWorld.score);
-                    Debug.Log("Current info world budget: " + infoWorld.budget);
-                    Debug.Log("Current info world ok_to_build_dyke: " + infoWorld.ok_build_dyke_with_unity);
+                    //Debug.Log("Current info world score: "  + infoWorld.score);
+                    //Debug.Log("Current info world budget: " + infoWorld.budget);
+                    //Debug.Log("Current info world ok_to_build_dyke: " + infoWorld.ok_build_dyke_with_unity);
                 }
                 break;
             case "endOfGame":
