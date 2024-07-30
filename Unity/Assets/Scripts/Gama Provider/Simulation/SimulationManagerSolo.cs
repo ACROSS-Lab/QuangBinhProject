@@ -23,7 +23,7 @@ public class SimulationManagerSolo : SimulationManager
                 
             _dykePointCnt++;
             Debug.Log("Dyke point count: " + _dykePointCnt);
-
+            GameObject groundObject = GameObject.Find("road");
             switch (_dykePointCnt)
             {
                 case 1:
@@ -35,6 +35,7 @@ public class SimulationManagerSolo : SimulationManager
                         Debug.Log("hitGameObject: " + hitGameObject.name);
                         Debug.Log(
                             "startPoint of dyke: " + _startPoint.x + " " + _startPoint.y + " " + _startPoint.z);
+                        Debug.Log("Coordinate of the ground: " + groundObject.transform.position.x + " " + groundObject.transform.position.y + " " + groundObject.transform.position.z);
                     }
 
                     //_startPoint = 
@@ -52,6 +53,8 @@ public class SimulationManagerSolo : SimulationManager
                         
                         _apiTest.TestDrawDykeWithParams(_startPoint, _endPoint);
 
+                        Debug.Log("Coordinate of the ground: " + groundObject.transform.position.x + " " + groundObject.transform.position.y + " " + groundObject.transform.position.z);
+                        
                         _dykePointCnt = 0;
                     }
 

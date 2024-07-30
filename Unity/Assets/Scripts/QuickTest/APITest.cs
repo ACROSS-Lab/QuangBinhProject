@@ -44,8 +44,8 @@ namespace QuickTest
         
         public void TestDrawDykeWithParams(Vector3 startPoint, Vector3 endPoint)
         {
-            string startPointStr = startPoint.x + "," + (startPoint.z >= 0 ? startPoint.z : startPoint.z * -1) + "," + "0";
-            string endPointStr = endPoint.x + "," + (endPoint.z >= 0 ? endPoint.z : endPoint * -1) + "," + "0";
+            string startPointStr = (int)startPoint.x + "," + (int)(startPoint.z >= 0 ? startPoint.z : startPoint.z * -1) + "," + "0";
+            string endPointStr = (int)endPoint.x + "," + (int)(endPoint.z >= 0 ? endPoint.z : endPoint.z * -1) + "," + "0";
             Dictionary<string, string> args = new Dictionary<string, string>()
             {
                 {"unity_start_point", startPointStr},
