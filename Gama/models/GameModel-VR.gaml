@@ -6,11 +6,8 @@ global {
 	action after_creating_dyke {
 		ask unity_linker {
 			
-			list<geometry> geoms <- dyke collect (each.shape + 10.0);
+			list<geometry> geoms <- dyke collect ((each.shape + 10.0) at_location {location.x, location.y, 10});
 			do add_geometries_to_send( geoms,up_dyke);	
-			
-			
-			
 			do send_world;
 			do send_current_message;
 		}
@@ -31,7 +28,7 @@ species unity_linker parent: abstract_unity_linker {
 		map_to_send["budget"] <- budget;
 	}
 	list<point> define_init_locations {
-		return [world.location];
+		return [world.location + {0,0,100}];
 	}
 	
 	action update_score(float diff_value)
@@ -87,6 +84,9 @@ species unity_linker parent: abstract_unity_linker {
 		let l <- world.action_management_with_unity_global(converted_start_point, converted_end_point);
 		write sample(ok_build_dyke_with_unity);
 		do send_message players: unity_player as list mes: ["ok_build_dyke_with_unity":: ok_build_dyke_with_unity];
+	
+		ask world {do after_creating_dyke;}
+		
 	}
 	
 	init {
@@ -102,7 +102,8 @@ species unity_linker parent: abstract_unity_linker {
 		//a rotation coefficient of 1.0 (no change of rotation from the prefab), no rotation offset, and we use the default precision. 
 		unity_aspect car_aspect <- prefab_aspect("Prefabs/Visual Prefabs/City/Vehicles/Car",100,0.2,1.0,-90.0, precision);
 		unity_aspect dyke_aspect <- geometry_aspect(10.0, #green, precision);
-	
+		//unity_aspect dyke_aspect <- prefab_aspect("Prefabs/Visual Prefabs/Basic shape/Green Cube", precision);
+ 	
 		//define the up_car unity property, with the name "car", no specific layer, the car_aspect unity aspect, no interaction, and the agents location are not sent back 
 		//to GAMA. 
 		up_people<- geometry_properties("car", nil, car_aspect, #no_interaction, false);
@@ -123,7 +124,7 @@ species unity_linker parent: abstract_unity_linker {
 }
 
 species unity_player parent: abstract_unity_player{
-	float player_size <- 1.0;
+	float player_size <- 50.0;
 	rgb color <- #red;	
 	float cone_distance <- 10.0 * player_size;
 	float cone_amplitude <- 90.0;

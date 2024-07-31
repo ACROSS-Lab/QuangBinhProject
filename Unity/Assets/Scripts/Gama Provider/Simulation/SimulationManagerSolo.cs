@@ -54,14 +54,19 @@ public class SimulationManagerSolo : SimulationManager
                         _apiTest.TestDrawDykeWithParams(_startPoint, _endPoint);
 
                         Debug.Log("Coordinate of the ground: " + groundObject.transform.position.x + " " + groundObject.transform.position.y + " " + groundObject.transform.position.z);
+                        GameObject[] dykeObjects = GameObject.FindGameObjectsWithTag("dyke");
                         
+                        Debug.Log("Number of dykes: " + dykeObjects.Length);
                         _dykePointCnt = 0;
                     }
 
                     break;
                 }
                 default:
+                {
+                    _dykePointCnt = 0;
                     break;
+                }
             }
         }
     }
