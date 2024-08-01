@@ -7,9 +7,7 @@ global {
 		ask unity_linker {
 			list<geometry> geoms <- dyke collect ((each.shape + 10.0) at_location {location.x, location.y, 10});
 			loop i from:0 to: length(geoms) -1 {
-				write sample(dyke[i].name);
 				geoms[i].attributes['name'] <- dyke[i].name;
-				write sample(geoms[i].attributes);
 			
 			}
 				
@@ -154,7 +152,17 @@ species unity_linker parent: abstract_unity_linker {
 	
 	reflex send_agents when: not empty(unity_player) {
 		do add_geometries_to_send(people where (each.my_path != nil),up_people);
-		do add_geometries_to_send(dyke collect (each.shape + 10.0) ,up_dyke);	
+		
+		if (not empty(dyke)) {
+			list<geometry> geoms <- dyke collect ((each.shape + 10.0) at_location {location.x, location.y, 10});
+			loop i from:0 to: length(geoms) -1 {
+				geoms[i].attributes['name'] <- dyke[i].name;
+				
+			}
+				
+			do add_geometries_to_send(geoms ,up_dyke);	
+		}
+		
 	}
 	
 
