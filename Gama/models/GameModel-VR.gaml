@@ -5,8 +5,14 @@ import "GameModel.gaml"
 global {
 	action after_creating_dyke {
 		ask unity_linker {
-			
 			list<geometry> geoms <- dyke collect ((each.shape + 10.0) at_location {location.x, location.y, 10});
+			loop i from:0 to: length(geoms) -1 {
+				write sample(dyke[i].name);
+				geoms[i].attributes['name'] <- dyke[i].name;
+				write sample(geoms[i].attributes);
+			
+			}
+				
 			do add_geometries_to_send( geoms,up_dyke);	
 			do send_world;
 			do send_current_message;
@@ -87,6 +93,38 @@ species unity_linker parent: abstract_unity_linker {
 	
 		ask world {do after_creating_dyke;}
 		
+	}
+	
+	action remove_dyke_with_unity(string dyke_name)
+	{
+		return world.remove_dyke_with_unity(dyke_name);
+	}
+	
+	action pause_with_unity
+	{
+		write "pause requested";
+		ask world
+		{
+			do pause;
+		}
+	}
+	
+	action resume_with_unity
+	{
+		write "resume requested";
+		ask world
+		{
+			do resume;
+		}
+	}
+	
+	action end_with_unity
+	{
+		write "end requested";
+		ask world
+		{
+			do die;
+		}
 	}
 	
 	init {

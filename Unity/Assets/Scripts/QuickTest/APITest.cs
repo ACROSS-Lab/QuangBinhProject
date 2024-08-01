@@ -55,5 +55,32 @@ namespace QuickTest
             };
             ConnectionManager.Instance.SendExecutableAsk("action_management_with_unity", args);
         }
+
+        public void TestRemoveDyke()
+        {
+            Dictionary<string, string> args = new Dictionary<string, string>()
+            {
+                { "dyke_name", "dyke0" }
+            };
+            ConnectionManager.Instance.SendExecutableAsk("remove_dyke_with_unity", args);
+        }
+
+        public void TestPause()
+        {
+            Dictionary<string, string> args = new Dictionary<string, string>();
+            ConnectionManager.Instance.SendExecutableAsk("pause_with_unity", args);
+        }
+
+        public void TestResume()
+        {
+            Dictionary<string, string> args = new Dictionary<string, string>();
+            ConnectionManager.Instance.SendExecutableAsk("resume_with_unity", args);
+        }
+
+        public void TestEnd()
+        {
+            Dictionary<string, string> args = new Dictionary<string, string>();
+            ConnectionManager.Instance.SendExecutableAsk("end_with_unity", args);
+        }
     }
 }

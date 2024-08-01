@@ -29,7 +29,26 @@ public class APITestEditor : Editor
         {
             apiTest.TestDrawDyke();
             apiTest.TestBuildDyke();
-            
+        }
+
+        if (GUILayout.Button("Remove dyke"))
+        {
+            apiTest.TestRemoveDyke();
+        }
+
+        if (GUILayout.Button("Pause"))
+        {
+            apiTest.TestPause();
+        }
+
+        if (GUILayout.Button("Resume"))
+        {
+            apiTest.TestResume();
+        }
+
+        if (GUILayout.Button("End"))
+        {
+            apiTest.TestEnd();
         }
     }
 }

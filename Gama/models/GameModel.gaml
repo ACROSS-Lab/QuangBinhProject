@@ -271,6 +271,14 @@ global {
 		target_point <- nil;
 		//ok_build_dyke_with_unity <- false;
 	}
+	
+	action remove_dyke_with_unity(string dyke_name)
+	{
+		ask dyke where (each.name = dyke_name)
+		{
+			do die;
+		}
+	}
 
 	int cpt <- 0;
 
@@ -293,7 +301,7 @@ global {
 			date date_gama <- date([int(dd[2]), int(dd[1]), int(dd[0]), int(dt[0]), int(dt[1]), 0]);
 			data_map[date_gama] <- [float(matrix_data[5, i])];
 		}
-
+		
 		starting_date <- first(data_map.keys);
 		do init_water;
 		do start_player_turn;

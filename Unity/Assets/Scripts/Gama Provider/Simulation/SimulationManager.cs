@@ -262,6 +262,7 @@ public class SimulationManager : MonoBehaviour
         for (int i = 0; i < infoWorld.names.Count; i++)
         {
             string name = infoWorld.names[i];
+            Debug.Log("name: " + name);
             string propId = infoWorld.propertyID[i];
          
             PropertiesGAMA prop = propertyMap[propId];
