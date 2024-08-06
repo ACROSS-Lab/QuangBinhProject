@@ -5,7 +5,7 @@ import "GameModel.gaml"
 global {
 	action after_creating_dyke {
 		ask unity_linker {
-			list<geometry> geoms <- dyke collect ((each.shape + 10.0) at_location {each.location.x, each.location.y, 10});
+			list<geometry> geoms <- dyke collect ((each.shape + 5.0) at_location {each.location.x, each.location.y, 10.0});
 			loop i from:0 to: length(geoms) -1 {
 				geoms[i].attributes['name'] <- dyke[i].name;
 			
@@ -157,7 +157,7 @@ species unity_linker parent: abstract_unity_linker {
 		do add_geometries_to_send(people where (each.my_path != nil),up_people);
 		
 		if (not empty(dyke)) {
-			list<geometry> geoms <- dyke collect ((each.shape + 10.0) at_location {location.x, location.y, 10});
+			list<geometry> geoms <- dyke collect ((each.shape + 5.0) at_location {each.location.x, each.location.y, 10});
 			loop i from:0 to: length(geoms) -1 {
 				geoms[i].attributes['name'] <- dyke[i].name;
 				
