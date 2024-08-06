@@ -28,11 +28,17 @@ public class SimulationManagerSolo : SimulationManager
             {
                 case 1:
                 {
-                    if (rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit))
+
+                       
+
+                       if (rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit))
                     {
                         GameObject hitGameObject = raycastHit.collider.gameObject;
                         _startPoint = raycastHit.point;
-                        Debug.Log("hitGameObject: " + hitGameObject.name);
+                            startPoint.transform.position = _startPoint;
+                            startPoint.active = true;
+                            endPoint.active = false;
+                            Debug.Log("hitGameObject: " + hitGameObject.name);
                         Debug.Log(
                             "startPoint of dyke: " + _startPoint.x + " " + _startPoint.y + " " + _startPoint.z);
                         Debug.Log("Coordinate of the ground: " + groundObject.transform.position.x + " " + groundObject.transform.position.y + " " + groundObject.transform.position.z);
@@ -47,7 +53,9 @@ public class SimulationManagerSolo : SimulationManager
                     {
                         GameObject hitGameObject = raycastHit.collider.gameObject;
                         _endPoint = raycastHit.point;
-                        Debug.Log("hitGameObject: " + hitGameObject.name);
+                            endPoint.transform.position = _endPoint;
+                            endPoint.active = true;
+                            Debug.Log("hitGameObject: " + hitGameObject.name);
                         Debug.Log(
                             "endPoint of dyke: " + _endPoint.x + " " + _endPoint.y + " " + _endPoint.z);
                         
@@ -62,11 +70,13 @@ public class SimulationManagerSolo : SimulationManager
 
                     break;
                 }
-                default:
+                /*default:
                 {
                     _dykePointCnt = 0;
-                    break;
-                }
+                       endPoint.active = false;
+                        endPoint.active = false;
+                        break;
+                }*/
             }
         }
     }

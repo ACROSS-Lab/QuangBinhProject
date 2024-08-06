@@ -17,6 +17,8 @@ TagManager:
   - textPN
   - locomotion
   - dyke
+  - startPoint
+  - endPoint
   layers:
   - Default
   - TransparentFX

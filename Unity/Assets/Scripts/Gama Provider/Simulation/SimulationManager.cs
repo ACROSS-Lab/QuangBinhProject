@@ -89,6 +89,9 @@ public class SimulationManager : MonoBehaviour
     protected Vector3 _startPoint;
     protected Vector3 _endPoint;
 
+    protected GameObject startPoint;
+    protected GameObject endPoint;
+
 
 
     // ############################################ UNITY FUNCTIONS ############################################
@@ -103,6 +106,11 @@ public class SimulationManager : MonoBehaviour
         toFollow = new List<GameObject>();
 
         _apiTest = player.AddComponent<APITest>();
+
+        startPoint = GameObject.FindGameObjectWithTag("startPoint");
+        endPoint = GameObject.FindGameObjectWithTag("endPoint");
+        endPoint.active = false;
+        startPoint.active = false;
     }
 
     
