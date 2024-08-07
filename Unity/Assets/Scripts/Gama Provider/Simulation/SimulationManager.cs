@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.XR.Interaction.Toolkit; 
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 
 public class SimulationManager : MonoBehaviour
@@ -91,6 +92,8 @@ public class SimulationManager : MonoBehaviour
 
     protected GameObject startPoint;
     protected GameObject endPoint;
+
+    [SerializeField] protected Text modalText;
 
 
 
@@ -769,6 +772,8 @@ public class SimulationManager : MonoBehaviour
             case "pointsLoc":
                 if (infoWorld == null) {                    
                     infoWorld = WorldJSONInfo.CreateFromJSON(content);
+                    modalText.text = "Score: " + (int)infoWorld.score +
+                                     "\n" + "Budget: " + (int)infoWorld.budget;
                     //Debug.Log("Current info world score: "  + infoWorld.score);
                     //Debug.Log("Current info world budget: " + infoWorld.budget);
                     //Debug.Log("Current info world ok_to_build_dyke: " + infoWorld.ok_build_dyke_with_unity);
