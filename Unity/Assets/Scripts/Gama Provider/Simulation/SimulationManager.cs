@@ -94,6 +94,7 @@ public class SimulationManager : MonoBehaviour
     protected GameObject endPoint;
 
     [SerializeField] protected Text modalText;
+    [SerializeField] protected Button startButton;
 
 
 
@@ -114,6 +115,15 @@ public class SimulationManager : MonoBehaviour
         endPoint = GameObject.FindGameObjectWithTag("endPoint");
         endPoint.active = false;
         startPoint.active = false;
+        Time.timeScale = 0;
+        startButton.onClick.AddListener(StartGame);
+    }
+
+    void StartGame()
+    {
+        _apiTest.TestResume();
+        startButton.gameObject.SetActive(false);
+        Time.timeScale = 1;
     }
 
     
@@ -773,7 +783,8 @@ public class SimulationManager : MonoBehaviour
                 if (infoWorld == null) {                    
                     infoWorld = WorldJSONInfo.CreateFromJSON(content);
                     modalText.text = "Score: " + (int)infoWorld.score +
-                                     "\n" + "Budget: " + (int)infoWorld.budget;
+                                     "\n" + "Budget: " + (int)infoWorld.budget +
+                                     "\n" + "Time: " + (int)Time.time;
                     //Debug.Log("Current info world score: "  + infoWorld.score);
                     //Debug.Log("Current info world budget: " + infoWorld.budget);
                     //Debug.Log("Current info world ok_to_build_dyke: " + infoWorld.ok_build_dyke_with_unity);
