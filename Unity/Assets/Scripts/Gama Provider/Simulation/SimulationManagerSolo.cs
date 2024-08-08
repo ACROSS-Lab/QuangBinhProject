@@ -18,9 +18,8 @@ public class SimulationManagerSolo : SimulationManager
         //{
         //    light.intensity = isNight ? 0 : 1.0f;
         //}
-
+        if (rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit))
         {
-                
             _dykePointCnt++;
             Debug.Log("Dyke point count: " + _dykePointCnt);
             GameObject groundObject = GameObject.Find("road");
@@ -28,10 +27,6 @@ public class SimulationManagerSolo : SimulationManager
             {
                 case 1:
                 {
-
-                       
-
-                       if (rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit))
                     {
                         GameObject hitGameObject = raycastHit.collider.gameObject;
                         _startPoint = raycastHit.point;
@@ -43,13 +38,11 @@ public class SimulationManagerSolo : SimulationManager
                             "startPoint of dyke: " + _startPoint.x + " " + _startPoint.y + " " + _startPoint.z);
                         Debug.Log("Coordinate of the ground: " + groundObject.transform.position.x + " " + groundObject.transform.position.y + " " + groundObject.transform.position.z);
                     }
-
                     //_startPoint = 
                     break;
                 }
                 case 2:
                 {
-                    if (rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit))
                     {
                         GameObject hitGameObject = raycastHit.collider.gameObject;
                         _endPoint = raycastHit.point;
@@ -67,7 +60,6 @@ public class SimulationManagerSolo : SimulationManager
                         Debug.Log("Number of dykes: " + dykeObjects.Length);
                         _dykePointCnt = 0;
                     }
-
                     break;
                 }
                 /*default:
