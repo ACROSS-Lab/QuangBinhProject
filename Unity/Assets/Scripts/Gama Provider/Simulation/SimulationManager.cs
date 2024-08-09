@@ -122,7 +122,7 @@ public class SimulationManager : MonoBehaviour
     void StartGame()
     {
         StartTime = Time.time;
-        _apiTest.TestResume();
+        _apiTest.TestStartSimulation();
         startButton.gameObject.SetActive(false);
     }
 

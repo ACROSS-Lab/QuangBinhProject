@@ -50,5 +50,11 @@ public class APITestEditor : Editor
         {
             apiTest.TestEnd();
         }
+
+        if (GUILayout.Button("Start Simulation"))
+        {
+            apiTest.TestStartSimulation();
+            ;
+        }
     }
 }

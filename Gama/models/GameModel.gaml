@@ -138,10 +138,11 @@ global {
 				colorroad <- #black;
 			}
 
-			do tell("Start of the simulation stage!");
+			//do tell("Start of the simulation stage!");
 			current_coeff <- flood_coefficient[index_flood];
 			stage <- SIMULATION;
 			do compute_height_propagation;
+			write "prepare to start simulation";
 			do resume;
 		} else {
 			do tell("END OF GAME!");

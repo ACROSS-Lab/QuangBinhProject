@@ -128,6 +128,15 @@ species unity_linker parent: abstract_unity_linker {
 		}
 	}
 	
+	action start_simulation_with_unity
+	{
+		write "start simulation";
+		ask world
+		{
+			do start_simulation;
+		}
+	}
+	
 	init {
 		//define the unity properties
 		do define_properties;
