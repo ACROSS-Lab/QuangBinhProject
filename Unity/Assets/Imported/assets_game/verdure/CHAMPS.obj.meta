@@ -3,7 +3,12 @@ guid: 9b7d2fd48ec0dce4aa5fbab3ddfd5e93
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: champs_Champ_LDMat
+    second: {fileID: 2100000, guid: 700ea61e7c958e947a1c0057a409cde0, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
