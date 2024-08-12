@@ -44,17 +44,16 @@ global {
 	float current_coeff;
 	point target_point;
 	bool ok_build_dyke <- true;
-	point start_point <- nil;
+	point start_point <- nil; 
 	bool update_drowning <- false update: true;
 	map<string, float> benchmark_map;
 	bool benchmark_mode <- false;
-	
+	list<cell> flooded_cells;
 	reflex RUN_SIMULATION when: stage = SIMULATION {
 		float t;
 		if benchmark_mode {
 			t <- gama.machine_time;
 		}
-		
 		if (every(#h)) {
 			if (current_date in data_map.keys) {
 				if need_to_recompute_graph {
@@ -93,6 +92,16 @@ global {
 			return gama.machine_time;
 		}
 		return 0.0;
+	}
+	
+	float update_score_global(float diff_value)
+	{
+		return score + diff_value;
+	}
+	
+	float update_budget_global(float diff_value)
+	{
+		return budget + diff_value;
 	}
 
 	action start_player_turn {
@@ -168,8 +177,21 @@ global {
 	}
 
 	float price_computation (point target) {
+		write sample(start_point);
+		write sample(target);
 		return (start_point distance_to target) with_precision 1;
 	}
+	
+	action after_creating_dyke;
+
+	action create_dyke(float price)
+	{
+		create dyke with: (shape: line([start_point, #user_location]));
+						budget <- update_budget_global(-price) with_precision 1;
+						score <- update_score_global(-price);
+						do after_creating_dyke;
+	}
+
 
 	action action_management {
 		switch action_type {
@@ -180,8 +202,9 @@ global {
 					float price <- price_computation(#user_location);
 					if (ok_build_dyke) {
 						create dyke with: (shape: line([start_point, #user_location]));
-						budget <- (budget - price) with_precision 1;
-						score <- score - price;
+						budget <- update_budget_global(-price) with_precision 1;
+						score <- update_score_global(-price);
+						do after_creating_dyke;
 					}
 					start_point <- nil;
 					target_point <- nil;
@@ -200,11 +223,9 @@ global {
 			}
 			match 3{
 				list<dyke> d <- dyke overlapping (#user_location buffer 20);
-				write "d: " + d;
 						
 				if (not empty(d)) {
 					ask d closest_to #user_location {
-						write "ldldld";
 						is_broken<-false;
 						height<- height+20.0;
 						ask dyke where not each.is_broken {
@@ -217,7 +238,38 @@ global {
 					}
 				}
 			} 
-			} }
+		} 
+	}
+	
+	action action_management_with_unity_global(point unity_start_point, point unity_end_point) {
+		write "draw dike";
+		start_point <- unity_start_point;
+		float price <- price_computation(unity_end_point);
+		
+		ok_build_dyke <- price <= budget;
+		
+		geometry l <- line([start_point, target_point]);
+		if ((cell overlapping l) first_with (each.is_river)) != nil {
+			ok_build_dyke <- false;
+		}
+
+		if ok_build_dyke and (not empty(building overlapping l)) {
+			ok_build_dyke <- false;
+		}
+		
+		if (ok_build_dyke) {
+			create dyke with: (shape: line([start_point, unity_end_point]));
+			budget <- update_budget_global(-price) with_precision 1;
+			score <- update_score_global(-price);
+			do after_creating_dyke;
+		}
+
+		start_point <- nil;
+		target_point <- nil;
+		ok_build_dyke <- false;
+		
+		
+	}
 
 	int cpt <- 0;
 
@@ -274,6 +326,7 @@ global {
 			}
 
 		}
+		
 
 		ask building {
 			ask cell overlapping shape {
@@ -338,7 +391,6 @@ global {
 						is_broken <- true;
 						need_recomputation <- true;
 					}
-
 				}
 				float val <- 255 * (1 - flooding_level / 1.0);
 				color <- rgb(val, val, 255);
@@ -350,6 +402,8 @@ global {
 		if need_recomputation {
 			do compute_height_propagation;
 		}
+		flooded_cells <- cell where (not each.is_river and  each.flooding_level > 0);
+		//flooded_cells <- cell where (  each.flooding_level > 0);
 		t <- add_benchmark("compute_height_propagation",t);	
 				
 	} 
@@ -445,7 +499,7 @@ species building {
 		ask my_cells where (each.flooding_level > 1.0) {
 			myself.drowned <- true;
 			myself.colorbuilding <- #red;
-			score <- score - 5.0;
+			score <- world.update_score_global(-5.0);
 			break;
 		}
 		ask world {
@@ -466,14 +520,28 @@ species people skills: [moving] {
 	bool boat <- false;
 	bool alerted <- false;
 	point target <- nil;
-	float perception_distance;
+	float perception_distance<-200.0;
 	float speed <- 0.5 #km / #h;
 	path my_path;
-
-	reflex become_alerted when: not alerted and flip(0.01) {
-		alerted <- true;
+//	list<cell> river_cell_near_me<- curren_cells closet to self.location ;
+//	reflex detect {
+//        if(cell.is_river closet_to self.location){
+//        	
+//        }
+//    }
+	reflex become_alerted when: not alerted {
+		cell closest_water_cell <- flooded_cells closest_to self;
+	 	if (closest_water_cell != nil) and ((self distance_to closest_water_cell)< perception_distance)  {
+			alerted <- true;
+		}
 	}
-	
+	reflex warnningg when: not alerted {
+		list<people> imrunning <- people where each.alerted;
+		people tell <- imrunning closest_to self;
+		if (tell != nil) and (self distance_to tell.location < 100.0) {
+			alerted <- true;
+		}
+	}
 	reflex alert_target when: alerted {
 		float t;
 		if benchmark_mode {
@@ -481,9 +549,9 @@ species people skills: [moving] {
 		}
 		if target = nil {
 			switch the_alert_strategy {
-				match "RANDOM" {
-					target <- (one_of(evacuation_point)).location;
-				}
+//				match "RANDOM" {
+//					target <- (one_of(evacuation_point)).location;
+//				}
 
 				match "CLOSEST" {
 					using (topology(road_network_usable)) {
@@ -500,7 +568,7 @@ species people skills: [moving] {
 		if my_path != nil {
 			do follow(path: my_path, move_weights: new_weights);
 			if (location = target) {
-				score <- score + 100;
+				score <- world.update_score_global(float(100));
 				evacuated <- evacuated + 1;
 				target <- nil;
 				do die;
@@ -519,7 +587,7 @@ species people skills: [moving] {
 		cell a_cell <- cell(location);
 		if (a_cell != nil and a_cell.flooding_level > 0.2 and flip(0.5)) {
 			casualties <- casualties + 1;
-			score <- score - 10;
+			score <- world.update_score_global(float(-10));
 			do die;
 		}
 		ask world {
