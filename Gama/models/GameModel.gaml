@@ -49,6 +49,9 @@ global {
 	map<string, float> benchmark_map;
 	bool benchmark_mode <- false;
 	list<cell> flooded_cells;
+	
+	float distance_warning <- 100.0;
+	
 	reflex RUN_SIMULATION when: stage = SIMULATION {
 		float t;
 		if benchmark_mode {
@@ -535,11 +538,12 @@ species people skills: [moving] {
 			alerted <- true;
 		}
 	}
-	reflex warnningg when: not alerted {
-		list<people> imrunning <- people where each.alerted;
-		people tell <- imrunning closest_to self;
-		if (tell != nil) and (self distance_to tell.location < 100.0) {
-			alerted <- true;
+	reflex warning when: not alerted {
+		list<people> imrunning <- (people at_distance distance_warning) where each.alerted;
+		//people tell <- imrunning closest_to self;
+		
+		if (not empty(imrunning)) {
+			alerted <- alerted or flip(length(imrunning) / 20.0);
 		}
 	}
 	reflex alert_target when: alerted {
