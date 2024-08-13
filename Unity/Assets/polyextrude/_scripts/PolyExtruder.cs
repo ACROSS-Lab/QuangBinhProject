@@ -98,12 +98,15 @@ public class PolyExtruder : MonoBehaviour
     private Vector2[] originalPolygonVertices;
 
     // references to prism (polygon -> 2D; prism -> 3D) components
-    private Mesh bottomMesh;
-    private Mesh topMesh;
+    public Mesh bottomMesh;
+    public Mesh topMesh;
     public Mesh surroundMesh;
     private MeshRenderer bottomMeshRenderer;
     private MeshRenderer topMeshRenderer;
     private MeshRenderer surroundMeshRenderer;
+    private Material material;
+
+    private bool isVisible = true;
 
     #endregion
 
@@ -121,14 +124,15 @@ public class PolyExtruder : MonoBehaviour
     /// <param name="color">Color of the prism's material.</param>
     /// <param name="is3D">Set to<c>true</c> if polygon extrusion should be applied (= 3D prism), or <c>false</c> if it is only the (2D) polygon.</param>
     /// <param name="isUsingBottomMeshIn3D">Set to<c>true</c> if the bottom mesh component should be attached, or <c>false</c> if not.</param>
-    public void createPrism(bool editModeA, string prismName, float height, Vector2[] vertices, Color32 color, bool is3D, bool isUsingBottomMeshIn3D)
+    public void createPrism(bool editModeA, string prismName, float height, Vector2[] vertices, Color32 color, Material mat, bool is3D, bool isUsingBottomMeshIn3D)
     {
         // set data
         this.editMode = editModeA;
-        this.prismName = name;
+        this.prismName = prismName;
         this.extrusionHeightY = height;
         this.originalPolygonVertices = vertices;
         this.prismColor = color;
+        this.material = mat;
         this.polygonArea = 0.0f;
         this.polygonCentroid = new Vector2(0.0f, 0.0f);
         this.is3D = is3D;
@@ -246,7 +250,7 @@ public class PolyExtruder : MonoBehaviour
         MeshFilter mfB = goB.AddComponent<MeshFilter>();
         if(this.isUsingColliders) goB.AddComponent<MeshCollider>();
         bottomMeshRenderer = goB.AddComponent<MeshRenderer>();
-        bottomMeshRenderer.sharedMaterial = new Material(Shader.Find(shader));
+        bottomMeshRenderer.sharedMaterial = material == null ? new Material(Shader.Find(shader)) : material;
 
         Mesh mesh = new Mesh();
         mfB.mesh = mesh;
@@ -322,7 +326,7 @@ public class PolyExtruder : MonoBehaviour
 
             if(this.isUsingColliders) goT.AddComponent<MeshCollider>();
 			topMeshRenderer = goT.AddComponent<MeshRenderer>();
-			topMeshRenderer.sharedMaterial = new Material(Shader.Find(shader));
+			topMeshRenderer.sharedMaterial = material == null ? new Material(Shader.Find(shader)) : material;
 
             // keep reference to top mesh
             Mesh meshT = new Mesh();
@@ -376,7 +380,7 @@ public class PolyExtruder : MonoBehaviour
 			goS.name = "surround_" + this.prismName;
 			MeshFilter mfS = goS.AddComponent<MeshFilter>();
 			surroundMeshRenderer = goS.AddComponent<MeshRenderer>();
-			surroundMeshRenderer.sharedMaterial = new Material(Shader.Find(shader));
+			surroundMeshRenderer.sharedMaterial = material == null ? new Material(Shader.Find(shader)) : material;
 
             // keep reference to surrounding mesh
             Mesh meshS = new Mesh();
@@ -476,6 +480,7 @@ public class PolyExtruder : MonoBehaviour
 
         // set height and color
         updateHeight(this.extrusionHeightY);
+
         updateColor(this.prismColor);
         setAnchorPosToCentroid();
     }
@@ -522,6 +527,25 @@ public class PolyExtruder : MonoBehaviour
         if(this.is3D) this.gameObject.transform.localScale = new Vector3(1.0f, this.extrusionHeightY, 1.0f);
         //else this.gameObject.transform.localPosition = new Vector3(1.0f, this.extrusionHeightY, 1.0f);
     }
+
+
+   /* public void updateMaterial(Material mat)
+    {
+        if (!this.material.Equals(mat)) this.material = mat;
+
+        // update color on meshes
+        if (!this.is3D)
+        {
+            bottomMeshRenderer.sharedMaterial = this.material;
+        }
+        else
+        {
+            if (this.isUsingBottomMeshIn3D) bottomMeshRenderer.sharedMaterial = this.material;
+            topMeshRenderer.sharedMaterial = this.material;
+            surroundMeshRenderer.sharedMaterial = this.material;
+        }
+    }*/
+
 
     /// <summary>
     /// Function to update the color of the prism material (default material attached during prism creation proces: Diffuse).
@@ -582,7 +606,7 @@ public class PolyExtruder : MonoBehaviour
         outlineRenderer.startWidth = outlineWidth;
         outlineRenderer.endWidth = outlineWidth;
         outlineRenderer.useWorldSpace = false;
-        outlineRenderer.sharedMaterial = new Material(Shader.Find(shader));
+        outlineRenderer.sharedMaterial = material == null ? new Material(Shader.Find(shader)) : material;
         outlineRenderer.sharedMaterial.color = outlineColor;
 
         // prepare original polygon vertices for LineRenderer positions

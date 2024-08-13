@@ -13,6 +13,9 @@ public class PolygonGenerator
     private static PolygonGenerator instance;
 
     public Mesh surroundMesh;
+    public Mesh bottomMesh;
+    public Mesh topMesh;
+
 
 
     public PolygonGenerator() { }
@@ -49,17 +52,41 @@ public class PolygonGenerator
         }
         Vector2[] MeshDataPoints = pts.ToArray();
         //Color32 col = new Color32(BitConverter.GetBytes(prop.color[0])[0], BitConverter.GetBytes(prop.color[1])[0],
-         //          BitConverter.GetBytes(prop.color[2])[0], BitConverter.GetBytes(prop.color[3])[0]);
-        Color32 col = new Color32(BitConverter.GetBytes(prop.red)[0], BitConverter.GetBytes(prop.green)[0],
-                 BitConverter.GetBytes(prop.blue)[0], BitConverter.GetBytes(prop.alpha)[0]);
-        // GameObject p = GeneratePolygon(pts.ToArray(), geom.names.Count > 0 ?  geom.names[cpt] : "", geom.tags.Count > 0 ?  geom.tags[cpt] : "", geom.heights[cpt], geom.hasColliders[cpt], geom.is3D[cpt]);
-        return GeneratePolygon(editMode, name, MeshDataPoints, ((float) prop.height) / precision, col);
-       
+        //          BitConverter.GetBytes(prop.color[2])[0], BitConverter.GetBytes(prop.color[3])[0]);
+
+       Color32 col = Color.black;
+       Material mat = null;
+        if (prop.visible)
+        {
+            if (prop.material != null && prop.material != "")
+            {
+                mat = Resources.Load<Material>(prop.material);
+            }
+            col = new Color32(BitConverter.GetBytes(prop.red)[0], BitConverter.GetBytes(prop.green)[0],
+                    BitConverter.GetBytes(prop.blue)[0], BitConverter.GetBytes(prop.alpha)[0]);
+        }
+        GameObject obj = GeneratePolygon(editMode, name, MeshDataPoints, ((float)prop.height) / precision, mat, col);
+        
+        if (!prop.visible)
+        {
+            MeshRenderer r =  obj.GetComponent<MeshRenderer>();
+            if (r != null) r.enabled = false;
+            foreach (MeshRenderer rr in obj.GetComponentsInChildren<MeshRenderer>())
+            {
+                if (rr != null) rr.enabled = false;
+
+            }
+            LineRenderer lr = obj.GetComponent<LineRenderer>();
+            if (lr != null)
+                lr.enabled = false;
+        }
+        return obj;
+
     }
 
 
     // Start is called before the first frame update
-    GameObject GeneratePolygon(bool editMode, String name, Vector2[] MeshDataPoints, float extrusionHeight, Color32 color)
+    GameObject GeneratePolygon(bool editMode, String name, Vector2[] MeshDataPoints, float extrusionHeight, Material mat, Color32 color)
     {
         bool isUsingBottomMeshIn3D = false;
         bool isOutlineRendered = true;
@@ -82,8 +109,11 @@ public class PolygonGenerator
         Vector3 pos = polyExtruderGO.transform.position;
         pos.y += offsetYBackgroundGeom;
         polyExtruderGO.transform.position = pos;
-        polyExtruder.createPrism(editMode, name, extrusionHeight, MeshDataPoints, color, is3D, isUsingBottomMeshIn3D);
+        polyExtruder.createPrism(editMode, name, extrusionHeight, MeshDataPoints, color, mat, is3D, isUsingBottomMeshIn3D);
         surroundMesh = polyExtruder.surroundMesh;
+        bottomMesh = polyExtruder.bottomMesh;
+        topMesh = polyExtruder.topMesh;
+        polyExtruderGO.name = name;
         return polyExtruderGO;
     }
 

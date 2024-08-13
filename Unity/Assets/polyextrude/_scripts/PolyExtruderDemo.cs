@@ -48,27 +48,7 @@ public class PolyExtruderDemo : MonoBehaviour
         // global PolyExtruder configurations
         polyExtruder.isOutlineRendered = isOutlineRendered;
 
-        // run poly extruder according to selected example data
-        switch (exampleData)
-        {
-            case ExampleData.Triangle:
-                polyExtruderGO.name = "Triangle";
-                polyExtruder.createPrism(false,polyExtruderGO.name, extrusionHeight, MeshDataTriangle, Color.grey, is3D, isUsingBottomMeshIn3D); ;
-                break;
-            case ExampleData.Square:
-                polyExtruderGO.name = "Square";
-                polyExtruder.createPrism(false, polyExtruderGO.name, extrusionHeight, MeshDataSquare, Color.grey, is3D, isUsingBottomMeshIn3D);
-                break;
-            case ExampleData.Cross:
-                polyExtruderGO.name = "Cross";
-                polyExtruder.createPrism(false, polyExtruderGO.name, extrusionHeight, MeshDataCross, Color.grey, is3D, isUsingBottomMeshIn3D);
-                break;
-            default:
-            case ExampleData.SCB_Gotland:
-                polyExtruderGO.name = "SCB_Kommun_RT90_Gotland";
-                polyExtruder.createPrism(false, polyExtruderGO.name, extrusionHeight, MeshDataGotland, Color.grey, is3D, isUsingBottomMeshIn3D);
-                break;
-        }
+        
     }
 
     void Update()
