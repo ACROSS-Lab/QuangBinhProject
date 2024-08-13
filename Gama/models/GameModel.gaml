@@ -49,6 +49,7 @@ global {
 	bool update_drowning <- false update: true;
 	map<string, float> benchmark_map;
 	bool benchmark_mode <- false;
+	float global_water_level <- 1.5 min: 1.5;
 	
 	reflex RUN_SIMULATION when: stage = SIMULATION {
 		float t;
@@ -64,6 +65,7 @@ global {
 				}
 				t <- add_benchmark("recompute_graph",t);	
 				do add_water;
+				do something;
 				t <- add_benchmark("add_water",t);
 				
 			} else {
@@ -83,6 +85,8 @@ global {
 		}
 
 	}
+	
+	action something;
 	
 	float add_benchmark (string k, float ref_time) {
 		if benchmark_mode {
@@ -389,6 +393,9 @@ global {
 		update_drowning <- true;
 		bool need_recomputation <- false;
 		matrix matrix_data <- matrix(my_csv_file);
+		write sample(data_map);
+		write sample(current_date);
+		write sample(data_map[current_date]);
 		float water_level <- data_map[current_date][0];
 		ask cell {
 			flooding_level <- water_level - altitude;
@@ -600,6 +607,8 @@ grid cell file: DEM_grid_file neighbors: 4 {
 	bool is_river;
 	float flooding_level;
 	string type <- one_of(color_per_type.keys);
+	geometry shape_union <- shape + 0.1;
+	
 	rgb color <- color_per_type[type];
 
 	aspect default {

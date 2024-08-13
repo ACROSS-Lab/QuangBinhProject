@@ -17,6 +17,21 @@ global {
 		}
 	}
 	
+	action something {
+		geometry g <- union ((cell where (each.flooding_level > 0.2)) collect each.shape_union ) ;
+		if g != nil and not empty(unity_player){
+			ask unity_linker {
+				//add the geometry of the water agents to the geometry to send - add a z offset correspoding to the level of water.
+				do add_geometries_to_send(g.geometries collect ((each simplification 1.0) at_location {each.location.x,each.location.y, global_water_level}),up_water);
+				write "before doing something";
+				//force the action to send the world (and send the current message) as the "do_send_world" to false to just send the world information at the right moment.
+				do send_world;
+				do send_current_message;
+				write "after doing something";
+			}
+		}
+	}
+	
 }
 
 species unity_linker parent: abstract_unity_linker {
@@ -26,6 +41,7 @@ species unity_linker parent: abstract_unity_linker {
 	list<point> init_locations <- define_init_locations();
 	unity_property up_people;
 	unity_property up_dyke;
+	unity_property up_water;
 
 	action add_to_send_world(map map_to_send) {
 		map_to_send["score"] <- score;
@@ -150,19 +166,21 @@ species unity_linker parent: abstract_unity_linker {
 		//a rotation coefficient of 1.0 (no change of rotation from the prefab), no rotation offset, and we use the default precision. 
 		unity_aspect car_aspect <- prefab_aspect("Prefabs/Visual Prefabs/City/Vehicles/Car",100,0.2,1.0,-90.0, precision);
 		unity_aspect dyke_aspect <- geometry_aspect(10.0, #green, precision);
+		unity_aspect water_aspect <- geometry_aspect(1.0, "Materials/Water/Water Material",#white, precision);
 		//unity_aspect dyke_aspect <- prefab_aspect("Prefabs/Visual Prefabs/Basic shape/Green Cube", precision);
  	
 		//define the up_car unity property, with the name "car", no specific layer, the car_aspect unity aspect, no interaction, and the agents location are not sent back 
 		//to GAMA. 
 		up_people<- geometry_properties("car", nil, car_aspect, #no_interaction, false);
 		up_dyke <- geometry_properties("dyke", "dyke", dyke_aspect, #no_interaction, false);
+		up_water <- geometry_properties("water", nil, water_aspect, #no_interaction,false);
 		// add the up_tree unity_property to the list of unity_properties
 		unity_properties << up_people;
 		unity_properties << up_dyke;
-		
+		unity_properties << up_water;
 	}
 	
-	reflex send_agents when: not empty(unity_player) {
+	reflex send_agents when: false {// not empty(unity_player) {
 		do add_geometries_to_send(people where (each.my_path != nil),up_people);
 		
 		if (not empty(dyke)) {
