@@ -3,6 +3,9 @@ model NewModel_model_VR
 import "GameModel.gaml"
 
 global {
+	
+	list<geometry> water_geoms;
+	
 	action after_creating_dyke {
 		ask unity_linker {
 			list<geometry> geoms <- dyke collect ((each.shape + 5.0) at_location {each.location.x, each.location.y, 10.0});
@@ -12,6 +15,8 @@ global {
 			}
 				
 			do add_geometries_to_send( geoms,up_dyke);	
+			do add_geometries_to_keep( water_geoms);	
+			
 			do send_world;
 			do send_current_message;
 		}
@@ -20,9 +25,12 @@ global {
 	action something {
 		geometry g <- union ((cell where (each.flooding_level > 0.2)) collect each.shape_union ) ;
 		if g != nil and not empty(unity_player){
+			water_geoms <- g.geometries collect ((each simplification 1.0) at_location {each.location.x,each.location.y, global_water_level});
 			ask unity_linker {
 				//add the geometry of the water agents to the geometry to send - add a z offset correspoding to the level of water.
-				do add_geometries_to_send(g.geometries collect ((each simplification 1.0) at_location {each.location.x,each.location.y, global_water_level}),up_water);
+				do add_geometries_to_send(water_geoms,up_water);
+				
+				do add_geometries_to_keep( dyke);	
 				write "before doing something";
 				//force the action to send the world (and send the current message) as the "do_send_world" to false to just send the world information at the right moment.
 				do send_world;
@@ -192,6 +200,8 @@ species unity_linker parent: abstract_unity_linker {
 				
 			do add_geometries_to_send(geoms ,up_dyke);	
 		}
+		do add_geometries_to_keep( water_geoms);	
+		
 		
 	}
 	
