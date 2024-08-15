@@ -278,6 +278,8 @@ public class SimulationManager : MonoBehaviour
 
             playerMovement(true);
         }
+        foreach (string n in infoWorld.keepNames) 
+            toRemove.Remove(n);
         int cptPrefab = 0;
         int cptGeom = 0;
         for (int i = 0; i < infoWorld.names.Count; i++)
