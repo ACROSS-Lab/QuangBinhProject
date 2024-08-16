@@ -3,7 +3,12 @@ guid: 671ac4ee4219bca48b12e12a8c0c85f1
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: toiture_2_LDMat
+    second: {fileID: 2100000, guid: e90cbe7df29e2484e9585338abffc1a3, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
