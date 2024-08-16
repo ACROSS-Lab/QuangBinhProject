@@ -18,7 +18,6 @@ public class SimulationManagerSolo : SimulationManager
         {
             Debug.Log("Water position: " + water.transform.position.x + " " + water.transform.position.y + " " + water.transform.position.z);
             Debug.Log("Water scale: " + water.transform.localScale.x + " " + water.transform.localScale.y + " " + water.transform.localScale.z);
-            Debug.Log("Water rendered: " + water.ga);
         }
         //isNight = !isNight;
         //Light[] lights = FindObjectsOfType(typeof(Light)) as Light[];
