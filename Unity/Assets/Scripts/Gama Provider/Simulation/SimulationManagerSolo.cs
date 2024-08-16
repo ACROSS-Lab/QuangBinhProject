@@ -12,6 +12,14 @@ public class SimulationManagerSolo : SimulationManager
     protected bool isNight = false;
     protected override void TriggerMainButton()
     {
+        GameObject water = GameObject.Find("water_0.0");
+
+        if (water != null)
+        {
+            Debug.Log("Water position: " + water.transform.position.x + " " + water.transform.position.y + " " + water.transform.position.z);
+            Debug.Log("Water scale: " + water.transform.localScale.x + " " + water.transform.localScale.y + " " + water.transform.localScale.z);
+            Debug.Log("Water rendered: " + water.ga);
+        }
         //isNight = !isNight;
         //Light[] lights = FindObjectsOfType(typeof(Light)) as Light[];
         //foreach (Light light in lights)
