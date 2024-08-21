@@ -95,7 +95,10 @@ public class SimulationManager : MonoBehaviour
 
     [SerializeField] protected Text modalText;
     [SerializeField] protected Button startButton;
+    [SerializeField] protected Text movementText;
     protected float StartTime;
+    protected Vector3 originalStartPosition;
+    protected bool firstPositionStored;
 
 
 
@@ -117,6 +120,7 @@ public class SimulationManager : MonoBehaviour
         endPoint.active = false;
         startPoint.active = false;
         startButton.onClick.AddListener(StartGame);
+        
     }
 
     void StartGame()
@@ -525,6 +529,13 @@ public class SimulationManager : MonoBehaviour
         //List<int> p = converter.toGAMACRS3D(player.transform.position);
 
         Vector3 v = new Vector3(Camera.main.transform.position.x, player.transform.position.y, Camera.main.transform.position.z);
+
+        if (!firstPositionStored)
+        {
+            originalStartPosition = v;
+            firstPositionStored = true;
+        }
+        
         List<int> p = converter.toGAMACRS3D(v);
         Dictionary<string, string> args = new Dictionary<string, string> {
             {"id",ConnectionManager.Instance.getUseMiddleware() ? ConnectionManager.Instance.GetConnectionId()  : ("\"" + ConnectionManager.Instance.GetConnectionId() +  "\"") },
@@ -539,7 +550,13 @@ public class SimulationManager : MonoBehaviour
             cpt++;
         }
         ConnectionManager.Instance.SendExecutableAsk("move_player_external", args);
-     }
+
+        if (Math.Abs(originalStartPosition.x - v.x) >= 0.1 ||
+            Math.Abs(originalStartPosition.z - v.z) >= 0.1)
+        {
+            movementText.gameObject.SetActive(false);
+        }
+    }
     private int cpt = 0;
    
 

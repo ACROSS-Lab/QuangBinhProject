@@ -181,7 +181,7 @@ species unity_linker parent: abstract_unity_linker {
 		//define the up_car unity property, with the name "car", no specific layer, the car_aspect unity aspect, no interaction, and the agents location are not sent back 
 		//to GAMA. 
 		up_people<- geometry_properties("car", nil, car_aspect, #no_interaction, false);
-		up_dyke <- geometry_properties("dyke", "dyke", dyke_aspect, #no_interaction, false);
+		up_dyke <- geometry_properties("dyke", "dyke", dyke_aspect, #collider, false);
 		up_water <- geometry_properties("water", nil, water_aspect, #no_interaction,false);
 		// add the up_tree unity_property to the list of unity_properties
 		unity_properties << up_people;
