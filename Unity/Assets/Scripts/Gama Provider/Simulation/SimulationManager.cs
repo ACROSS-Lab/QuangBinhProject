@@ -117,10 +117,13 @@ public class SimulationManager : MonoBehaviour
 
         startPoint = GameObject.FindGameObjectWithTag("startPoint");
         endPoint = GameObject.FindGameObjectWithTag("endPoint");
-        endPoint.active = false;
-        startPoint.active = false;
-        startButton.onClick.AddListener(StartGame);
         
+        if (endPoint != null)
+            endPoint.active = false;
+        if (startPoint != null)
+            startPoint.active = false;
+        
+        startButton.onClick.AddListener(StartGame);
     }
 
     void StartGame()
