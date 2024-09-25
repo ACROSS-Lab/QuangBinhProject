@@ -25,7 +25,7 @@ global {
 	action something {
 		geometry g <- union ((cell where (each.flooding_level > 0.2)) collect each.shape_union ) ;
 		if g != nil and not empty(unity_player){
-			water_geoms <- g.geometries collect ((each simplification 1.0) at_location {each.location.x,each.location.y, global_water_level});
+			water_geoms <- g.geometries;
 			loop i from: 0 to: length( water_geoms) - 1{water_geoms[i].attributes['name'] <- "water_" + i;}
 			ask unity_linker {
 				//add the geometry of the water agents to the geometry to send - add a z offset correspoding to the level of water.
