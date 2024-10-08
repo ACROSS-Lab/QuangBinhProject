@@ -96,6 +96,9 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] protected Text modalText;
     [SerializeField] protected Button startButton;
     [SerializeField] protected Text movementText;
+    [SerializeField] protected Text timeText;
+    [SerializeField] protected int maximumTimeToBuild;
+    protected bool mustBuildDyke = false;
     protected float StartTime;
     protected Vector3 originalStartPosition;
     protected bool firstPositionStored;
@@ -244,6 +247,7 @@ public class SimulationManager : MonoBehaviour
             _dykePointCnt = 0;
         }*/
 
+        UpdateTimeLeftToBuildDykes();
         OtherUpdate();
     }
 
@@ -805,8 +809,7 @@ public class SimulationManager : MonoBehaviour
                 if (infoWorld == null) {                    
                     infoWorld = WorldJSONInfo.CreateFromJSON(content);
                     modalText.text = "Score: " + (int)infoWorld.score +
-                                     "\n" + "Budget: " + (int)infoWorld.budget +
-                                     "\n" + "Time: " + (int)(Time.time - StartTime);
+                                     "\n" + "Budget: " + (int)infoWorld.budget;
                     //Debug.Log("Current info world score: "  + infoWorld.score);
                     //Debug.Log("Current info world budget: " + infoWorld.budget);
                     //Debug.Log("Current info world ok_to_build_dyke: " + infoWorld.ok_build_dyke_with_unity);
@@ -866,7 +869,18 @@ public class SimulationManager : MonoBehaviour
         return currentState;
     }
 
- 
+    private void UpdateTimeLeftToBuildDykes()
+    {
+        if (mustBuildDyke) 
+            return;
+        
+        int intermediateValue = Math.Max(0, maximumTimeToBuild - (int)Time.time);
+        
+        timeText.text = "Time: " + intermediateValue;
+
+        if (intermediateValue == 0)
+            mustBuildDyke = true;
+    }
 }
 
 
