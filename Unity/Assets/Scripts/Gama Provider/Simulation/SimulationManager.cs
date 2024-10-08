@@ -94,12 +94,12 @@ public class SimulationManager : MonoBehaviour
     protected GameObject endPoint;
 
     [SerializeField] protected Text modalText;
-    [SerializeField] protected Button startButton;
+    //[SerializeField] protected Button startButton;
     [SerializeField] protected Text movementText;
     [SerializeField] protected Text timeText;
     [SerializeField] protected int maximumTimeToBuild;
-    protected bool mustBuildDyke = false;
-    protected float StartTime;
+    protected bool mustNotBuildDyke = false;
+    //protected float StartTime;
     protected Vector3 originalStartPosition;
     protected bool firstPositionStored;
 
@@ -126,14 +126,14 @@ public class SimulationManager : MonoBehaviour
         if (startPoint != null)
             startPoint.active = false;
         
-        startButton.onClick.AddListener(StartGame);
+        //startButton.onClick.AddListener(StartGame);
     }
 
-    void StartGame()
+    void StartTheFlood()
     {
-        StartTime = Time.time;
+        //StartTime = Time.time;
         _apiTest.TestStartSimulation();
-        startButton.gameObject.SetActive(false);
+        //startButton.gameObject.SetActive(false);
     }
 
     
@@ -871,7 +871,7 @@ public class SimulationManager : MonoBehaviour
 
     private void UpdateTimeLeftToBuildDykes()
     {
-        if (mustBuildDyke) 
+        if (mustNotBuildDyke) 
             return;
         
         int intermediateValue = Math.Max(0, maximumTimeToBuild - (int)Time.time);
@@ -879,7 +879,10 @@ public class SimulationManager : MonoBehaviour
         timeText.text = "Time: " + intermediateValue;
 
         if (intermediateValue == 0)
-            mustBuildDyke = true;
+        {
+            mustNotBuildDyke = true;
+            StartTheFlood();
+        }
     }
 }
 
