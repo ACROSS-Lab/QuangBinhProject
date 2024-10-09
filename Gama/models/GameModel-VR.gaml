@@ -174,7 +174,8 @@ species unity_linker parent: abstract_unity_linker {
 		//define a unity_aspect called tree_aspect that will display in Unity the agents with the SM_arbres_001 prefab, with a scale of 2.0, no y-offset, 
 		//a rotation coefficient of 1.0 (no change of rotation from the prefab), no rotation offset, and we use the default precision. 
 		unity_aspect car_aspect <- prefab_aspect("Prefabs/Visual Prefabs/City/Vehicles/Car",100,0.2,1.0,-90.0, precision);
-		unity_aspect dyke_aspect <- geometry_aspect(40.0, #green, precision);
+		//unity_aspect dyke_aspect <- geometry_aspect(40.0, #green, precision);
+		unity_aspect dyke_aspect <- geometry_aspect(40.0, "Materials/Dike/Dike",#red, precision);
 		unity_aspect water_aspect <- geometry_aspect(40.0, "Materials/eau/ShaderGraph/WaterMaterial",#red, precision);
 		//unity_aspect dyke_aspect <- prefab_aspect("Prefabs/Visual Prefabs/Basic shape/Green Cube", precision);
  	
