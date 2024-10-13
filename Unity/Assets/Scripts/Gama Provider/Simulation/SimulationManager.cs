@@ -1,15 +1,20 @@
 using System;
 using System.Collections.Generic;
+using QuickTest;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.XR.Interaction.Toolkit; 
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 
 public class SimulationManager : MonoBehaviour
 {
+    [SerializeField] protected XRRayInteractor leftXRRayInteractor;
+    [SerializeField] protected XRRayInteractor rightXRRayInteractor;
     [SerializeField] protected InputActionReference primaryRightHandButton = null;
     [SerializeField] protected InputActionReference TryReconnectButton = null;
+    [SerializeField] protected InputActionReference TriggerButton = null;
 
     [Header("Base GameObjects")] 
     [SerializeField] protected GameObject player;
@@ -78,7 +83,25 @@ public class SimulationManager : MonoBehaviour
     protected float TimerSendPosition = 0.0f;
 
     protected List<GameObject> locomotion;
+    protected APITest _apiTest;
 
+    protected int _dykePointCnt = 0;
+    
+    protected Vector3 _startPoint;
+    protected Vector3 _endPoint;
+
+    protected GameObject startPoint;
+    protected GameObject endPoint;
+
+    [SerializeField] protected Text modalText;
+    //[SerializeField] protected Button startButton;
+    [SerializeField] protected Text movementText;
+    [SerializeField] protected Text timeText;
+    [SerializeField] protected int maximumTimeToBuild;
+    protected bool mustNotBuildDyke = false;
+    //protected float StartTime;
+    protected Vector3 originalStartPosition;
+    protected bool firstPositionStored;
 
 
 
@@ -93,7 +116,24 @@ public class SimulationManager : MonoBehaviour
         playerMovement(false);
         toFollow = new List<GameObject>();
 
+        _apiTest = player.AddComponent<APITest>();
 
+        startPoint = GameObject.FindGameObjectWithTag("startPoint");
+        endPoint = GameObject.FindGameObjectWithTag("endPoint");
+        
+        if (endPoint != null)
+            endPoint.active = false;
+        if (startPoint != null)
+            startPoint.active = false;
+        
+        //startButton.onClick.AddListener(StartGame);
+    }
+
+    void StartTheFlood()
+    {
+        //StartTime = Time.time;
+        _apiTest.TestStartSimulation();
+        //startButton.gameObject.SetActive(false);
     }
 
     
@@ -200,6 +240,14 @@ public class SimulationManager : MonoBehaviour
             TryReconnect();
         }
 
+        /*if (TriggerButton != null && TriggerButton.action.triggered)
+        {
+            Debug.Log("Trigger Button activated");
+            _apiTest.TestDrawDykeWithParams(_startPoint, _endPoint);
+            _dykePointCnt = 0;
+        }*/
+
+        UpdateTimeLeftToBuildDykes();
         OtherUpdate();
     }
 
@@ -241,11 +289,14 @@ public class SimulationManager : MonoBehaviour
 
             playerMovement(true);
         }
+        foreach (string n in infoWorld.keepNames) 
+            toRemove.Remove(n);
         int cptPrefab = 0;
         int cptGeom = 0;
         for (int i = 0; i < infoWorld.names.Count; i++)
         {
             string name = infoWorld.names[i];
+            Debug.Log("name: " + name);
             string propId = infoWorld.propertyID[i];
          
             PropertiesGAMA prop = propertyMap[propId];
@@ -485,6 +536,13 @@ public class SimulationManager : MonoBehaviour
         //List<int> p = converter.toGAMACRS3D(player.transform.position);
 
         Vector3 v = new Vector3(Camera.main.transform.position.x, player.transform.position.y, Camera.main.transform.position.z);
+
+        if (!firstPositionStored)
+        {
+            originalStartPosition = v;
+            firstPositionStored = true;
+        }
+        
         List<int> p = converter.toGAMACRS3D(v);
         Dictionary<string, string> args = new Dictionary<string, string> {
             {"id",ConnectionManager.Instance.getUseMiddleware() ? ConnectionManager.Instance.GetConnectionId()  : ("\"" + ConnectionManager.Instance.GetConnectionId() +  "\"") },
@@ -499,7 +557,13 @@ public class SimulationManager : MonoBehaviour
             cpt++;
         }
         ConnectionManager.Instance.SendExecutableAsk("move_player_external", args);
-     }
+
+        if (Math.Abs(originalStartPosition.x - v.x) >= 0.1 ||
+            Math.Abs(originalStartPosition.z - v.z) >= 0.1)
+        {
+            movementText.gameObject.SetActive(false);
+        }
+    }
     private int cpt = 0;
    
 
@@ -744,6 +808,11 @@ public class SimulationManager : MonoBehaviour
             case "pointsLoc":
                 if (infoWorld == null) {                    
                     infoWorld = WorldJSONInfo.CreateFromJSON(content);
+                    modalText.text = "Score: " + (int)infoWorld.score +
+                                     "\n" + "Budget: " + (int)infoWorld.budget;
+                    //Debug.Log("Current info world score: "  + infoWorld.score);
+                    //Debug.Log("Current info world budget: " + infoWorld.budget);
+                    //Debug.Log("Current info world ok_to_build_dyke: " + infoWorld.ok_build_dyke_with_unity);
                 }
                 break;
             case "endOfGame":
@@ -800,7 +869,21 @@ public class SimulationManager : MonoBehaviour
         return currentState;
     }
 
- 
+    private void UpdateTimeLeftToBuildDykes()
+    {
+        if (mustNotBuildDyke) 
+            return;
+        
+        int intermediateValue = Math.Max(0, maximumTimeToBuild - (int)Time.time);
+        
+        timeText.text = "Time: " + intermediateValue;
+
+        if (intermediateValue == 0)
+        {
+            mustNotBuildDyke = true;
+            StartTheFlood();
+        }
+    }
 }
 
 

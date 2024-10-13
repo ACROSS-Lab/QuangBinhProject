@@ -31,7 +31,7 @@ global {
 	list<string> actions <- ["build dyke", "destroy dyke", "end of turn"];
 	float budget;
 	float score;
-	float limitscore <- 32000.0;
+	float limitscore <- 3200000000.0;
 	float budget_year <- 3000.0;
 	bool need_to_recompute_graph <- false;
 	list<file> images <- [file("../includes/pencil.jpg"), file("../includes/eraser1.png"), file("../includes/gstart_icon.jpg"),file("../includes/build_icon.png")];
@@ -44,19 +44,19 @@ global {
 	float current_coeff;
 	point target_point;
 	bool ok_build_dyke <- true;
+	bool ok_build_dyke_with_unity <- true;
 	point start_point <- nil; 
 	bool update_drowning <- false update: true;
 	map<string, float> benchmark_map;
 	bool benchmark_mode <- false;
-	list<cell> flooded_cells;
-	
-	float distance_warning <- 100.0;
+	float global_water_level <- 1.5 min: 1.5;
 	
 	reflex RUN_SIMULATION when: stage = SIMULATION {
 		float t;
 		if benchmark_mode {
 			t <- gama.machine_time;
 		}
+		
 		if (every(#h)) {
 			if (current_date in data_map.keys) {
 				if need_to_recompute_graph {
@@ -65,6 +65,7 @@ global {
 				}
 				t <- add_benchmark("recompute_graph",t);	
 				do add_water;
+				do something;
 				t <- add_benchmark("add_water",t);
 				
 			} else {
@@ -84,6 +85,8 @@ global {
 		}
 
 	}
+	
+	action something;
 	
 	float add_benchmark (string k, float ref_time) {
 		if benchmark_mode {
@@ -139,10 +142,11 @@ global {
 				colorroad <- #black;
 			}
 
-			do tell("Start of the simulation stage!");
+			//do tell("Start of the simulation stage!");
 			current_coeff <- flood_coefficient[index_flood];
 			stage <- SIMULATION;
 			do compute_height_propagation;
+			write "prepare to start simulation";
 			do resume;
 		} else {
 			do tell("END OF GAME!");
@@ -249,29 +253,36 @@ global {
 		start_point <- unity_start_point;
 		float price <- price_computation(unity_end_point);
 		
-		ok_build_dyke <- price <= budget;
+		ok_build_dyke_with_unity <- price <= budget;
 		
-		geometry l <- line([start_point, target_point]);
+		geometry l <- line([start_point, unity_end_point]);
 		if ((cell overlapping l) first_with (each.is_river)) != nil {
-			ok_build_dyke <- false;
+			ok_build_dyke_with_unity <- false;
 		}
 
-		if ok_build_dyke and (not empty(building overlapping l)) {
-			ok_build_dyke <- false;
+		if ok_build_dyke_with_unity and (not empty(building overlapping l)) {
+			ok_build_dyke_with_unity <- false;
 		}
 		
-		if (ok_build_dyke) {
+		if (ok_build_dyke_with_unity) {
 			create dyke with: (shape: line([start_point, unity_end_point]));
 			budget <- update_budget_global(-price) with_precision 1;
 			score <- update_score_global(-price);
+			write "dike has been created";
 			do after_creating_dyke;
 		}
 
 		start_point <- nil;
 		target_point <- nil;
-		ok_build_dyke <- false;
-		
-		
+		//ok_build_dyke_with_unity <- false;
+	}
+	
+	action remove_dyke_with_unity(string dyke_name)
+	{
+		ask dyke where (each.name = dyke_name)
+		{
+			do die;
+		}
 	}
 
 	int cpt <- 0;
@@ -295,7 +306,7 @@ global {
 			date date_gama <- date([int(dd[2]), int(dd[1]), int(dd[0]), int(dt[0]), int(dt[1]), 0]);
 			data_map[date_gama] <- [float(matrix_data[5, i])];
 		}
-
+		
 		starting_date <- first(data_map.keys);
 		do init_water;
 		do start_player_turn;
@@ -329,7 +340,6 @@ global {
 			}
 
 		}
-		
 
 		ask building {
 			ask cell overlapping shape {
@@ -383,6 +393,9 @@ global {
 		update_drowning <- true;
 		bool need_recomputation <- false;
 		matrix matrix_data <- matrix(my_csv_file);
+		write sample(data_map);
+		write sample(current_date);
+		write sample(data_map[current_date]);
 		float water_level <- data_map[current_date][0];
 		ask cell {
 			flooding_level <- water_level - altitude;
@@ -394,6 +407,7 @@ global {
 						is_broken <- true;
 						need_recomputation <- true;
 					}
+
 				}
 				float val <- 255 * (1 - flooding_level / 1.0);
 				color <- rgb(val, val, 255);
@@ -405,8 +419,6 @@ global {
 		if need_recomputation {
 			do compute_height_propagation;
 		}
-		flooded_cells <- cell where (not each.is_river and  each.flooding_level > 0);
-		//flooded_cells <- cell where (  each.flooding_level > 0);
 		t <- add_benchmark("compute_height_propagation",t);	
 				
 	} 
@@ -523,29 +535,14 @@ species people skills: [moving] {
 	bool boat <- false;
 	bool alerted <- false;
 	point target <- nil;
-	float perception_distance<-200.0;
+	float perception_distance;
 	float speed <- 0.5 #km / #h;
 	path my_path;
-//	list<cell> river_cell_near_me<- curren_cells closet to self.location ;
-//	reflex detect {
-//        if(cell.is_river closet_to self.location){
-//        	
-//        }
-//    }
-	reflex become_alerted when: not alerted {
-		cell closest_water_cell <- flooded_cells closest_to self;
-	 	if (closest_water_cell != nil) and ((self distance_to closest_water_cell)< perception_distance)  {
-			alerted <- true;
-		}
+
+	reflex become_alerted when: not alerted and flip(0.01) {
+		alerted <- true;
 	}
-	reflex warning when: not alerted {
-		list<people> imrunning <- (people at_distance distance_warning) where each.alerted;
-		//people tell <- imrunning closest_to self;
-		
-		if (not empty(imrunning)) {
-			alerted <- alerted or flip(length(imrunning) / 20.0);
-		}
-	}
+	
 	reflex alert_target when: alerted {
 		float t;
 		if benchmark_mode {
@@ -553,9 +550,9 @@ species people skills: [moving] {
 		}
 		if target = nil {
 			switch the_alert_strategy {
-//				match "RANDOM" {
-//					target <- (one_of(evacuation_point)).location;
-//				}
+				match "RANDOM" {
+					target <- (one_of(evacuation_point)).location;
+				}
 
 				match "CLOSEST" {
 					using (topology(road_network_usable)) {
@@ -610,6 +607,8 @@ grid cell file: DEM_grid_file neighbors: 4 {
 	bool is_river;
 	float flooding_level;
 	string type <- one_of(color_per_type.keys);
+	geometry shape_union <- shape + 0.1;
+	
 	rgb color <- color_per_type[type];
 
 	aspect default {
@@ -800,11 +799,11 @@ experiment game_with_mode parent: game {
 		string difficulty <- result["Choose a difficulty"];
 		switch difficulty {
 			match "easy" {
-				create simulation with: (nb_of_people: 200, budget_year: 4000, the_alert_strategy: "CLOSEST", my_csv_file: csv_file("../includes/FLoodDataH.csv"), limitscore: 20000);
+				create simulation with: (nb_of_people: 200, budget_year: 4000, the_alert_strategy: "CLOSEST", my_csv_file: csv_file("../includes/FLoodDataH.csv"), limitscore: 2000000000);
 			}
 
 			match "normal" {
-				create simulation with: (nb_of_people: 400, budget_year: 3500, the_alert_strategy: "CLOSEST", my_csv_file: csv_file("../includes/FLoodDataH.csv"), limitscore: 32000);
+				create simulation with: (nb_of_people: 400, budget_year: 3500, the_alert_strategy: "CLOSEST", my_csv_file: csv_file("../includes/FLoodDataH.csv"), limitscore: 300000000);
 			}
 
 			match "hard" {

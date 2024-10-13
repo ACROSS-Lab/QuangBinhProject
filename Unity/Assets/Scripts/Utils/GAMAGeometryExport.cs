@@ -17,6 +17,7 @@ public class GAMAGeometryExport : ConnectionWithGama
     public float GamaCRSCoefY = 1.0f;
     public float GamaCRSOffsetX = 0.0f;
     public float GamaCRSOffsetY = 0.0f;
+    public static int precision;
 
     private bool continueProcess = true;
     GameObject objectToSend;
@@ -95,6 +96,7 @@ public class GAMAGeometryExport : ConnectionWithGama
 
                 parameters = ConnectionParameter.CreateFromJSON(content);
                 converter = new CoordinateConverter(parameters.precision, GamaCRSCoefX, GamaCRSCoefY, GamaCRSOffsetX, GamaCRSOffsetY);
+                precision = parameters.precision;
                 Debug.Log("Received parameter data");
                 break;
 
