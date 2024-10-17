@@ -871,17 +871,20 @@ public class SimulationManager : MonoBehaviour
 
     private void UpdateTimeLeftToBuildDykes()
     {
-        if (mustNotBuildDyke) 
-            return;
-        
-        int intermediateValue = Math.Max(0, maximumTimeToBuild - (int)Time.time);
-        
-        timeText.text = "Time: " + intermediateValue;
-
-        if (intermediateValue == 0)
+        if (ConnectionManager.Instance.IsConnectionState(ConnectionState.AUTHENTICATED))
         {
-            mustNotBuildDyke = true;
-            StartTheFlood();
+            if (mustNotBuildDyke)
+                return;
+
+            int intermediateValue = Math.Max(0, maximumTimeToBuild - (int)Time.time);
+
+            timeText.text = "Time: " + intermediateValue;
+
+            if (intermediateValue == 0)
+            {
+                mustNotBuildDyke = true;
+                StartTheFlood();
+            }
         }
     }
 }
