@@ -175,8 +175,8 @@ species unity_linker parent: abstract_unity_linker {
 		//a rotation coefficient of 1.0 (no change of rotation from the prefab), no rotation offset, and we use the default precision. 
 		unity_aspect car_aspect <- prefab_aspect("Prefabs/Visual Prefabs/City/Vehicles/Car",100,0.2,1.0,-90.0, precision);
 		//unity_aspect dyke_aspect <- geometry_aspect(40.0, #green, precision);
-		unity_aspect dyke_aspect <- geometry_aspect(40.0, "Materials/Dike/Dike",#red, precision);
-		unity_aspect water_aspect <- geometry_aspect(40.0, "Materials/eau/ShaderGraph/WaterMaterial",#red, precision);
+		unity_aspect dyke_aspect <- geometry_aspect(40.0, "Materials/Dike/Dike", rgb(0, 0, 0, 0.0), precision);
+		unity_aspect water_aspect <- geometry_aspect(40.0, "Materials/eau/ShaderGraph/WaterMaterial", rgb(0, 0, 0, 0.0), precision);
 		//unity_aspect dyke_aspect <- prefab_aspect("Prefabs/Visual Prefabs/Basic shape/Green Cube", precision);
  	
 		//define the up_car unity property, with the name "car", no specific layer, the car_aspect unity aspect, no interaction, and the agents location are not sent back 
