@@ -22,7 +22,7 @@ global {
 		}
 	}
 	
-	action something {
+	action old {
 		geometry g <- union ((cell where (each.flooding_level > 0.2)) collect each.shape_union ) ;
 		if g != nil and not empty(unity_player){
 			water_geoms <- g.geometries;
@@ -202,13 +202,14 @@ species unity_linker parent: abstract_unity_linker {
 				
 			do add_geometries_to_send(geoms ,up_dyke);	
 		}
-		do add_geometries_to_keep( water_geoms);	
+		do add_geometries_to_send(river,up_water);
+		//do add_geometries_to_keep( water_geoms);	
 		
 		
 	}
 	
 
-
+ 
 }
 
 species unity_player parent: abstract_unity_player{
