@@ -3,7 +3,6 @@ model NewModel
 global {
 	grid_file DEM_grid_file <- grid_file("../includes/DEM.tif");
 	file river_shapefile <- file("../includes/river.shp");
-	geometry river <- geometry(river_shapefile);
 	file shape_file_roads <- file("../includes/road.shp");
 	file buildings_shapefile <- file("../includes/buildings.shp");
 	file shape_file_evacuation <- file("../includes/evacuation_point.shp");
@@ -65,7 +64,6 @@ global {
 				}
 				t <- add_benchmark("recompute_graph",t);	
 				do add_water;
-				do something;
 				t <- add_benchmark("add_water",t);
 				
 			} else {
@@ -86,7 +84,7 @@ global {
 
 	}
 	
-	action something;
+	//action something;
 	
 	float add_benchmark (string k, float ref_time) {
 		if benchmark_mode {
@@ -297,7 +295,7 @@ global {
 		new_weights <- road as_map (each::each.shape.perimeter);
 		list<building> all_buildings <- list(building);
 		create evacuation_point from: shape_file_evacuation;
-		create riverr from: river_shapefile;
+		create river from: river_shapefile;
 		matrix matrix_data <- matrix(my_csv_file);
 		loop i from: 1 to: matrix_data.rows - 1 {
 			list<string> d <- matrix_data[0, i] split_with " ";
@@ -329,7 +327,7 @@ global {
 	}
 
 	action compute_height_propagation {
-		current_cells <- cell overlapping (river);
+		current_cells <- cell overlapping (river[0]);
 		ask cell {
 			dyke_altitude <- 0.0;
 		}
@@ -373,7 +371,7 @@ global {
 	}
 
 	action init_water {
-		ask cell overlapping river {
+		ask cell overlapping river[0] {
 			is_river <- true;
 		}
 
@@ -433,12 +431,18 @@ species evacuation_point {
 
 }
 
-species riverr {
+species river {
 	rgb color <- #blue;
+	
+	reflex when: every (10) {
+		shape <- union ((cell where (each.flooding_level > 0.2)) collect each.shape_union ) simplification 0.1;
+	}
 
 	aspect base {
 		draw shape color: color;
 	}
+	
+	
 
 }
 
@@ -634,10 +638,8 @@ experiment game type: gui virtual: true {
 	output {
 		layout horizontal([0.0::7285, 1::2715]) tabs: true controls: true;
 		display map {
-			grid cell;
-			graphics "river " {
-				draw river color: #blue;
-			}
+			//grid cell;
+			species river;
 
 			species building aspect: base refresh: false;
 			species road aspect: base;
@@ -745,9 +747,7 @@ experiment "2 Simulations" type: gui {
 	output {
 		display map {
 			grid cell;
-			graphics "river " {
-				draw river color: #blue;
-			}
+			species river;
 
 			species building aspect: base refresh: false;
 			species road aspect: base;

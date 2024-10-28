@@ -22,7 +22,7 @@ global {
 		}
 	}
 	
-	action something {
+	action old {
 		geometry g <- union ((cell where (each.flooding_level > 0.2)) collect each.shape_union ) ;
 		if g != nil and not empty(unity_player){
 			water_geoms <- g.geometries;
@@ -174,8 +174,9 @@ species unity_linker parent: abstract_unity_linker {
 		//define a unity_aspect called tree_aspect that will display in Unity the agents with the SM_arbres_001 prefab, with a scale of 2.0, no y-offset, 
 		//a rotation coefficient of 1.0 (no change of rotation from the prefab), no rotation offset, and we use the default precision. 
 		unity_aspect car_aspect <- prefab_aspect("Prefabs/Visual Prefabs/City/Vehicles/Car",100,0.2,1.0,-90.0, precision);
-		unity_aspect dyke_aspect <- geometry_aspect(40.0, #green, precision);
-		unity_aspect water_aspect <- geometry_aspect(40.0, "Materials/eau/ShaderGraph/WaterMaterial",#red, precision);
+		//unity_aspect dyke_aspect <- geometry_aspect(40.0, #green, precision);
+		unity_aspect dyke_aspect <- geometry_aspect(40.0, "Materials/Dike/Dike", rgb(0, 0, 0, 0.0), precision);
+		unity_aspect water_aspect <- geometry_aspect(40.0, "Materials/WaterMaterial", rgb(0, 0, 0, 0.0), precision);
 		//unity_aspect dyke_aspect <- prefab_aspect("Prefabs/Visual Prefabs/Basic shape/Green Cube", precision);
  	
 		//define the up_car unity property, with the name "car", no specific layer, the car_aspect unity aspect, no interaction, and the agents location are not sent back 
@@ -201,13 +202,14 @@ species unity_linker parent: abstract_unity_linker {
 				
 			do add_geometries_to_send(geoms ,up_dyke);	
 		}
-		do add_geometries_to_keep( water_geoms);	
+		do add_geometries_to_send(river,up_water);
+		//do add_geometries_to_keep( water_geoms);	
 		
 		
 	}
 	
 
-
+ 
 }
 
 species unity_player parent: abstract_unity_player{

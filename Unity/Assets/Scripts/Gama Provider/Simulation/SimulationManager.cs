@@ -94,9 +94,12 @@ public class SimulationManager : MonoBehaviour
     protected GameObject endPoint;
 
     [SerializeField] protected Text modalText;
-    [SerializeField] protected Button startButton;
+    //[SerializeField] protected Button startButton;
     [SerializeField] protected Text movementText;
-    protected float StartTime;
+    [SerializeField] protected Text timeText;
+    [SerializeField] protected int maximumTimeToBuild;
+    protected bool mustNotBuildDyke = false;
+    //protected float StartTime;
     protected Vector3 originalStartPosition;
     protected bool firstPositionStored;
 
@@ -123,14 +126,14 @@ public class SimulationManager : MonoBehaviour
         if (startPoint != null)
             startPoint.active = false;
         
-        startButton.onClick.AddListener(StartGame);
+        //startButton.onClick.AddListener(StartGame);
     }
 
-    void StartGame()
+    void StartTheFlood()
     {
-        StartTime = Time.time;
+        //StartTime = Time.time;
         _apiTest.TestStartSimulation();
-        startButton.gameObject.SetActive(false);
+        //startButton.gameObject.SetActive(false);
     }
 
     
@@ -244,6 +247,7 @@ public class SimulationManager : MonoBehaviour
             _dykePointCnt = 0;
         }*/
 
+        UpdateTimeLeftToBuildDykes();
         OtherUpdate();
     }
 
@@ -805,8 +809,7 @@ public class SimulationManager : MonoBehaviour
                 if (infoWorld == null) {                    
                     infoWorld = WorldJSONInfo.CreateFromJSON(content);
                     modalText.text = "Score: " + (int)infoWorld.score +
-                                     "\n" + "Budget: " + (int)infoWorld.budget +
-                                     "\n" + "Time: " + (int)(Time.time - StartTime);
+                                     "\n" + "Budget: " + (int)infoWorld.budget;
                     //Debug.Log("Current info world score: "  + infoWorld.score);
                     //Debug.Log("Current info world budget: " + infoWorld.budget);
                     //Debug.Log("Current info world ok_to_build_dyke: " + infoWorld.ok_build_dyke_with_unity);
@@ -866,7 +869,24 @@ public class SimulationManager : MonoBehaviour
         return currentState;
     }
 
- 
+    private void UpdateTimeLeftToBuildDykes()
+    {
+        if (ConnectionManager.Instance.IsConnectionState(ConnectionState.AUTHENTICATED))
+        {
+            if (mustNotBuildDyke)
+                return;
+
+            int intermediateValue = Math.Max(0, maximumTimeToBuild - (int)Time.time);
+
+            timeText.text = "Time: " + intermediateValue;
+
+            if (intermediateValue == 0)
+            {
+                mustNotBuildDyke = true;
+                StartTheFlood();
+            }
+        }
+    }
 }
 
 
