@@ -283,7 +283,7 @@ global {
 		}
 	}
 	
-	action repair_dyke_with_unity(string dyke_name)
+	action repair_dyke_with_unity_global(string dyke_name)
 	{
 		ask dyke where (each.name = dyke_name)
 		{
@@ -291,7 +291,7 @@ global {
 		}
 	}
 	
-	action break_dyke_with_unity(string dyke_name)
+	action break_dyke_with_unity_global(string dyke_name)
 	{
 		ask dyke where (each.name = dyke_name)
 		{

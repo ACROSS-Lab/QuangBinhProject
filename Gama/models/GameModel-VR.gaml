@@ -162,6 +162,22 @@ species unity_linker parent: abstract_unity_linker {
 		}
 	}
 	
+	action repair_dyke_with_unity(string dyke_name)
+	{
+		ask world
+		{
+			do repair_dyke_with_unity_global(dyke_name);
+		}
+	}
+	
+	action break_dyke_with_unity(string dyke_name)
+	{
+		ask world
+		{
+			do break_dyke_with_unity_global(dyke_name);
+		}
+	}
+	
 	init {
 		//define the unity properties
 		do define_properties;
