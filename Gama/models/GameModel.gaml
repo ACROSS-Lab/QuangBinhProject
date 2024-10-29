@@ -282,6 +282,22 @@ global {
 			do die;
 		}
 	}
+	
+	action repair_dyke_with_unity_global(string dyke_name)
+	{
+		ask dyke where (each.name = dyke_name)
+		{
+			is_broken <- false;
+		}
+	}
+	
+	action break_dyke_with_unity_global(string dyke_name)
+	{
+		ask dyke where (each.name = dyke_name)
+		{
+			is_broken <- true;
+		}
+	}
 
 	int cpt <- 0;
 
