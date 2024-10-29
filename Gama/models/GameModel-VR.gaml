@@ -1,46 +1,80 @@
-model NewModel_model_VR
+model Flood_VR
 
-import "GameModel.gaml"
+import "Base Model.gaml"
 
 global {
 	
 	list<geometry> water_geoms;
+	point target_point;
+	point start_point <- nil;
+	 
+	
+	float price_computation (point target) {
+		return (start_point distance_to target) with_precision 1;
+	}
+	
+	action action_management_with_unity_global (point unity_start_point, point unity_end_point) {
+		start_point <- unity_start_point;
+		float price <- price_computation(unity_end_point);
+		ok_build_dyke_with_unity <- price <= budget;
+		geometry l <- line([start_point, unity_end_point]);
+		if ((cell overlapping l) first_with (each.is_river)) != nil {
+			ok_build_dyke_with_unity <- false;
+		}
+
+		if ok_build_dyke_with_unity and (not empty(building overlapping l)) {
+			ok_build_dyke_with_unity <- false;
+		}
+
+		if (ok_build_dyke_with_unity) {
+			create dyke with: (shape: line([start_point, unity_end_point]));
+			budget <- update_budget_global(-price) with_precision 1;
+			score <- update_score_global(-price); 
+			do after_creating_dyke;
+		} 
+ 
+		start_point <- nil;
+		target_point <- nil;
+		//ok_build_dyke_with_unity <- false;
+	}
+	
+	action repair_dyke_with_unity_global(string dyke_name)
+	{
+		ask dyke where (each.name = dyke_name)
+		{
+			is_broken <- false;
+		}
+	}
+	
+	action break_dyke_with_unity_global(string dyke_name)
+	{
+		ask dyke where (each.name = dyke_name)
+		{
+			is_broken <- true;
+		}
+	}
+
+	action remove_dyke_with_unity_global (string dyke_name) {
+		ask dyke where (each.name = dyke_name) {
+			do die;
+		}
+
+	}
 	
 	action after_creating_dyke {
 		ask unity_linker {
 			list<geometry> geoms <- dyke collect ((each.shape + 5.0) at_location {each.location.x, each.location.y, 10.0});
 			loop i from:0 to: length(geoms) -1 {
 				geoms[i].attributes['name'] <- dyke[i].name;
-			
 			}
 				
 			do add_geometries_to_send( geoms,up_dyke);	
-			do add_geometries_to_keep( water_geoms);	
+			do add_geometries_to_send(river,up_water);
 			
 			do send_world;
 			do send_current_message;
 		}
 	}
-	
-	action old {
-		geometry g <- union ((cell where (each.flooding_level > 0.2)) collect each.shape_union ) ;
-		if g != nil and not empty(unity_player){
-			water_geoms <- g.geometries;
-			loop i from: 0 to: length( water_geoms) - 1{water_geoms[i].attributes['name'] <- "water_" + i;}
-			ask unity_linker {
-				//add the geometry of the water agents to the geometry to send - add a z offset correspoding to the level of water.
-				do add_geometries_to_send(water_geoms,up_water);
-				
-				do add_geometries_to_keep( dyke);	
-				write "before doing something";
-				//force the action to send the world (and send the current message) as the "do_send_world" to false to just send the world information at the right moment.
-				do send_world;
-				do send_current_message;
-				write "after doing something";
-			}
-		}
-	}
-	
 }
 
 species unity_linker parent: abstract_unity_linker {
@@ -66,52 +100,20 @@ species unity_linker parent: abstract_unity_linker {
 	}
 	
 	action update_budget(float diff_value)
-	{
+	{ 
 		budget <- world.update_budget_global(diff_value);
 	}
 	
-	list<float> convert_string_to_array_of_float(string my_string)
-	{
-    	
+	list<float> convert_string_to_array_of_float(string my_string) {
     	return (my_string split_with ",") collect float(each);
-    	/*list<float> float_array <- [];
-    	
-    	
-    	string temp_string <- "";
-
-    	int length <- length(my_string);
-    	loop i from: 0 to: (length - 1) 
-    	{
-        	if (my_string at i = ',') 
-        	{
-            	float_array <- float_array + (temp_string as float);
-            	temp_string <- "";
-        	} 
-        	else 
-        	{
-            	temp_string <- temp_string + my_string at i;
-        	}
-    	}
-
-    	float_array <- float_array + (temp_string as float);
-    	
-    	return float_array;*/
 	}
 	
-	action action_management_with_unity(string unity_start_point, string unity_end_point)
-	{
-		write sample(unity_start_point);
-		write sample(unity_end_point);
-		
+	action action_management_with_unity(string unity_start_point, string unity_end_point) {
 		list<float> unity_start_point_float <- convert_string_to_array_of_float(unity_start_point);
 		list<float> unity_end_point_float <- convert_string_to_array_of_float(unity_end_point);
-		write sample(unity_start_point_float);
-		write sample(unity_end_point_float);
 		point converted_start_point <- {unity_start_point_float[0], unity_start_point_float[1], unity_start_point_float[2]};
 		point converted_end_point <- {unity_end_point_float[0], unity_end_point_float[1], unity_end_point_float[2]};
-		
 		let l <- world.action_management_with_unity_global(converted_start_point, converted_end_point);
-		write sample(ok_build_dyke_with_unity);
 		do send_message players: unity_player as list mes: ["ok_build_dyke_with_unity":: ok_build_dyke_with_unity];
 	
 		ask world {do after_creating_dyke;}
@@ -121,14 +123,23 @@ species unity_linker parent: abstract_unity_linker {
 		
 	}
 	
+	action repair_dyke_with_unity(string dyke_name)
+	{
+			return world.repair_dyke_with_unity_global(dyke_name);
+	}
+	
+	action break_dyke_with_unity(string dyke_name)
+	{
+			return world.break_dyke_with_unity_global(dyke_name);
+	}
+	
 	action remove_dyke_with_unity(string dyke_name)
 	{
-		return world.remove_dyke_with_unity(dyke_name);
+			return world.remove_dyke_with_unity_global(dyke_name);
 	}
 	
 	action pause_with_unity
 	{
-		write "pause requested";
 		ask world
 		{
 			do pause;
@@ -137,7 +148,6 @@ species unity_linker parent: abstract_unity_linker {
 	
 	action resume_with_unity
 	{
-		write "resume requested";
 		ask world
 		{
 			do resume;
@@ -146,7 +156,6 @@ species unity_linker parent: abstract_unity_linker {
 	
 	action end_with_unity
 	{
-		write "end requested";
 		ask world
 		{
 			do die;
@@ -155,7 +164,6 @@ species unity_linker parent: abstract_unity_linker {
 	
 	action start_simulation_with_unity
 	{
-		write "start simulation";
 		ask world
 		{
 			do start_simulation;
@@ -219,7 +227,6 @@ species unity_linker parent: abstract_unity_linker {
 			do add_geometries_to_send(geoms ,up_dyke);	
 		}
 		do add_geometries_to_send(river,up_water);
-		//do add_geometries_to_keep( water_geoms);	
 		
 		
 	}
@@ -246,10 +253,11 @@ species unity_player parent: abstract_unity_player{
 	}
 }
 
-experiment vr_xp parent:game autorun: false type: unity {
+experiment vr_xp parent:"Base" autorun: false  type: unity {
+
 	float minimum_cycle_duration <- 0.05;
 	string unity_linker_species <- string(unity_linker);
-	list<string> displays_to_hide <- ["map"];
+	//list<string> displays_to_hide <- ["map"];
 	float t_ref;
 
 	action create_player(string id) {
@@ -265,9 +273,31 @@ experiment vr_xp parent:game autorun: false type: unity {
 			}
 		}
 	}
+	
+	action restart {
+		ask simulation {do die;}
+		create simulation;
+	}
 
 	output {
-		 display map_VR parent:map{
+		 display map_VR type: 3d background: #dimgray{
+		 	
+			camera 'default' location: {1419.7968,8667.7995,4069.6711} target: {1419.7968,4303.6116,0.0};
+		 	species river transparency: 0.7 {
+				draw shape color: #lightseagreen depth: 2 at: location - {0, 0, 5};
+			}
+		 	species building {
+		 		draw shape color: drowned ? #gray : color depth: height * 2;	
+		 	}
+			species road {
+				draw shape + 4 color: drowned ? rgb(60,60,60) : #lightgray;	
+			}
+			species people;
+			species evacuation_point;
+			species dyke;
+
+		 	
+		 	
 			 species unity_player;
 			 event #mouse_down{
 				 float t <- gama.machine_time;
