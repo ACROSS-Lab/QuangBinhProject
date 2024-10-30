@@ -2,7 +2,7 @@
   "type": "json_settings",
   "name": "QuangBinhFloodProject",
   "splashscreen": "./QuangBinhProject/splashscreen/demoOne.png",
-  "model_file_path": "./models/GameModel-VR.gaml",
+  "model_file_path": "./models/Flooding VR.gaml",
   "experiment_name": "vr_xp", 
   "minimal_players": "1", 
   "maximal_players": "4", 

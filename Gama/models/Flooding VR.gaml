@@ -4,25 +4,7 @@ import "Flooding Model.gaml"
 
 global { 
 	
-	float score <- 0.0;
-	float budget <- 3000.0;
-	
-		
-	action update_score(float diff_value)
-	{
-		score <- score + diff_value with_precision 1;
-	}
-	
-	action update_budget(float diff_value)
-	{ 
-		budget <- budget + diff_value with_precision 1;
-	}
-	
-	action add_casualty {
-		casualties <- casualties + 1;
-		do update_score(-10.0);
-	}
-	
+
 	action repair_dyke_with_unity_global(string dyke_name)
 	{
 		ask dyke where (each.name = dyke_name)
@@ -61,14 +43,12 @@ species unity_linker parent: abstract_unity_linker {
 	unity_property up_water;
 
 	action add_to_send_world(map map_to_send) {
-		map_to_send["score"] <- score;
-		map_to_send["budget"] <- budget;
+		map_to_send["score"] <- int(100*evacuated/nb_of_people);
 	}
 	list<point> define_init_locations {
 		return [world.location + {0,0,100}];
 	}
 
-	
 	list<float> convert_string_to_array_of_float(string my_string) {
     	return (my_string split_with ",") collect float(each);
 	}
@@ -79,14 +59,10 @@ species unity_linker parent: abstract_unity_linker {
 		point converted_start_point <- {unity_start_point_float[0], unity_start_point_float[1], unity_start_point_float[2]};
 		point converted_end_point <- {unity_end_point_float[0], unity_end_point_float[1], unity_end_point_float[2]};
 		float price <- converted_start_point distance_to (converted_end_point) with_precision 1;
-		bool ok_build_dyke_with_unity <- price <= budget;
 		geometry l <- line([converted_start_point, converted_end_point]);
-		if (ok_build_dyke_with_unity) {
-			create dyke with: (shape: line([converted_start_point, converted_end_point]));
-			ask world {do update_budget(-price) ;}
-			do after_creating_dyke;
-		} 
-		do send_message players: unity_player as list mes: ["ok_build_dyke_with_unity":: ok_build_dyke_with_unity];
+		create dyke with: (shape: line([converted_start_point, converted_end_point]));
+		do after_creating_dyke;
+		do send_message players: unity_player as list mes: ["ok_build_dyke_with_unity":: true];
 		ask experiment {
 			do update_outputs(true); 
 		}
@@ -167,10 +143,8 @@ species unity_linker parent: abstract_unity_linker {
 		//define a unity_aspect called tree_aspect that will display in Unity the agents with the SM_arbres_001 prefab, with a scale of 2.0, no y-offset, 
 		//a rotation coefficient of 1.0 (no change of rotation from the prefab), no rotation offset, and we use the default precision. 
 		unity_aspect car_aspect <- prefab_aspect("Prefabs/Visual Prefabs/City/Vehicles/Car",100,0.2,1.0,-90.0, precision);
-		//unity_aspect dyke_aspect <- geometry_aspect(40.0, #green, precision);
 		unity_aspect dyke_aspect <- geometry_aspect(40.0, "Materials/Dike/Dike", rgb(0, 0, 0, 0.0), precision);
 		unity_aspect water_aspect <- geometry_aspect(40.0, "Materials/MAT_LOW_POLY_SHADER_TEST", rgb(0, 0, 0, 0.0), precision);
-		//unity_aspect dyke_aspect <- prefab_aspect("Prefabs/Visual Prefabs/Basic shape/Green Cube", precision);
  	
 		//define the up_car unity property, with the name "car", no specific layer, the car_aspect unity aspect, no interaction, and the agents location are not sent back 
 		//to GAMA. 

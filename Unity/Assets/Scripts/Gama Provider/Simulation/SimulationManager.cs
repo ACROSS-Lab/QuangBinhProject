@@ -810,8 +810,7 @@ public class SimulationManager : MonoBehaviour
             case "pointsLoc":
                 if (infoWorld == null) {                    
                     infoWorld = WorldJSONInfo.CreateFromJSON(content);
-                    modalText.text = "Score: " + (int)infoWorld.score +
-                                     "\n" + "Budget: " + (int)infoWorld.budget;
+                    modalText.text = "Score: " + (int)infoWorld.score;
                     //Debug.Log("Current info world score: "  + infoWorld.score);
                     //Debug.Log("Current info world budget: " + infoWorld.budget);
                     //Debug.Log("Current info world ok_to_build_dyke: " + infoWorld.ok_build_dyke_with_unity);

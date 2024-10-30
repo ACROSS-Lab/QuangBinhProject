@@ -15,6 +15,10 @@ global {
 		casualties <- casualties + 1;
 	}
 	
+	action add_evacuated {
+		evacuated <- evacuated + 1;
+	}
+	
 	float max_water_height <- 10.0;
 	
 	bool update_drowning <- false update: true;
@@ -32,7 +36,7 @@ global {
 	//Shapefile for the roads
 	file shape_file_roads <- file("../includes/road.shp");
 	//Data elevation file
-	file dem_file <- file("../includes/elevation.asc");
+	file dem_file <- file("../includes/terrain.tif");
 	//Diffusion rate
 	float diffusion_rate <- 0.5;
 	//Height of the dykes (15 m by default)
@@ -341,8 +345,7 @@ species people skills: [moving] {
 		if my_path != nil {
 			do follow(path: my_path, move_weights: new_weights);
 			if (location = target) {
-				//score <- world.update_score_global(float(100));
-				evacuated <- evacuated + 1;
+				ask world {do add_evacuated;}
 				target <- nil;
 				do die;
 			} }
