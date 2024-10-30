@@ -125,7 +125,9 @@ public class SimulationManager : MonoBehaviour
             endPoint.active = false;
         if (startPoint != null)
             startPoint.active = false;
-        
+
+        maximumTimeToBuild += (int)Time.time;
+
         //startButton.onClick.AddListener(StartGame);
     }
 
