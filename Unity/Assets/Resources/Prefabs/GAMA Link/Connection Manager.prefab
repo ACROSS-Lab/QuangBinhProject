@@ -47,7 +47,7 @@ MonoBehaviour:
   UseHeartbeat: 1
   DesktopMode: 1
   fixedProperties: 0
-  DefaultIP: localhost
+  DefaultIP: 11.0.32.191
   DefaultPort: 8080
   UseMiddlewareDM: 0
   numErrorsBeforeDeconnection: 10
