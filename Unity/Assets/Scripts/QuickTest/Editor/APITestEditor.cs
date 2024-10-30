@@ -9,10 +9,10 @@ public class APITestEditor : Editor
         DrawDefaultInspector();
 
         QuickTest.APITest apiTest = (QuickTest.APITest)target;
-        if (GUILayout.Button("Update Budget"))
-        {
-            apiTest.TestUpdateBudget();
-        }
+        // if (GUILayout.Button("Update Budget"))
+        // {
+        //     apiTest.TestUpdateBudget();
+        // }
 
         if (GUILayout.Button("Update score"))
         {

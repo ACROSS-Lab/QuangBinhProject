@@ -27,18 +27,18 @@ namespace QuickTest
             ConnectionManager.Instance.SendExecutableAsk("update_score", args);
         }
 
-        public void TestUpdateBudget()
-        {
-            Dictionary<string, string> args = new Dictionary<string, string>()
-            {
-                { "diff_value", "-1" }
-            };
-            ConnectionManager.Instance.SendExecutableAsk("update_budget", args);
-        }
+        // public void TestUpdateBudget()
+        // {
+        //     Dictionary<string, string> args = new Dictionary<string, string>()
+        //     {
+        //         { "diff_value", "-1" }
+        //     };
+        //     ConnectionManager.Instance.SendExecutableAsk("update_budget", args);
+        // }
 
         public void TestBuildDyke()
         {
-            TestUpdateBudget();
+            //TestUpdateBudget();
             TestUpdateScore();
         }
         
