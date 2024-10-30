@@ -32,7 +32,7 @@ global {
 	//Shapefile for the roads
 	file shape_file_roads <- file("../includes/road.shp");
 	//Data elevation file
-	file dem_file <- file("../includes/elevation.asc");
+	file dem_file <- file("../includes/terrain.tif");
 	//Diffusion rate
 	float diffusion_rate <- 0.5;
 	//Height of the dykes (15 m by default)
