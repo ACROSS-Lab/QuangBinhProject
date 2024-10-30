@@ -8,8 +8,8 @@
 experiment Run model:"Flooding Model.gaml" type:gui {
 	
 	point start_point;
-	point end_point;
-	geometry line;
+	point end_point; 
+	geometry line; 
 	bool river_in_3D <- false;
 	rgb background_color <- #lightgray; 
 	

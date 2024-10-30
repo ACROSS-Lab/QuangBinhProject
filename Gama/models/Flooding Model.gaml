@@ -7,9 +7,11 @@
 * 	in the display.
 * Tags: shapefile, gis, grid, 3d, gui, hydrology
 */
-model hydro
+model Flooding
 
 global {
+	
+	bool restart_requested;
 	
 	action add_casualty {
 		casualties <- casualties + 1;
@@ -19,7 +21,10 @@ global {
 		evacuated <- evacuated + 1;
 	}
 	
+	float seed <- 0.0;
+	
 	float max_water_height <- 10.0;
+	float initial_water_height <- 5.0;
 	
 	bool update_drowning <- false update: true;
 	graph<geometry, geometry> road_network;
@@ -63,12 +68,8 @@ global {
 		do init_cells;
 		//Initialization of the water cells
 		do init_water;
-		//Initialization of the river cells
-		river_cells <- cell where (each.is_river);
-		//Initialization of the drain cells
-		drain_cells <- cell where (each.is_drain);
 		//Initialization of the obstacles (buildings and dykes)
-		do init_obstacles;
+		do init_buildings;
 		do init_roads;
 		do init_evac;
 		//Set the height of each cell
@@ -78,6 +79,29 @@ global {
 		}
 		
 		do init_people;
+	}
+	
+	
+	reflex restart when: restart_requested {
+		ask road+dyke+people+buildings+river {
+			do die;
+		}
+		ask cell {
+			water_height <- 0.0;
+			already <- false;
+			obstacle_height <- 0.0;
+			obstacles <- [];
+		}
+		do init_water;
+		do init_buildings;
+		do init_roads;
+		ask cell {
+			obstacle_height <- compute_highest_obstacle();
+			do update_color;
+		}
+		do init_people;
+		restart_requested <- false;
+		do pause;
 	}
 	
 	action init_people {
@@ -112,15 +136,21 @@ global {
 	action init_water {
 		create river from:(river_shapefile);
 		ask cell overlapping river[0] {
-			water_height <- 10.0;
+			water_height <- initial_water_height;
 			is_river <- true;
 			is_drain <- grid_y = 0;
 		}
+		//Initialization of the river cells
+		river_cells <- cell where (each.is_river);
+		//Initialization of the drain cells
+		drain_cells <- cell where (each.is_drain);
 
 	}
 	//initialization of the obstacles (the buildings and the dykes)
-	action init_obstacles {
-		create buildings from: buildings_shapefile;
+	action init_buildings {
+		create buildings from: buildings_shapefile {
+			do init_color();
+		}
 	}
 	
 	//Reflex to add water among the water cells
@@ -133,7 +163,8 @@ global {
 	}
 	//Reflex to flow the water according to the altitute and the obstacle
 	reflex flowing {
-		ask (cell sort_by ((each.altitude + each.water_height + each.obstacle_height))) {
+		list<cell> cells <- cell sort_by ((each.altitude + each.water_height + each.obstacle_height));
+		ask cells {
 			already <- false;
 			do flow;
 		}
@@ -144,7 +175,6 @@ global {
 	reflex update_cell_color {
 		ask cell {
 			do update_color;
-			//water[grid_x, grid_y] <- water_height;
 		}
 	}
 
@@ -211,7 +241,10 @@ species obstacle {
 species buildings parent: obstacle {
 //The building has a height randomly chosed between 5 and 10 meters
 	float height <- 5.0 + rnd(10.0) ;
-	rgb color <- one_of (#orange, darker(#orange), #brown);
+	
+	action init_color {
+		color <- one_of (#orange, darker(#orange), #brown);
+	}
 }
 //Species dyke which is derivated from obstacle
 species dyke parent: obstacle {
@@ -371,16 +404,11 @@ species evacuation_point {
 
 species road parent: obstacle {
 	float height <- 0.5;
+	
+	action break {
+		need_to_recompute_graph <- true;
+	}
 
-	init {
-		cells_under <- (cell overlapping self);
-	}
-	reflex check_drowning when: !drowned and update_drowning {
-		drowned <- (cells_under first_with (each.water_height > height)) != nil;
-		if (drowned) {
-			need_to_recompute_graph <- true;
-		}
-	}
 }
 
 

@@ -4,7 +4,7 @@ import "Flooding Model.gaml"
 
 global { 
 	
-
+ 
 	action repair_dyke_with_unity_global(string dyke_name)
 	{
 		ask dyke where (each.name = dyke_name)
@@ -47,7 +47,7 @@ species unity_linker parent: abstract_unity_linker {
 	}
 	list<point> define_init_locations {
 		return [world.location + {0,0,100}];
-	}
+	} 
 
 	list<float> convert_string_to_array_of_float(string my_string) {
     	return (my_string split_with ",") collect float(each);
@@ -123,11 +123,15 @@ species unity_linker parent: abstract_unity_linker {
 	}
 	
 	action start_simulation_with_unity
-	{
+	{ 
 		ask world
 		{
 			do start_flooding;
 		}
+	}
+	
+	action restart_with_unity {
+		world.restart_requested <- true;
 	}
 
 	
@@ -216,11 +220,6 @@ experiment vr_xp parent:"Base" autorun: false  type: unity {
 			}
 		}
 	}
-	
-	action restart {
-		ask simulation {do die;}
-		create simulation;
-	}
 
 	output {
 		 display map_VR type: 3d background: #dimgray{
@@ -243,7 +242,9 @@ experiment vr_xp parent:"Base" autorun: false  type: unity {
 			}
 			species evacuation_point;
 
-
+			event "r" {
+				 world.restart_requested <- true ;
+			}
 		 	
 		 	
 			species unity_player;
