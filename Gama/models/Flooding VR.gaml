@@ -1,16 +1,34 @@
 model Flood_VR
 
-import "Base Model.gaml"
+import "Flooding Model.gaml"
 
-global {
+global { 
 	
-
+	float score <- 0.0;
+	float budget <- 3000.0;
+	
+		
+	action update_score(float diff_value)
+	{
+		score <- score + diff_value with_precision 1;
+	}
+	
+	action update_budget(float diff_value)
+	{ 
+		budget <- budget + diff_value with_precision 1;
+	}
+	
+	action add_casualty {
+		casualties <- casualties + 1;
+		do update_score(-10.0);
+	}
 	
 	action repair_dyke_with_unity_global(string dyke_name)
 	{
 		ask dyke where (each.name = dyke_name)
 		{
-			is_broken <- false;
+			drowned <- false;
+			do build();
 		}
 	}
 	
@@ -18,7 +36,8 @@ global {
 	{
 		ask dyke where (each.name = dyke_name)
 		{
-			is_broken <- true;
+			drowned <- true;
+			do break();
 		}
 	}
 
@@ -48,16 +67,7 @@ species unity_linker parent: abstract_unity_linker {
 	list<point> define_init_locations {
 		return [world.location + {0,0,100}];
 	}
-	
-	action update_score(float diff_value)
-	{
-		score <- world.update_score_global(diff_value);
-	}
-	
-	action update_budget(float diff_value)
-	{ 
-		budget <- world.update_budget_global(diff_value);
-	}
+
 	
 	list<float> convert_string_to_array_of_float(string my_string) {
     	return (my_string split_with ",") collect float(each);
@@ -68,10 +78,15 @@ species unity_linker parent: abstract_unity_linker {
 		list<float> unity_end_point_float <- convert_string_to_array_of_float(unity_end_point);
 		point converted_start_point <- {unity_start_point_float[0], unity_start_point_float[1], unity_start_point_float[2]};
 		point converted_end_point <- {unity_end_point_float[0], unity_end_point_float[1], unity_end_point_float[2]};
-		do action_management_with_unity_global(converted_start_point, converted_end_point);
+		float price <- converted_start_point distance_to (converted_end_point) with_precision 1;
+		bool ok_build_dyke_with_unity <- price <= budget;
+		geometry l <- line([converted_start_point, converted_end_point]);
+		if (ok_build_dyke_with_unity) {
+			create dyke with: (shape: line([converted_start_point, converted_end_point]));
+			ask world {do update_budget(-price) ;}
+			do after_creating_dyke;
+		} 
 		do send_message players: unity_player as list mes: ["ok_build_dyke_with_unity":: ok_build_dyke_with_unity];
-	
-		do after_creating_dyke;
 		ask experiment {
 			do update_outputs(true); 
 		}
@@ -84,35 +99,14 @@ species unity_linker parent: abstract_unity_linker {
 				geoms[i].attributes['name'] <- dyke[i].name;
 			}
 				
-			do add_geometries_to_send( geoms,up_dyke);	
+			do add_geometries_to_send(geoms,up_dyke);	
 			do add_geometries_to_send(river,up_water);
 			
 			do send_world;
 			do send_current_message;
 	}
 	
-	action action_management_with_unity_global (point start_point, point unity_end_point) {
-		float price <- start_point distance_to (unity_end_point) with_precision 1;
-		ok_build_dyke_with_unity <- price <= budget;
-		geometry l <- line([start_point, unity_end_point]);
-		if ((cell overlapping l) first_with (each.is_river)) != nil {
-			ok_build_dyke_with_unity <- false;
-		}
 
-		if ok_build_dyke_with_unity and (not empty(building overlapping l)) {
-			ok_build_dyke_with_unity <- false;
-		}
-
-		if (ok_build_dyke_with_unity) {
-			create dyke with: (shape: line([start_point, unity_end_point]));
-			budget <- world.update_budget_global(-price) with_precision 1;
-			score <- world.update_score_global(-price); 
-			do after_creating_dyke;
-		} 
- 
-		//ok_build_dyke_with_unity <- false;
-	}
-	
 	action repair_dyke_with_unity(string dyke_name)
 	{
 			return world.repair_dyke_with_unity_global(dyke_name);
@@ -156,7 +150,7 @@ species unity_linker parent: abstract_unity_linker {
 	{
 		ask world
 		{
-			do start_simulation;
+			do start_flooding;
 		}
 	}
 
@@ -259,22 +253,27 @@ experiment vr_xp parent:"Base" autorun: false  type: unity {
 		 	
 			camera 'default' location: {1419.7968,8667.7995,4069.6711} target: {1419.7968,4303.6116,0.0};
 		 	species river transparency: 0.7 {
-				draw shape color: #lightseagreen depth: 2 at: location - {0, 0, 5};
+				draw shape color: #lightseagreen depth: 10 at: location - {0, 0, 5};
 			}
-		 	species building {
-		 		draw shape color: drowned ? #gray : color depth: height * 2;	
-		 	}
 			species road {
-				draw shape + 4 color: drowned ? rgb(60,60,60) : #lightgray;	
+				draw shape color: drowned ? (#cadetblue) : color depth: height border: drowned ? #white:color;
 			}
-			species people;
+		 	species buildings {
+		 		draw shape color: drowned ? (#cadetblue) : color depth: height * 2 border: drowned ? #white:color;	
+		 	}
+		 	species dyke {
+		 		draw shape + 5 color: drowned ? (#cadetblue) : color depth: height * 2 border: drowned ? #white:color;	
+			}
+			species people {
+				draw sphere(18) color:#darkseagreen;
+			}
 			species evacuation_point;
-			species dyke;
+
 
 		 	
 		 	
-			 species unity_player;
-			 event #mouse_down{
+			species unity_player;
+			event #mouse_down{
 				 float t <- gama.machine_time;
 				 if (t - t_ref) > 500 {
 					 ask unity_linker {
