@@ -12,12 +12,12 @@ global {
 	unity_property up_road ;
 	unity_property up_building;
 	unity_property up_river;
-	file river_shapefile <- file("../../includes/river.shp");
-	file shape_file_roads <- file("../../includes/road.shp");
-	file buildings_shapefile <- file("../../includes/buildings.shp");
-	file shape_file_evacuation <- file("../../includes/evacuation_point.shp");
+	file river_shapefile <- file("../../includes/gis/river.shp");
+	file shape_file_roads <- file("../../includes/gis/road.shp");
+	file buildings_shapefile <- file("../../includes/gis/buildings.shp");
+	file shape_file_evacuation <- file("../../includes/gis/evacuation_point.shp");
 	
-	shape_file bounds_shape_file <- shape_file("../../includes/QBBB.shp");
+	shape_file bounds_shape_file <- shape_file("../../includes/gis/QBBB.shp");
 	
 	geometry shape <- envelope(bounds_shape_file);
 	

@@ -11,6 +11,9 @@ model Flooding
 
 global {
 	
+	
+	
+	
 	bool restart_requested;
 	
 	action add_casualty {

@@ -204,7 +204,6 @@ experiment vr_xp parent:"Base" autorun: false  type: unity {
 
 	float minimum_cycle_duration <- 0.05;
 	string unity_linker_species <- string(unity_linker);
-	//list<string> displays_to_hide <- ["map"];
 	float t_ref;
 
 	action create_player(string id) {

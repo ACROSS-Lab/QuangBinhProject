@@ -48,7 +48,7 @@ experiment Run model:"Flooding Model.gaml" type:gui {
 				} else {
 					end_point <- #user_location;
 					geometry l <- line([start_point, end_point]);
-					ask simulation {
+					ask simulation { 
 						if (cycle = 0) {
 							create dyke with:(shape:l + dyke_width);}
 					}
