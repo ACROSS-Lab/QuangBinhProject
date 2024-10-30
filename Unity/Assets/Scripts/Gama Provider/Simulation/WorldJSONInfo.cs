@@ -21,7 +21,7 @@ public class WorldJSONInfo
     public bool isInit;
 
     public double score;
-    public double budget;
+    //public double budget;
     public double ok_build_dyke_with_unity;
     public static WorldJSONInfo CreateFromJSON(string jsonString)
     {
