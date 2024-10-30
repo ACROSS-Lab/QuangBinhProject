@@ -15,6 +15,10 @@ global {
 		casualties <- casualties + 1;
 	}
 	
+	action add_evacuated {
+		evacuated <- evacuated + 1;
+	}
+	
 	float max_water_height <- 10.0;
 	
 	bool update_drowning <- false update: true;
@@ -341,8 +345,7 @@ species people skills: [moving] {
 		if my_path != nil {
 			do follow(path: my_path, move_weights: new_weights);
 			if (location = target) {
-				//score <- world.update_score_global(float(100));
-				evacuated <- evacuated + 1;
+				ask world {do add_evacuated;}
 				target <- nil;
 				do die;
 			} }

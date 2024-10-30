@@ -5,11 +5,6 @@ import "Flooding Model.gaml"
 global { 
 	
 
-	
-	action add_casualty {
-		casualties <- casualties + 1;
-	}
-	
 	action repair_dyke_with_unity_global(string dyke_name)
 	{
 		ask dyke where (each.name = dyke_name)
@@ -48,7 +43,7 @@ species unity_linker parent: abstract_unity_linker {
 	unity_property up_water;
 
 	action add_to_send_world(map map_to_send) {
-		map_to_send["score"] <- int(100*casualties/nb_of_people);
+		map_to_send["score"] <- int(100*evacuated/nb_of_people);
 	}
 	list<point> define_init_locations {
 		return [world.location + {0,0,100}];

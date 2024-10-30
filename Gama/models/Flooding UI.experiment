@@ -11,7 +11,7 @@ experiment Run model:"Flooding Model.gaml" type:gui {
 	point end_point;
 	geometry line;
 	bool river_in_3D <- false;
-	rgb background_color <- #lightgray;
+	rgb background_color <- #lightgray; 
 	
 	
 	
