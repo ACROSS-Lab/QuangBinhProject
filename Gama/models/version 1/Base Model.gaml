@@ -2,13 +2,13 @@ model BaseModel
 
 global {
 	// Data files 
-	grid_file DEM_grid_file <- grid_file("../includes/DEM.tif");
-	file river_shapefile <- file("../includes/river.shp");
-	file shape_file_roads <- file("../includes/road.shp");
-	file buildings_shapefile <- file("../includes/buildings.shp");
-	file shape_file_evacuation <- file("../includes/evacuation_point.shp");
-	shape_file bounds_shape_file <- shape_file("../includes/QBBB.shp");
-	file my_csv_file <- csv_file("../includes/FLoodDataH.csv"); 
+	grid_file DEM_grid_file <- grid_file("../../includes/dem/terrain89x211.tif");
+	file river_shapefile <- file("../../includes/gis/river.shp");
+	file shape_file_roads <- file("../../includes/gis/road.shp");
+	file buildings_shapefile <- file("../../includes/gis/buildings.shp");
+	file shape_file_evacuation <- file("../../includes/gis/evacuation_point.shp");
+	shape_file bounds_shape_file <- shape_file("../../includes/gis/QBBB.shp");
+	file my_csv_file <- csv_file("../../includes/flood/FLoodDataH.csv"); 
 	//
 	geometry shape <- envelope(bounds_shape_file);
 	bool height_propagation <- false;

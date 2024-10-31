@@ -8,11 +8,11 @@
 experiment Comparison model:"Base Model.gaml" type:gui parent: "Base"{
 
 	action _init_ {
-		create simulation with: [nb_of_people::500, the_alert_strategy::"CLOSEST", my_csv_file::csv_file("../includes/FloodData.csv")] {
+		create simulation with: [nb_of_people::500, the_alert_strategy::"CLOSEST", my_csv_file::csv_file("../../includes/flood/FloodData.csv")] {
 			do start_simulation;
 		}
 
-		create simulation with: [nb_of_people::500, the_alert_strategy::"RANDOM", my_csv_file::csv_file("../includes/FloodData.csv")] {
+		create simulation with: [nb_of_people::500, the_alert_strategy::"RANDOM", my_csv_file::csv_file("../../includes/flood/FloodData.csv")] {
 			do start_simulation;
 		}
 

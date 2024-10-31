@@ -10,11 +10,9 @@ experiment Run model:"Flooding Model.gaml" type:gui {
 	point start_point;
 	point end_point; 
 	geometry line; 
-	bool river_in_3D <- false;
+	bool river_in_3D <- false; 
 	rgb background_color <- #lightgray; 
-	
-	
-	
+
 	
 	output {
 		layout #none controls: false toolbars: false editors: false parameters: false consoles: false tabs: false;
@@ -58,7 +56,7 @@ experiment Run model:"Flooding Model.gaml" type:gui {
 
 			}
 			graphics g visible: cycle= 0 {
-				draw "Build dykes with the mouse. Press 'f' or 'F' when finished" font: font ("Helvetica", 18, #bold) at: {0,100, 30} anchor: #center color: #black;
+				draw "Build dykes with the mouse. \nPress 'f' to start flooding" font: font ("Helvetica", 18, #bold) at: {0,1000, 30} anchor: #center color: #black;
 			}
 			
 			event "f" {

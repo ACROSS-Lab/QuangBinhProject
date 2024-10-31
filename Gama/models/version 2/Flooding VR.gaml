@@ -200,7 +200,7 @@ species unity_player parent: abstract_unity_player{
 	}
 }
 
-experiment vr_xp parent:"Base" autorun: false  type: unity {
+experiment Launch parent:"Base" autorun: false  type: unity {
 
 	float minimum_cycle_duration <- 0.05;
 	string unity_linker_species <- string(unity_linker);

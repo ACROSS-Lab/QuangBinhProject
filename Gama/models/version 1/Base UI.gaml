@@ -14,7 +14,7 @@ global {
 	point target_point;
 	point start_point <- nil;
 	 
-	list<file> images <- [file("../includes/icons/pencil.jpg"), file("../includes/icons/eraser.png"), file("../includes/icons/start.jpg"), file("../includes/icons/build.png")];
+	list<file> images <- [file("../../includes/icons/pencil.jpg"), file("../../includes/icons/eraser.png"), file("../../includes/icons/start.jpg"), file("../../includes/icons/build.png")];
 	
 	 
 	action after_creating_dyke;

@@ -1,70 +1,121 @@
 /**
-* Name: Hydrological Model
-* Author: Patrick Taillandier
-* Description: A model showing how to represent a flooding system with dykes and buildings. It uses 
-* 	a grid to discretize space, and has a 3D display. The water can flow from one cell to another considering 
-* 	the height of the cells, and the water pressure. It is also possible to delete dyke by clicking on one of them 
-* 	in the display.
-* Tags: shapefile, gis, grid, 3d, gui, hydrology
+* Name: Flooding Model
+* Author: Alexis Drogoul
+* Description: This model is based on the toy model called "Hydrological Model" 
+* and uses a simple flow diffusion model to simulate a flooding in a subset of Dong Hoi city
+* (Quang Binh province).
+* Tags: SIMPLE
 */
 model Flooding
 
 global {
 	
+	/*************************************************************
+	 * Built-in parameters to control the simulations
+	 *************************************************************/
 	
-	
-	
-	bool restart_requested;
-	
-	action add_casualty {
-		casualties <- casualties + 1;
-	}
-	
-	action add_evacuated {
-		evacuated <- evacuated + 1;
-	}
-	
+	// Random seed 
 	float seed <- 0.0;
-	
-	float max_water_height <- 10.0;
-	float initial_water_height <- 5.0;
-	
-	bool update_drowning <- false update: true;
-	graph<geometry, geometry> road_network;
-	graph<geometry, geometry> road_network_usable;
-	map<road, float> new_weights;
-	bool need_to_recompute_graph <- false;
-
-	//Shapefile for the river
-	file river_shapefile <- file("../includes/river.shp");
-	//Shapefile for the buildings
-	file buildings_shapefile <- file("../includes/buildings.shp");
-	//Shapefile for the evacuation points
-	file shape_file_evacuation <- file("../includes/evacuation_point.shp");
-	//Shapefile for the roads
-	file shape_file_roads <- file("../includes/road.shp");
-	//Data elevation file
-	file dem_file <- file("../includes/terrain.tif");
-	//Diffusion rate
-	float diffusion_rate <- 0.5;
-	//Height of the dykes (15 m by default)
-	float dyke_height <- 15.0;
-	//Width of the dyke (15 m by default)
-	float dyke_width <- 15.0;
 	
 	//Step of the simulation
 	float step <- 30#mn;
+	
+	// Current date is fixed to #now
 	date current_date <- #now;
-	int nb_of_people <- 500;
+	
+	/*************************************************************
+	 * Flags to control the phases in the simulations
+	 *************************************************************/
+
+	// Is a restart requested by the user ? 
+	bool restart_requested;
+	
+	// Do we need to recompute the road graph ? 
+	bool need_to_recompute_graph <- false;
+	
+	// Do we need to update the "drowned" status of people and obstacles ?
+	bool update_drowning <- false update: true;
+	
+	/*************************************************************
+	 * Global monitoring variables
+	 *************************************************************/
+	 
+	// Number of casualties (drowned people)
 	int casualties <- 0;
+	
+	// Number of evacuated people
 	int evacuated <- 0;
 
-	//Shape of the environment using the dem file
-	geometry shape <- envelope(file("../includes/QBBB.shp"));
+	/*************************************************************
+	 * Initial conditions for people, water and obstacles
+	 *************************************************************/
 
-	//List of the drain and river cells
+	// Initial number of people
+	int nb_of_people <- 500;
+	
+	// The initial (and current) maximum level of water
+	float max_water_height <- 10.0;
+	
+	// The height of water in the river at the beginning
+	float initial_water_height <- 5.0;
+	
+	//Diffusion rate
+	float diffusion_rate <- 0.5;
+	
+	//Height of the dykes (15 m by default)
+	float dyke_height <- 15.0;
+	
+	//Width of the dyke (15 m by default)
+	float dyke_width <- 15.0;
+	
+	/*************************************************************
+	 * Road network
+	 *************************************************************/
+	
+	// Complete initial road network
+	graph<geometry, geometry> road_network;
+	
+	// Road network w/o the drowned roads
+	graph<geometry, geometry> road_network_usable;
+	
+	// Weights associated with the road network
+	map<road, float> new_weights;
+
+	
+	/*************************************************************
+	 * GIS input data
+	 *************************************************************/
+
+	//Shapefile for the river
+	file river_shapefile <- file("../../includes/gis/river.shp");
+	
+	//Shapefile for the buildings
+	file buildings_shapefile <- file("../../includes/gis/buildings.shp");
+	
+	//Shapefile for the evacuation points
+	file shape_file_evacuation <- file("../../includes/gis/evacuation_point.shp");
+	
+	//Shapefile for the roads
+	file shape_file_roads <- file("../../includes/gis/road.shp");
+	
+	//Data elevation file
+	file dem_file <- file("../../includes/dem/terrain143x331.tif");
+	
+	//Shape of the environment using the bounding box of Quang Binh
+	geometry shape <- envelope(file("../../includes/gis/QBBB.shp"));
+	
+	
+	/*************************************************************
+	 * Lists of the water cells used to schedule them 
+	 *************************************************************/
+
+	//List of the drain cells ("end" of the river)
 	list<cell> drain_cells;
+	
+	//List of the initial river cells ("bed" of the river)
 	list<cell> river_cells;
+
+
 
 	init {
 	//Initialization of the cells
@@ -82,6 +133,15 @@ global {
 		}
 		
 		do init_people;
+	}
+	
+	
+	action add_casualty {
+		casualties <- casualties + 1;
+	}
+	
+	action add_evacuated {
+		evacuated <- evacuated + 1;
 	}
 	
 	
@@ -127,6 +187,7 @@ global {
 	action init_evac {
 		create evacuation_point from: shape_file_evacuation;
 	}
+	
 	//Action to initialize the altitude value of the cell according to the dem file
 	action init_cells {
 		ask cell {
@@ -362,7 +423,7 @@ species people skills: [moving] {
 	bool alerted <- false;
 	point target <- nil;
 	float perception_distance;
-	float speed <- 20 #m / #h;
+	float speed <- 50 #m / #h;
 	path my_path;
 
 	reflex become_alerted when: not alerted and flip(0.1) {
