@@ -85,6 +85,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Connection Manager
       objectReference: {fileID: 0}
+    - target: {fileID: 8400268368628786363, guid: 183635f754b18454b8f0d5a78d41ad7d, type: 3}
+      propertyPath: DefaultIP
+      value: 192.168.68.22
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
