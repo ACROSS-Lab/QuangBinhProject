@@ -8,7 +8,49 @@
 */
 model Flooding
 
-global {
+global control: fsm{
+	
+	/*************************************************************
+	 * Global states
+	 *************************************************************/	
+	
+	state s_init initial: true{
+		transition to: s_diking when: diking_requested;
+	}
+	
+	state s_restart {
+		do restart();
+		transition to: s_init;
+	}
+	
+	/**
+	 * This state represents the state where the user(s) is(are) able to build dikes 
+	 */
+	state s_diking {
+		enter {
+			float begin <- gama.machine_time;
+		}
+		// The flag flooding_requested can be set by other processes (UI, VR, etc.)
+		transition to: s_flooding when: flooding_requested or gama.machine_time - begin >= diking_timeout * 1000 {
+			flooding_requested <- false;
+		}
+		
+	}
+	
+	state s_flooding {
+		enter {
+			float begin <- gama.machine_time;
+		}		
+		do add_water();
+		do flow_water();
+		do recompute_road_graph();
+		do drain_water();
+		
+		// The flag restart_requested can be set by external processes (UI, VR, etc.)
+		transition to: s_restart when: restart_requested or gama.machine_time - begin >= flooding_timeout * 1000{
+			restart_requested <- false;
+		}
+	}
 	
 	/*************************************************************
 	 * Built-in parameters to control the simulations
@@ -30,11 +72,23 @@ global {
 	// Is a restart requested by the user ? 
 	bool restart_requested;
 	
+	// Is the flooding state requested by the user ? 
+	bool flooding_requested;
+	
+	// Is the diking state requested (all players present, etc.)
+	bool diking_requested <- true;
+	
 	// Do we need to recompute the road graph ? 
 	bool need_to_recompute_graph <- false;
 	
 	// Do we need to update the "drowned" status of people and obstacles ?
 	bool update_drowning <- false update: true;
+	
+	// The maximum amount of time, in seconds, for building dikes 
+	float diking_timeout <- 120.0;
+	
+	// The maximum amount of time, in seconds, for watching the water flow 
+	float flooding_timeout <- 120.0;
 	
 	/*************************************************************
 	 * Global monitoring variables
@@ -118,7 +172,7 @@ global {
 
 
 	init {
-	//Initialization of the cells
+		//Initialization of the cells
 		do init_cells;
 		//Initialization of the water cells
 		do init_water;
@@ -144,8 +198,7 @@ global {
 		evacuated <- evacuated + 1;
 	}
 	
-	
-	reflex restart when: restart_requested {
+	action restart {
 		ask road+dyke+people+buildings+river {
 			do die;
 		}
@@ -163,8 +216,6 @@ global {
 			do update_color;
 		}
 		do init_people;
-		restart_requested <- false;
-		do pause;
 	}
 	
 	action init_people {
@@ -172,11 +223,7 @@ global {
 			location <- any_location_in(one_of(buildings));
 		}
 	}
-	
-	action start_flooding {
-		do resume;
-	}
-	
+
 	action init_roads {
 		create road from: clean_network(shape_file_roads.contents, 0.0, false, true);
 		road_network <- as_edge_graph(road);
@@ -218,7 +265,7 @@ global {
 	}
 	
 	//Reflex to add water among the water cells
-	reflex adding_input_water {
+	action add_water {
 		float water_input <- rnd(100) / 100;
 		ask river_cells {
 			water_height <- water_height + water_input;
@@ -226,7 +273,7 @@ global {
 
 	}
 	//Reflex to flow the water according to the altitute and the obstacle
-	reflex flowing {
+	action flow_water {
 		list<cell> cells <- cell sort_by ((each.altitude + each.water_height + each.obstacle_height));
 		ask cells {
 			already <- false;
@@ -236,21 +283,22 @@ global {
 	}
 	
 	//Reflex to update the color of the cell
-	reflex update_cell_color {
+	action update_cell_color {
 		ask cell {
 			do update_color;
 		}
 	}
 
 	//Reflex for recomputing the graph 
-	reflex recompute when: need_to_recompute_graph {
+	action recompute_road_graph {
+		if (!need_to_recompute_graph) {return;}
 		new_weights <- road as_map (each::each.shape.perimeter * (each.drowned ? 3.0 : 1.0));
 		road_network_usable <- as_edge_graph(road where not each.drowned);
 		need_to_recompute_graph <- false;
 	}
 
 	//Reflex for the drain cells to drain water
-	reflex draining {
+	action drain_water {
 		ask drain_cells {
 			water_height <- 0.0;
 		}
@@ -426,7 +474,7 @@ species people skills: [moving] {
 	float speed <- 50 #m / #h;
 	path my_path;
 
-	reflex become_alerted when: not alerted and flip(0.1) {
+	reflex become_alerted when: state="s_flooding" and not alerted and flip(0.1) {
 		alerted <- true;
 	}
 

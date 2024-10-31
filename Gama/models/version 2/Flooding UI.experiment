@@ -8,7 +8,7 @@
 experiment Run model:"Flooding Model.gaml" type:gui {
 	
 	point start_point;
-	point end_point; 
+	point end_point;  
 	geometry line; 
 	bool river_in_3D <- false; 
 	rgb background_color <- #lightgray; 
@@ -30,7 +30,7 @@ experiment Run model:"Flooding Model.gaml" type:gui {
 		 	}
 		 	species dyke {
 		 		draw shape + 5 color: drowned ? (#cadetblue) : color depth: height * 2 border: drowned ? #white:color;	
-			}
+			} 
 			species people {
 				draw sphere(18) color:#darkseagreen;
 			}
@@ -38,37 +38,42 @@ experiment Run model:"Flooding Model.gaml" type:gui {
 
 			mesh cell above: 0 triangulation: true smooth: false color: cell collect each.color visible: river_in_3D;
 			event #mouse_down {
-				if (cycle > 0) {
-					return;
-				}
+				if (state != "s_diking") { return;}
 				if (start_point = nil) {
 					start_point <- #user_location;
 				} else {
 					end_point <- #user_location;
 					geometry l <- line([start_point, end_point]);
 					ask simulation { 
-						if (cycle = 0) {
-							create dyke with:(shape:l + dyke_width);}
+						create dyke with:(shape:l + dyke_width);
 					}
 					start_point <- nil;
 					end_point <- nil;
 				}
 
 			}
-			graphics g visible: cycle= 0 {
-				draw "Build dykes with the mouse. \nPress 'f' to start flooding" font: font ("Helvetica", 18, #bold) at: {0,1000, 30} anchor: #center color: #black;
+			graphics g {
+				if (state = "s_diking") {
+					draw "Build dykes with the mouse. \nPress 'f' to start flooding" font: font ("Helvetica", 18, #bold) at: {0,2000, 30} anchor: #top_left color: #black;	
+				} else if (state = "s_restart") {
+					draw "Restarting the simulation" font: font ("Helvetica", 18, #bold) at: {0,2000, 30} anchor: #top_left color: #black;	
+				} else if (state = "s_flooding") {
+					draw "Casualties: " + casualties font: font ("Helvetica", 18, #bold) at: {0,2000, 30} anchor: #top_left color: #black;	
+				}
 			}
 			
 			event "f" {
-				ask world {
-					do start_flooding;
-				}
+				if (state != "s_diking") {return;}
+				flooding_requested <- true;
 			}
 			
-			event #mouse_move {
-				if (cycle > 0) {
-					return;
-				}
+			event "r" {
+				if (state != "s_flooding") {return;}
+				restart_requested <- true;
+			}
+			
+			event #mouse_move { 
+				if (state != "s_diking") {return;}
 				if (start_point != nil) {
 					line <- line([start_point, #user_location]);
 				} else {

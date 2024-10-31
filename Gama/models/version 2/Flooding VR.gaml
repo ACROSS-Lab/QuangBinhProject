@@ -4,31 +4,7 @@ import "Flooding Model.gaml"
 
 global { 
 	
- 
-	action repair_dyke_with_unity_global(string dyke_name)
-	{
-		ask dyke where (each.name = dyke_name)
-		{
-			drowned <- false;
-			do build();
-		}
-	}
-	
-	action break_dyke_with_unity_global(string dyke_name)
-	{
-		ask dyke where (each.name = dyke_name)
-		{
-			drowned <- true;
-			do break();
-		}
-	}
 
-	action remove_dyke_with_unity_global (string dyke_name) {
-		ask dyke where (each.name = dyke_name) {
-			do die;
-		}
-
-	}
 	
 
 }
@@ -41,6 +17,24 @@ species unity_linker parent: abstract_unity_linker {
 	unity_property up_people;
 	unity_property up_dyke;
 	unity_property up_water;
+	
+	
+	
+	init {
+		
+		unity_aspect car_aspect <- prefab_aspect("Prefabs/Visual Prefabs/City/Vehicles/Car",100,0.2,1.0,-90.0, precision);
+		unity_aspect dyke_aspect <- geometry_aspect(40.0, "Materials/Dike/Dike", rgb(0, 0, 0, 0.0), precision);
+		unity_aspect water_aspect <- geometry_aspect(40.0, "Materials/MAT_LOW_POLY_SHADER_TEST", rgb(0, 0, 0, 0.0), precision);
+ 	
+		up_people<- geometry_properties("car", nil, car_aspect, #no_interaction, false);
+		up_dyke <- geometry_properties("dyke", "dyke", dyke_aspect, #collider, false);
+		up_water <- geometry_properties("water", nil, water_aspect, #no_interaction,false);
+		// add the up_tree unity_property to the list of unity_properties
+		unity_properties << up_people;
+		unity_properties << up_dyke;
+		unity_properties << up_water;
+		
+	}
 
 	action add_to_send_world(map map_to_send) {
 		map_to_send["score"] <- int(100*evacuated/nb_of_people);
@@ -66,7 +60,6 @@ species unity_linker parent: abstract_unity_linker {
 		ask experiment {
 			do update_outputs(true); 
 		}
-		
 	}
 	
 	action after_creating_dyke {
@@ -85,17 +78,27 @@ species unity_linker parent: abstract_unity_linker {
 
 	action repair_dyke_with_unity(string dyke_name)
 	{
-			return world.repair_dyke_with_unity_global(dyke_name);
+		ask dyke where (each.name = dyke_name)
+		{
+			drowned <- false;
+			do build();
+		}
 	}
 	
 	action break_dyke_with_unity(string dyke_name)
 	{
-			return world.break_dyke_with_unity_global(dyke_name);
+		ask dyke where (each.name = dyke_name)
+		{
+			drowned <- true;
+			do break();
+		}
 	}
 	
 	action remove_dyke_with_unity(string dyke_name)
 	{
-			return world.remove_dyke_with_unity_global(dyke_name);
+		ask dyke where (each.name = dyke_name) {
+			do die;
+		}
 	}
 	
 	action pause_with_unity
@@ -126,39 +129,12 @@ species unity_linker parent: abstract_unity_linker {
 	{ 
 		ask world
 		{
-			do start_flooding;
+			flooding_requested <- true;
 		}
 	}
 	
 	action restart_with_unity {
 		world.restart_requested <- true;
-	}
-
-	
-	init {
-		//define the unity properties
-		do define_properties;
-		
-	}
-	
-	//action that defines the different unity properties
-	action define_properties {
-		
-		//define a unity_aspect called tree_aspect that will display in Unity the agents with the SM_arbres_001 prefab, with a scale of 2.0, no y-offset, 
-		//a rotation coefficient of 1.0 (no change of rotation from the prefab), no rotation offset, and we use the default precision. 
-		unity_aspect car_aspect <- prefab_aspect("Prefabs/Visual Prefabs/City/Vehicles/Car",100,0.2,1.0,-90.0, precision);
-		unity_aspect dyke_aspect <- geometry_aspect(40.0, "Materials/Dike/Dike", rgb(0, 0, 0, 0.0), precision);
-		unity_aspect water_aspect <- geometry_aspect(40.0, "Materials/MAT_LOW_POLY_SHADER_TEST", rgb(0, 0, 0, 0.0), precision);
- 	
-		//define the up_car unity property, with the name "car", no specific layer, the car_aspect unity aspect, no interaction, and the agents location are not sent back 
-		//to GAMA. 
-		up_people<- geometry_properties("car", nil, car_aspect, #no_interaction, false);
-		up_dyke <- geometry_properties("dyke", "dyke", dyke_aspect, #collider, false);
-		up_water <- geometry_properties("water", nil, water_aspect, #no_interaction,false);
-		// add the up_tree unity_property to the list of unity_properties
-		unity_properties << up_people;
-		unity_properties << up_dyke;
-		unity_properties << up_water;
 	}
 	
 	reflex send_agents when:  not empty(unity_player) {
@@ -171,7 +147,7 @@ species unity_linker parent: abstract_unity_linker {
 				
 			}
 				
-			do add_geometries_to_send(geoms ,up_dyke);	
+			do add_geometries_to_send(geoms ,up_dyke);	 
 		}
 		do add_geometries_to_send(river,up_water);
 		
