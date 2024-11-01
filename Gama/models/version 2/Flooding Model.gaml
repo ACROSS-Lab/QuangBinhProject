@@ -8,14 +8,17 @@
 */
 model Flooding
 
-global control: fsm{
+global control: fsm {
 	
 	/*************************************************************
 	 * Global states
 	 *************************************************************/	
 	
 	state s_init initial: true{
-		transition to: s_diking when: diking_requested;
+		enter {
+			do enter_init();
+		}
+		transition to: s_diking when: init_over();
 	}
 	
 	state s_restart {
@@ -28,30 +31,44 @@ global control: fsm{
 	 */
 	state s_diking {
 		enter {
-			float begin <- gama.machine_time;
+			do enter_diking();
 		}
-		// The flag flooding_requested can be set by other processes (UI, VR, etc.)
-		transition to: s_flooding when: flooding_requested or gama.machine_time - begin >= diking_timeout * 1000 {
-			flooding_requested <- false;
-		}
+		transition to: s_flooding when: diking_over();
 		
 	}
 	
+	/**
+	 * This state represents the state where the flooding dynamics is simulated 
+	 */
 	state s_flooding {
 		enter {
-			float begin <- gama.machine_time;
+			do enter_flooding();
 		}		
 		do add_water();
 		do flow_water();
 		do recompute_road_graph();
 		do drain_water();
 		
-		// The flag restart_requested can be set by external processes (UI, VR, etc.)
-		transition to: s_restart when: restart_requested or gama.machine_time - begin >= flooding_timeout * 1000{
-			restart_requested <- false;
-		}
+		transition to: s_restart when: flooding_over();
 	}
+
+	/*************************************************************
+	 * Functions that control the transitions between the states. 
+	 * Must be redefined in sub-models
+	 *************************************************************/
+	 
+	action enter_init virtual: true;
 	
+	action enter_diking virtual: true;
+	
+	action enter_flooding virtual: true;
+
+	bool init_over virtual: true;
+	
+	bool diking_over virtual: true;
+	
+	bool flooding_over virtual: true;
+ 	
 	/*************************************************************
 	 * Built-in parameters to control the simulations
 	 *************************************************************/
@@ -66,29 +83,15 @@ global control: fsm{
 	date current_date <- #now;
 	
 	/*************************************************************
-	 * Flags to control the phases in the simulations
+	 * Flags to control some functions in the simulations
 	 *************************************************************/
 
-	// Is a restart requested by the user ? 
-	bool restart_requested;
-	
-	// Is the flooding state requested by the user ? 
-	bool flooding_requested;
-	
-	// Is the diking state requested (all players present, etc.)
-	bool diking_requested <- true;
-	
 	// Do we need to recompute the road graph ? 
 	bool need_to_recompute_graph <- false;
 	
 	// Do we need to update the "drowned" status of people and obstacles ?
-	bool update_drowning <- false update: true;
-	
-	// The maximum amount of time, in seconds, for building dikes 
-	float diking_timeout <- 120.0;
-	
-	// The maximum amount of time, in seconds, for watching the water flow 
-	float flooding_timeout <- 120.0;
+	bool update_drowning -> cycle != 0;
+
 	
 	/*************************************************************
 	 * Global monitoring variables
@@ -176,7 +179,7 @@ global control: fsm{
 		do init_cells;
 		//Initialization of the water cells
 		do init_water;
-		//Initialization of the obstacles (buildings and dykes)
+		//Initialization of the obstacles (buildings, roads, etc.)
 		do init_buildings;
 		do init_roads;
 		do init_evac;
@@ -185,7 +188,7 @@ global control: fsm{
 			obstacle_height <- compute_highest_obstacle();
 			do update_color;
 		}
-		
+		//Initialization of the people	
 		do init_people;
 	}
 	

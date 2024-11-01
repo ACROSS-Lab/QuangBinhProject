@@ -5,11 +5,85 @@ import "Flooding Model.gaml"
 global { 
 	
 
+	/*************************************************************
+	 * Statuses of the player, once connected to the middleware (and to GAMA)
+	 *************************************************************/
+	 
+	 // The player has chosen a language and is officially counted as an active player
+	 string ENTERED <- "ENTERED";
+	 
+	 // The player has finished the tutorial and is ready to move on to the "playing" scene
+	 string READY <- "READY";
+	 	 
+	 // Default status when entering the game, or when the player has finished the game and be informed on his/her score
+	 string NOT_READY <- "NOT_READY";
+
+
+	/*************************************************************
+	 * Functions that control the transitions between the states
+	 *************************************************************/
+
+	action enter_init {
+		write "in init state";
+		current_timeout <- gama.machine_time + init_duration * 1000;
+	} 
 	
+	action enter_diking {
+		write "in diking state";
+		flooding_requested_from_gama <- false;
+		current_timeout <- gama.machine_time + diking_duration * 1000;
+	}
+	
+	action enter_flooding {
+		write "in flooding state";
+		restart_requested_from_gama <- false;	
+		current_timeout <- gama.machine_time + flooding_duration * 1000;	
+	}
+
+	bool init_over  { 
+		return empty(unity_player) or tutorial_over or gama.machine_time >= current_timeout;
+	} 
+	
+	bool diking_over { 
+		return empty(unity_player) or gama.machine_time >= current_timeout;
+	}
+	
+	bool flooding_over  { 
+		return flooding_over or gama.machine_time >= current_timeout;
+	}	
+	
+	/*************************************************************
+	 * Flags to control the phases in the simulations
+	 *************************************************************/
+
+	// Is a restart requested by the user ? 
+	bool restart_requested_from_gama;
+	
+	// Is the flooding requested by the user ? 
+	bool flooding_requested_from_gama;
+	
+	
+	// Are all the players who entered ready or has GAMA sent the beginning of the game ? 
+	bool tutorial_over -> flooding_requested_from_gama or ((unity_player select each.entered) all_match (each.ready))  ;
+	
+	// Are all the players in the not_ready state or has GAMA sent the end of the game ?
+	bool flooding_over -> empty(unity_player) ? restart_requested_from_gama : restart_requested_from_gama or (unity_player all_match (each.not_ready));
+
+	// The maximum amount of time, in seconds, we wait for players to be ready 
+	float init_duration <- 120.0;
+	
+	// The maximum amount of time, in seconds, for watching the water flow before restarting
+	float flooding_duration <- 120.0;
+	
+	// The maximum amount of time, in seconds, for building dikes 
+	float diking_duration <- 120.0;
+	
+	// The next timeout to occur for the different stages
+	float current_timeout;
 
 }
 
-species unity_linker parent: abstract_unity_linker {
+species unity_linker parent: abstract_unity_linker { 
 	string player_species <- string(unity_player);
 	int max_num_players  <- -1;
 	int min_num_players  <- 10;
@@ -38,6 +112,8 @@ species unity_linker parent: abstract_unity_linker {
 
 	action add_to_send_world(map map_to_send) {
 		map_to_send["score"] <- int(100*evacuated/nb_of_people);
+		map_to_send["tutorial_over"] <- tutorial_over;
+		map_to_send["remaining_time"] <- (int(current_timeout - gama.machine_time)/1000);
 	}
 	list<point> define_init_locations {
 		return [world.location + {0,0,100}];
@@ -100,51 +176,15 @@ species unity_linker parent: abstract_unity_linker {
 			do die;
 		}
 	}
+
 	
-	action pause_with_unity
-	{
-		ask world
-		{
-			do pause;
-		}
-	}
-	
-	action resume_with_unity
-	{
-		ask world
-		{
-			do resume;
-		}
-	}
-	
-	action end_with_unity
-	{
-		ask world
-		{
-			do die;
-		}
-	}
-	
-	action start_simulation_with_unity
-	{ 
-		ask world
-		{
-			flooding_requested <- true;
-		}
-	}
-	
-	action restart_with_unity {
-		world.restart_requested <- true;
-	}
-	
-	reflex send_agents when:  not empty(unity_player) {
+	reflex send_agents when: not empty(unity_player) {
 		do add_geometries_to_send(people where (each.my_path != nil),up_people);
 		
 		if (not empty(dyke)) {
 			list<geometry> geoms <- dyke collect ((each.shape + 5.0) at_location {each.location.x, each.location.y, 10});
 			loop i from:0 to: length(geoms) -1 {
 				geoms[i].attributes['name'] <- dyke[i].name;
-				
 			}
 				
 			do add_geometries_to_send(geoms ,up_dyke);	 
@@ -153,32 +193,50 @@ species unity_linker parent: abstract_unity_linker {
 		
 		
 	}
+	// Message sent by Unity to inform about the status of a specific player
+	action set_status(string player_id, string status) {
+		unity_player player <- player_agents[player_id];
+		if (player != nil) {
+			ask player {do set_status(status);}
+		}
+	}
 	
 
  
 }
 
 species unity_player parent: abstract_unity_player{
-	float player_size <- 50.0;
-	rgb color <- #red;	
-	float cone_distance <- 10.0 * player_size;
-	float cone_amplitude <- 90.0;
-	float player_rotation <- 90.0;
-	bool to_display <- true;
-	aspect default {
-		if to_display {
-			if selected {
-				 draw circle(player_size) at: location + {0, 0, 4.9} color: rgb(#blue, 0.5);
+	
+	bool entered;
+	bool ready;
+	bool not_ready;
+	
+	init {
+		do set_status(NOT_READY);
+	}
+	
+	action set_status(string status) {
+		switch status {
+			match ENTERED {
+				entered <- true;
+				not_ready <- false;
 			}
-			draw circle(player_size/2.0) at: location + {0, 0, 5} color: color ;
-			draw player_perception_cone() color: rgb(color, 0.5);
+			match READY {
+				ready <- entered;
+			}
+			match NOT_READY {
+				not_ready <- true;
+				entered <- false;
+				ready <- false;
+			}
 		}
 	}
+	
+
 }
 
-experiment Launch parent:"Base" autorun: false  type: unity {
+experiment Launch parent:"Base" autorun: true type: unity {
 
-	float minimum_cycle_duration <- 0.05;
 	string unity_linker_species <- string(unity_linker);
 	float t_ref;
 
@@ -218,11 +276,19 @@ experiment Launch parent:"Base" autorun: false  type: unity {
 			species evacuation_point;
 
 			event "r" {
-				 world.restart_requested <- true ;
+				write "restart requested";
+				world.restart_requested_from_gama <- true ;
+			}
+			
+			event "f" {
+				write "flooding requested";
+				world.flooding_requested_from_gama <- true ;
 			}
 		 	
 		 	
-			species unity_player;
+			species unity_player {
+				draw circle(30) at: location + {0, 0, 50} color: rgb(color, 0.5) ;
+			}
 			event #mouse_down{
 				 float t <- gama.machine_time;
 				 if (t - t_ref) > 500 {
