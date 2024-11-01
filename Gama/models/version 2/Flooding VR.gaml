@@ -22,7 +22,7 @@ global {
 	/*************************************************************
 	 * Functions that control the transitions between the states
 	 *************************************************************/
-
+ 
 	action enter_init {
 		write "in init state";
 		current_timeout <- gama.machine_time + init_duration * 1000;
@@ -129,7 +129,6 @@ species unity_linker parent: abstract_unity_linker {
 		point converted_start_point <- {unity_start_point_float[0], unity_start_point_float[1], unity_start_point_float[2]};
 		point converted_end_point <- {unity_end_point_float[0], unity_end_point_float[1], unity_end_point_float[2]};
 		float price <- converted_start_point distance_to (converted_end_point) with_precision 1;
-		geometry l <- line([converted_start_point, converted_end_point]);
 		create dyke with: (shape: line([converted_start_point, converted_end_point]));
 		do after_creating_dyke;
 		do send_message players: unity_player as list mes: ["ok_build_dyke_with_unity":: true];
@@ -179,7 +178,7 @@ species unity_linker parent: abstract_unity_linker {
 
 	
 	reflex send_agents when: not empty(unity_player) {
-		do add_geometries_to_send(people where (each.my_path != nil),up_people);
+		do add_geometries_to_send(people where (each.state = "s_fleeing"),up_people);
 		
 		if (not empty(dyke)) {
 			list<geometry> geoms <- dyke collect ((each.shape + 5.0) at_location {each.location.x, each.location.y, 10});

@@ -12,22 +12,34 @@ import "Flooding Model.gaml"
 
 global {
 	
+	geometry button_frame; 
+	image button_image_unselected;
+	image button_image_selected;
+	bool button_selected;
+	
+	
 	/*************************************************************
 	 * Functions that control the transitions between the states
 	 *************************************************************/
 
 	action enter_init {
-		
+		button_frame <- nil;
+		button_image_unselected <- nil;
+		button_image_selected <- nil;
 	} 
 	
 	action enter_diking {
 		diking_over <- false;
 		diking_timeout <- gama.machine_time + diking_duration * 1000;
+		button_image_unselected <- image("../../includes/icons/flood-line.png");
+		button_image_selected <- image("../../includes/icons/flood-fill.png");
 	}
 	
 	action enter_flooding {
 		restart_requested <- false;	
 		flooding_timeout <- gama.machine_time + flooding_duration * 1000;	
+		button_image_unselected <- image("../../includes/icons/restart-line.png");
+		button_image_selected <- image("../../includes/icons/restart-fill.png");
 	}
 
 	bool init_over  { 
@@ -74,6 +86,10 @@ experiment Run  type:gui autorun: true{
 	geometry line; 
 	bool river_in_3D <- false; 
 	rgb background_color <- #lightgray; 
+	point text_position;
+	point icon_position;
+	point timer_position;
+
 
 	
 	output {
@@ -100,9 +116,14 @@ experiment Run  type:gui autorun: true{
 
 			mesh cell above: 0 triangulation: true smooth: false color: cell collect each.color visible: river_in_3D;
 			event #mouse_down {
+				if (button_selected) {
+					if (state = "s_diking") {diking_over <- true; start_point <- nil; end_point<- nil; return;} else
+					if (state = "s_flooding") {restart_requested <- true; start_point <- nil; end_point<- nil;return;}
+				}
 				if (state != "s_diking") { return;}
-				if (start_point = nil) {
+		 		if (start_point = nil) {
 					start_point <- #user_location; 
+					line <- line([start_point, #user_location]);
 				} else {
 					end_point <- #user_location;
 					geometry l <- line([start_point, end_point]);
@@ -114,20 +135,41 @@ experiment Run  type:gui autorun: true{
 				}
 
 			}
-			graphics g {
-				string msg <- nil;
+			
+			graphics "Text and icon"   {
+				string text <- nil;
+				string timer <- nil;
+				text_position <- {-2000,500};
+				timer_position <- {-1600,1000};
+				icon_position <- {-1850,1000};
+								
 				switch (state) {
 					match "s_diking" {
-						msg <- "Build dykes with the mouse.";
+						text <- "Build dykes with the mouse.";
 						float left <- diking_timeout - gama.machine_time;
-						msg <- msg + "\nFlooding in " + int(left / 1000) + " seconds.\nPress 'f' to start immediately.";
+						timer <- "Flooding in " + int(left / 1000) + " seconds.";
+						//\nPress 'f' to start immediately.";
 					}	
-					match "s_restart" {msg <-  "Restarting the simulation";}
-					match "s_flooding" {msg <- "Casualties: " + casualties;}
+					match "s_restart" {text <-  "Restarting the simulation"; timer <- nil;}
+					match "s_flooding" {text <- "Casualties: " + casualties;
+						float left <- flooding_timeout - gama.machine_time;
+						timer <- "Restarting in " + int(left / 1000) + " seconds.";
+						//\nPress 'r' to restart immediately.";
+					}
 				}
-				if (msg != nil) {
-					draw msg font: font ("Helvetica", 18, #bold) at: {0,2000, 30} anchor: #top_left color: #black;	
+				if (text != nil) {
+					draw text font: font ("Helvetica", 18, #bold) at: text_position anchor: #left_center color: #black;	
 				}
+				if (timer != nil) {
+					draw timer font: font ("Helvetica", 18, #plain) at: timer_position anchor: #left_center color: #black;	
+				}
+				
+				button_frame <- square(300) at_location icon_position;
+				if (button_image_unselected != nil) { draw button_selected ? button_image_selected : button_image_unselected size: 300 at: icon_position;}
+			}
+			
+			event "z" {
+				ask last(dyke) {do die;}
 			}
 			
 			event "f" {
@@ -141,6 +183,7 @@ experiment Run  type:gui autorun: true{
 			}
 			
 			event #mouse_move { 
+				button_selected <- button_frame != nil and button_frame overlaps #user_location;
 				if (state != "s_diking") {return;}
 				if (start_point != nil) {
 					line <- line([start_point, #user_location]);
