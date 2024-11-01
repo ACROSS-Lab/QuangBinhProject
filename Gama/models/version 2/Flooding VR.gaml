@@ -113,7 +113,7 @@ species unity_linker parent: abstract_unity_linker {
 	action add_to_send_world(map map_to_send) {
 		map_to_send["score"] <- int(100*evacuated/nb_of_people);
 		map_to_send["tutorial_over"] <- tutorial_over;
-		map_to_send["remaining_time"] <- (int(current_timeout - gama.machine_time)/1000);
+		map_to_send["remaining_time"] <- int((current_timeout - gama.machine_time)/1000);
 	}
 	list<point> define_init_locations {
 		return [world.location + {0,0,100}];
