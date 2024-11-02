@@ -254,7 +254,7 @@ experiment Launch parent:"Base" autorun: true type: unity {
 	}
 
 	output {
-		 display map_VR type: 3d background: #dimgray{
+		 display map_VR type: 3d background: #dimgray axes: false{
 		 	
 			camera 'default' location: {1419.7968,8667.7995,4069.6711} target: {1419.7968,4303.6116,0.0};
 		 	species river transparency: 0.7 {

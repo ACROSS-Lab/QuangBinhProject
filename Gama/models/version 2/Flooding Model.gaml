@@ -76,9 +76,6 @@ global control: fsm {
 	 * Built-in parameters to control the simulations
 	 *************************************************************/
 	
-	// Random seed 
-	//float seed <- 0.0;
-	
 	//Step of the simulation
 	float step <- 30#mn;
 	
@@ -92,13 +89,9 @@ global control: fsm {
 	// Do we need to recompute the road graph ? 
 	bool need_to_recompute_graph <- false;
 	
-	// Do we need to update the "drowned" status of people and obstacles ?
-	//bool update_drowning -> cycle != 0;
-	
-	// Do we keep the previous dykes from one game to the other ? 
+	// Do we keep the previous dykes from one simulation to the other ? 
 	bool keep_dykes;
 
-	
 	/*************************************************************
 	 * Global monitoring variables
 	 *************************************************************/
@@ -110,7 +103,7 @@ global control: fsm {
 	int evacuated <- 0;
 
 	/*************************************************************
-	 * Initial conditions for people, water and obstacles
+	 * Initial parameters for people, water and obstacles
 	 *************************************************************/
 
 	// Initial number of people
@@ -121,9 +114,7 @@ global control: fsm {
 	
 	// The maximum water input
 	float max_water_input <- 1.0;
-	
-	// The current maximum level of water
-	float max_water_height <- 10.0;
+
 	
 	// The height of water in the river at the beginning
 	float initial_water_height <- 5.0;
@@ -164,12 +155,11 @@ global control: fsm {
 	//Shapefile for the roads
 	file shape_file_roads <- file("../../includes/gis/road.shp");
 	
-	//Data elevation file
-	file dem_file <- file("../../includes/dem/terrain89x211.tif");
+	//Data elevation file : small, medium and large definition files are availables
+	file dem_file <- file("../../includes/dem/terrain_small.tif");
 	
 	//Shape of the environment using the bounding box of Quang Binh
 	geometry shape <- envelope(file("../../includes/gis/QBBB.shp"));
-	
 	
 	/*************************************************************
 	 * Lists of the water cells used to schedule them 
@@ -232,7 +222,9 @@ global control: fsm {
 		if (empty(evacuation_point)) {create evacuation_point from: shape_file_evacuation;}
 	}
 	
-	//action to initialize the water cells according to the river shape file and the drain
+	/*
+	 * Initializes the water cells according to the river shape file and the drain
+	 */
 	action init_river {
 		if (empty(river)){ 
 			create river from:(river_shapefile);
@@ -244,12 +236,11 @@ global control: fsm {
 		ask bed_cells {water_height <- initial_water_height;}
 	}
 	
-	//initialization of the buildings
+	/*
+	 * Initializes the buildings */
 	action init_buildings {
 		if (empty(buildings)) {
-			create buildings from: buildings_shapefile {
-				do init_color();
-			}
+			create buildings from: buildings_shapefile;
 		}
 	}
 	
@@ -304,38 +295,48 @@ global control: fsm {
 	}
 
 }
-//Species which represent the obstacle
+/*************************************************************
+* Obstacles represent the attributes and behaviors common to 
+* buildings, roads and dikes. 
+*************************************************************/	
 species obstacle {
+	// Is the obstacle under water ? 
 	bool drowned <- false;
-	//height of the obstacle
+	//The height of the obstacle
 	float height min: 0.0;
-	//Color of the obstacle
+	//The color of the obstacle
 	rgb color <- #gray;
+	//The list of cells overlapped by this obstacle
+	list<cell> cells_under <- (cell overlapping self);
+	
+	/**
+	 * Initializes the height of the obstacle and that of its cells
+	*/
+	init {
+		do compute_height();
+		do build();
+	}
 
-	//List of cells concerned by this obstacle
-	list<cell> cells_under;
-	//list<cell> cells_around;
-
+	/**
+	 * When an obstacle breaks (or is drowned), it tells the 
+	 * cells under to recompute their height.
+	*/
 	action break {
 		ask cells_under {
 			do update_after_destruction(myself);
 		}
 	}
 	
+	/**
+	 * When an obstacle is built, it tells the 
+	 * cells under to recompute their height.
+	*/
 	action build {
 		ask cells_under {
 			do update_after_construction(myself);
 		}
 	}
 
-	//Action to init the cells
-	init init_cells {
-		//The cells concerned by the obstacle are the ones overlapping the obstacle
-		cells_under <- (cell overlapping self);
-		//The height is now computed
-		do compute_height();
-		do build();
-	}
 	
 	action check_drowning {
 		drowned <- (cells_under first_with (each.water_height > height)) != nil;
@@ -344,62 +345,85 @@ species obstacle {
 		}
 	}
 
-	action compute_height;
+	action compute_height virtual: true;
 
 
 }
 
-/**
- *  */
+/*************************************************************
+* Buildings are obstacles that can host people
+*************************************************************/	
+
 species buildings parent: obstacle schedules: []{
-	//The building has a height randomly chosed between 5 and 10 meters
+	//The height of the building is randomly chosed between 5 and 15 meters
 	action compute_height {
 		height <- 5.0 + rnd(10.0) ;
 	}
-	
-	action init_color {
-		color <- one_of (#orange, darker(#orange), #brown, #yellow);
-	}
 }
-//Species dyke which is derivated from obstacle
+
+/*************************************************************
+* Dykes are obstacles that are created dynamically by the user
+*************************************************************/	
 species dyke parent: obstacle schedules: []{
-	//Action to compute the height of the dyke as the dyke_height without the mean height of the cells it overlaps
+	
+	//The height of the dyke is dyke_height minus the average height of the cells it overlaps
 	action compute_height {
 		height <- dyke_height - mean(cells_under collect (each.altitude));
 	}
-	//user command which allows the possibility to destroy the dyke for the user
+	
+	//Allows a user to destroy the dyke by ctrl-clicking on it
 	user_command "Destroy" {
 		do break;
 		drowned <- true;
 	}
 }
-/**
- * Grid cell to discretize space, initialized using the dem file
- * The agents in the grid are not scheduled, but rather piloted by the world
- */
-grid cell file: dem_file neighbors: 4 frequency: 0 use_regular_agents: false use_individual_shapes: false use_neighbors_cache: true schedules: [] {
+
+
+/*************************************************************
+* A road allows people to evacuate. Breaking a road makes 
+* the graph to be recomputed
+*************************************************************/	
+species road parent: obstacle schedules: [] {
+	
+	action compute_height {
+		height <- 0.5;
+	}
+	
+	action break {
+		need_to_recompute_graph <- true;
+	}
+}
+
+
+
+
+
+/*************************************************************
+* Cells are the support of water flowing. To save memory (and 
+* speed) they are not scheduled but managed by the world directly
+*************************************************************/	
+grid cell 	file: dem_file 
+			neighbors: 4 
+			frequency: 0 
+			use_regular_agents: false 
+			use_individual_shapes: false 
+			use_neighbors_cache: true 
+			schedules: [] {
+	
 	geometry shape_union <- shape + 0.1;
-	//Altitude of the cell
+	//Altitude of the cell as read from the DEM
 	float altitude <- grid_value const: true;
 	//Height of the water in the cell
 	float water_height min: 0.0;
-	//Height of the cell
+	//Height of the cell (dynamic addition of its altitude, obstacle_height and water_height)
 	float height;
 	//List of all the obstacles overlapping the cell
 	list<obstacle> obstacles;
 	//Height of the obstacles
 	float obstacle_height;
+	//Has the cell been already processed during the current step ? 
 	bool already;
 
-	//Action to compute the highest obstacle among the obstacles
-	float compute_highest_obstacle {
-		if (empty(obstacles)) {
-			return 0.0;
-		} else {
-			return obstacles max_of (each.height);
-		}
-	}
-	
 	action initialize {
 		water_height <- 0.0;
 		height <- 0.0;
@@ -408,8 +432,9 @@ grid cell file: dem_file neighbors: 4 frequency: 0 use_regular_agents: false use
 		obstacles <- [];
 	}
 	
-	
-	//Action to flow the water 
+	/**
+	 * The main algorithmic part of water flowing
+	 */ 
 	action flow {
 	//if the height of the water is higher than 0 then, it can flow among the neighbour cells
 		if (water_height > 0) {
@@ -439,38 +464,30 @@ grid cell file: dem_file neighbors: 4 frequency: 0 use_regular_agents: false use
 			}
 
 		}
-		if (water_height > max_water_height) {
-			max_water_height <- water_height;
-		}
 		already <- true;
 	}
-	//Update the color of the cell
-	action update_color {
-		if (water_height <= 0.01) {
-			color <- #transparent;
-		} else {
-			float val_water <-  255 * (1 - (water_height / max_water_height));
-			color <- rgb([val_water/2, val_water/2, 255]);
-		}
-		grid_value <- water_height;
-	}
+
 	
 	//action to recompute the height after the destruction of the obstacle
 	action update_after_destruction (obstacle the_obstacle) {
-		remove the_obstacle from: obstacles;
-		obstacle_height <- compute_highest_obstacle();
+		obstacles >>  the_obstacle; 
+		if (empty(obstacles)) {
+			obstacle_height <- 0.0; 
+		} else if (the_obstacle.height >= obstacle_height) {
+			obstacle_height <- obstacles max_of (each.height);
+		}
 	}
+
 	//action to recompute the height after the construction of the obstacle
 	action update_after_construction(obstacle the_obstacle) {
 		obstacles << the_obstacle;
-		obstacle_height <- compute_highest_obstacle();
 		water_height <- 0.0;
+		if (the_obstacle.height > obstacle_height) {obstacle_height <- the_obstacle.height;}
 	}
-
 }
 
 /*************************************************************
-* Species river: only purpose is to create a shape that gathers 
+* The river's only purpose is to create a shape that gathers 
 * the @code{cell}s covered by water
 *************************************************************/	
 
@@ -481,9 +498,9 @@ species river {
 }
 
 /*************************************************************
-* Species people: people can be in different states (idle, fleeing,
-* drowned, evacuated). When evacuating, they try to move to the 
-* closest @code{evacuation_point}
+* People are moving agents that can be in different states 
+* (idle, fleeing, drowned, evacuated). When evacuating, they 
+* try to move to the closest @code{evacuation_point}
 *************************************************************/	
 
 species people skills: [moving] control: fsm { 
@@ -526,17 +543,11 @@ species people skills: [moving] control: fsm {
 }
 	
 /*************************************************************
-* Species evacuation_point: no behaviour attached to these agents
+* Evacuations points are simple landmarks read from a GIS file.
+* No behaviour is attached to these agents
 *************************************************************/	
 species evacuation_point schedules: [];
 
-species road parent: obstacle schedules: [] {
-	float height <- 0.5;
-	
-	action break {
-		need_to_recompute_graph <- true;
-	}
 
-}
 
 

@@ -13,10 +13,28 @@ import "Flooding Model.gaml"
 global { 
 	
 	/*************************************************************
-	 * Attributes dedicated to the UI (images, etc.)
+	 * Attributes dedicated to the UI (images, colors, frames, etc.)
 	 *************************************************************/
 	
-	rgb background_color <- #white; 
+	rgb background_color <- #dimgray;
+	rgb frame_color <- rgb(1, 95, 115);
+	rgb river_color <- rgb(74, 169, 163);
+	rgb people_color <-rgb(232, 215, 164);
+	rgb evacuation_color <- rgb(176, 32, 19);
+	rgb road_color <- rgb(64, 64, 64);
+	rgb line_color <- rgb(156, 34, 39);
+	rgb dyke_color <- rgb(156, 34, 39);
+	rgb text_color <- rgb(232, 215, 164);
+	list<rgb> building_colors <- [rgb(214, 168, 0),rgb(237, 155, 0),rgb(202, 103, 2),rgb(120, 167, 121)];
+	
+	geometry background <- rectangle(1700, 1400);
+	point text_position <- {-1500, 500};
+	point background_position <- text_position - {200, 200};
+	point timer_position <- {-1100, 1000};
+	point icon_position <- {-1350, 1000};
+	point check_position <- {-1350, 1300};
+	point check_text_position <- {-1100, 1300};
+	
 	bool river_in_3D <- false; 
 	geometry button_frame;  
 	geometry check_frame;
@@ -33,6 +51,10 @@ global {
 	 *************************************************************/
 
 	action enter_init {
+			
+		ask buildings {
+			color <- one_of(building_colors);
+		}
 		button_frame <- nil;
 		check_frame <- nil;
 		button_image_unselected <- nil;
@@ -45,8 +67,8 @@ global {
 		diking_over <- false;
 		check_frame <- nil;
 		current_timeout <- gama.machine_time + diking_duration * 1000;
-		button_image_unselected <- image("../../includes/icons/flood-line.png");
-		button_image_selected <- image("../../includes/icons/flood-fill.png");
+		button_image_unselected <- image("../../includes/icons/flood-line.png") * rgb(232, 215, 164);
+		button_image_selected <- image("../../includes/icons/flood-fill.png") * rgb(232, 215, 164);
 		check_image_unselected <- nil;
 		check_image_selected <- nil;
 	}
@@ -86,21 +108,29 @@ global {
 	float diking_duration <- 30.0;
 	
 	// The maximum amount of time, in seconds, for watching the water flow before restarting
-	float flooding_duration <- 30.0;
+	float flooding_duration <- 60.0;
 	
 	// The time at which diking will switch to flooding or conversely
 	float current_timeout;
 	
 	
 	
-	/**
-	 * Reflex to update the color of the cell depending on its water height 
-	 */
+	/*************************************************************
+	 * Reflex to update the color of the cells depending on their water height 
+	 *************************************************************/
 
 	reflex update_cell_colors when: river_in_3D {
-			ask cell {do update_color();}
+		float max_water_height <- max(cell collect each.water_height);
+		ask cell {
+			if (water_height <= 0.01) {
+				color <- #transparent;
+			} else {
+				float val_water <-  255 * (1 - (water_height / max_water_height));
+				color <- rgb([val_water/8, val_water/3, 150]);
+			}
+			grid_value <- water_height;
+		}
 	}
-	 
 }
 
 
@@ -110,41 +140,34 @@ experiment Run  type:gui autorun: true{
 	point start_point;
 	point end_point;  
 	geometry line; 
-
-
-	point text_position <- {-2000, 500};
-	point timer_position <- {-1600, 1000};
-	point icon_position <- {-1850, 1000};
-	point check_position <- {-1850, 1300};
-	point check_text_position <- {-1600, 1300};
-
-
-
 	 
 	output {
 		
 		layout #none controls: false toolbars: false editors: false parameters: false consoles: false tabs: false;
 		display map type: 3d axes: false background: background_color antialias: false{
 
-			species river visible: !river_in_3D transparency: 0.5{
-				draw shape color: rgb(95,158,160);
+			species river visible: !river_in_3D {
+				draw without_holes(shape simplification 30) border: brighter(brighter(river_color)) width: 5 color: river_color;
 			}			
 
 			species road {
-				draw shape color: drowned ? background_color : color depth: height border: drowned ? #white:color;
+				draw drowned ? shape : shape + 10 color: drowned ? darker(river_color) : road_color ;
 			}
 		 	species buildings {
-		 		draw shape color: drowned ? (#cadetblue) : color depth: height * 2 border: drowned ? #white:color;	
+		 		draw shape color: drowned ? river_color : color border: drowned ? darker(river_color):color;	
 		 	}
 		 	species dyke {
-		 		draw shape + 5 color: drowned ? (#cadetblue) : color depth: height * 2 border: drowned ? #white:color;	
+		 		draw shape + 5 color: drowned ? river_color : dyke_color border: drowned ? darker(river_color):dyke_color;	
 			} 
 			species people {
-				draw sphere(18) color:#darkseagreen;
+				draw circle(10)  color: people_color;
 			}
-			species evacuation_point;
+			species evacuation_point {
+				draw circle(60) at: location + {0,0,40} color: evacuation_color;
+			}
 
-			mesh cell above: 0 triangulation: true smooth: false color: cell collect each.color visible: river_in_3D;
+			mesh cell above: 0 triangulation: true smooth: false color: cell collect each.color visible: river_in_3D transparency: 0.5;
+			
 			event #mouse_down {
 				if (button_selected) {
 					if (state = "s_diking") {diking_over <- true; start_point <- nil; end_point<- nil; return;} else
@@ -179,28 +202,29 @@ experiment Run  type:gui autorun: true{
 					match "s_diking" {
 						text <- "Build dykes with the mouse.";
 						float left <- current_timeout - gama.machine_time;
-						timer <- "Flooding in " + int(left / 1000) + " seconds.";
+						timer <- button_selected ? "Start flooding now.": "Flooding in " + int(left / 1000) + " seconds.";
 						//\nPress 'f' to start immediately.";
 					}	
 					match "s_flooding" {text <- "Casualties: " + casualties + '/' + nb_of_people;
 						float left <- current_timeout - gama.machine_time;
-						timer <- "Restarting in " + int(left / 1000) + " seconds.";
+						timer <- button_selected ? "Restart now.": "Restarting in " + int(left / 1000) + " seconds.";
 						//\nPress 'r' to restart immediately.";
 						keep <- "Keep the dykes."; 
 					}
 				}
+				//draw background color: darker(frame_color) width: 5 border: brighter(frame_color) at: background_position + {background.width / 2, background.height/2, -10} lighted: false ;
 				if (text != nil) {
-					draw text font: font ("Helvetica", 18, #bold) at: text_position anchor: #left_center color: #black;	
+					draw text font: font ("Helvetica", 18, #bold) at: text_position anchor: #top_left color: text_color;	
 				}
 				if (timer != nil) { 
-					draw timer font: font ("Helvetica", 18, #plain) at: timer_position anchor: #left_center color: #black;	
+					draw timer font: font ("Helvetica", 14, #plain) at: timer_position anchor: #top_left color: text_color;	
 				}
 				if (keep != nil) {
-					draw keep font: font ("Helvetica", 18, #plain) at: check_text_position anchor: #left_center color: #black;	
+					draw keep font: font ("Helvetica", 14, #plain) at: check_text_position anchor: #top_left color: text_color;	
 				}				
 				
 				
-				if (button_image_unselected != nil) {
+				if (button_image_unselected != nil) { 
 					button_frame <- square(300) at_location icon_position;
 					draw button_selected ? button_image_selected : button_image_unselected size: 300 at: icon_position;
 				}
@@ -237,7 +261,9 @@ experiment Run  type:gui autorun: true{
 			}
 			
 			graphics ll {
-				if (line != nil) {draw line + dyke_width color: #red;}
+				if (line != nil) {
+					draw line + dyke_width + 5 color: dyke_color;
+				}
 			}
 		}
 
