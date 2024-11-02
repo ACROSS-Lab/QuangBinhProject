@@ -6,28 +6,29 @@
 */
 
 
-model FloodingUI
+model FloodingUI 
 
 import "Flooding Model.gaml"
 
-global {
+global { 
 	
 	/*************************************************************
 	 * Attributes dedicated to the UI (images, etc.)
 	 *************************************************************/
 	
+	rgb background_color <- #white; 
 	bool river_in_3D <- false; 
 	geometry button_frame;  
 	geometry check_frame;
 	image button_image_unselected;
 	image button_image_selected;
 	image check_image_unselected;
-	image check_image_selected;
+	image check_image_selected; 
 	bool button_selected;
 	bool check_selected;
 	
-	
-	/*************************************************************
+	 
+	/************************************************************* 
 	 * Functions that control the transitions between the states
 	 *************************************************************/
 
@@ -43,7 +44,7 @@ global {
 	action enter_diking {
 		diking_over <- false;
 		check_frame <- nil;
-		diking_timeout <- gama.machine_time + diking_duration * 1000;
+		current_timeout <- gama.machine_time + diking_duration * 1000;
 		button_image_unselected <- image("../../includes/icons/flood-line.png");
 		button_image_selected <- image("../../includes/icons/flood-fill.png");
 		check_image_unselected <- nil;
@@ -52,7 +53,7 @@ global {
 	
 	action enter_flooding {
 		restart_requested <- false;	
-		flooding_timeout <- gama.machine_time + flooding_duration * 1000;	
+		current_timeout <- gama.machine_time + flooding_duration * 1000;	
 		button_image_unselected <- image("../../includes/icons/restart-line.png");
 		button_image_selected <- image("../../includes/icons/restart-fill.png");
 		check_image_unselected <- image("../../includes/icons/checkbox-blank-line.png");
@@ -64,11 +65,11 @@ global {
 	} 
 	
 	bool diking_over { 
-		return diking_over or gama.machine_time >= diking_timeout;
+		return diking_over or gama.machine_time >= current_timeout;
 	}
 	
 	bool flooding_over  { 
-		return restart_requested or gama.machine_time >= flooding_timeout;
+		return restart_requested or gama.machine_time >= current_timeout;
 	}	
 	
 	/*************************************************************
@@ -76,21 +77,20 @@ global {
 	 *************************************************************/
 
 	// Is a restart requested by the user ? 
-	bool restart_requested;
+	bool restart_requested; 
 	
 	// Is the flooding state requested by the user ? 
 	bool diking_over;
 	
-	
 	// The maximum amount of time, in seconds, for building dikes 
-	float diking_duration <- 120.0;
+	float diking_duration <- 30.0;
 	
 	// The maximum amount of time, in seconds, for watching the water flow before restarting
-	float flooding_duration <- 120.0;
+	float flooding_duration <- 30.0;
 	
-	float diking_timeout;
+	// The time at which diking will switch to flooding or conversely
+	float current_timeout;
 	
-	float flooding_timeout; 
 	
 	
 	/**
@@ -100,7 +100,7 @@ global {
 	reflex update_cell_colors when: river_in_3D {
 			ask cell {do update_color();}
 	}
-	
+	 
 }
 
 
@@ -111,7 +111,7 @@ experiment Run  type:gui autorun: true{
 	point end_point;  
 	geometry line; 
 
-	rgb background_color <- #white; 
+
 	point text_position <- {-2000, 500};
 	point timer_position <- {-1600, 1000};
 	point icon_position <- {-1850, 1000};
@@ -120,13 +120,10 @@ experiment Run  type:gui autorun: true{
 
 
 
-	
+	 
 	output {
 		
-		monitor "Average water height" value: mean(cell collect each.water_height);
-		
-		
-		layout #none controls: true toolbars: false editors: false parameters: true consoles: false tabs: false;
+		layout #none controls: false toolbars: false editors: false parameters: false consoles: false tabs: false;
 		display map type: 3d axes: false background: background_color antialias: false{
 
 			species river visible: !river_in_3D transparency: 0.5{
@@ -134,7 +131,7 @@ experiment Run  type:gui autorun: true{
 			}			
 
 			species road {
-				draw shape color: drowned ? (#cadetblue) : color depth: height border: drowned ? #white:color;
+				draw shape color: drowned ? background_color : color depth: height border: drowned ? #white:color;
 			}
 		 	species buildings {
 		 		draw shape color: drowned ? (#cadetblue) : color depth: height * 2 border: drowned ? #white:color;	
@@ -181,13 +178,12 @@ experiment Run  type:gui autorun: true{
 				switch (state) {
 					match "s_diking" {
 						text <- "Build dykes with the mouse.";
-						float left <- diking_timeout - gama.machine_time;
+						float left <- current_timeout - gama.machine_time;
 						timer <- "Flooding in " + int(left / 1000) + " seconds.";
 						//\nPress 'f' to start immediately.";
 					}	
-					match "s_restart" {text <-  "Restarting the simulation"; timer <- nil;}
 					match "s_flooding" {text <- "Casualties: " + casualties + '/' + nb_of_people;
-						float left <- flooding_timeout - gama.machine_time;
+						float left <- current_timeout - gama.machine_time;
 						timer <- "Restarting in " + int(left / 1000) + " seconds.";
 						//\nPress 'r' to restart immediately.";
 						keep <- "Keep the dykes."; 

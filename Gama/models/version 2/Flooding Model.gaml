@@ -8,6 +8,9 @@
 * This model can be experimented using either the classical UI of GAMA (see Flooding UI.gaml)
 * or a VR environment (see Flooding VR.gaml)
 */
+@no_experiment
+@no_info
+
 model Flooding
 
 global control: fsm {
@@ -22,11 +25,7 @@ global control: fsm {
 		}
 		transition to: s_diking when: init_over();
 	}
-	
-	state s_restart {
-		do restart();
-		transition to: s_init;
-	}
+
 	
 	/**
 	 * This state represents the state where the user(s) is(are) able to build dikes 
@@ -48,9 +47,12 @@ global control: fsm {
 		}		
 		do add_water();
 		do flow_water();
+		do check_obstactles_drowning();
 		do recompute_road_graph();
 		do drain_water();
-		transition to: s_restart when: flooding_over();
+		transition to: s_init when: flooding_over() {
+			do restart();
+		}
 	}
 
 	/*************************************************************
@@ -75,7 +77,7 @@ global control: fsm {
 	 *************************************************************/
 	
 	// Random seed 
-	float seed <- 0.0;
+	//float seed <- 0.0;
 	
 	//Step of the simulation
 	float step <- 30#mn;
@@ -129,8 +131,8 @@ global control: fsm {
 	//Diffusion rate
 	float diffusion_rate <- 0.5;
 	
-	//Height of the dykes (15 m by default)
-	float dyke_height <- 15.0;
+	//Height of the dykes (30 m by default)
+	float dyke_height <- 30.0;
 	
 	//Width of the dyke (15 m by default)
 	float dyke_width <- 15.0;
@@ -139,14 +141,11 @@ global control: fsm {
 	 * Road network
 	 *************************************************************/
 	
-	// Complete initial road network
+	// Road network w/o the drowned roads
 	graph<geometry, geometry> road_network;
 	
-	// Road network w/o the drowned roads
-	graph<geometry, geometry> road_network_usable;
-	
 	// Weights associated with the road network
-	map<road, float> new_weights;
+	map<road, float> road_weights;
 
 	
 	/*************************************************************
@@ -180,7 +179,7 @@ global control: fsm {
 	list<cell> drain_cells;
 	
 	//List of the initial river cells ("bed" of the river)
-	list<cell> river_cells;
+	list<cell> bed_cells;
 	
 	/*************************************************************
 	 * Initialization and reinitialization behaviors
@@ -194,24 +193,14 @@ global control: fsm {
 		casualties <- 0;
 		evacuated <- 0;
 		ask cell {
-			water_height <- 0.0;
-			height <- 0.0;
-			already <- false;
-			obstacle_height <- 0.0;
-			obstacles <- [];
+			do initialize();
 		}
-		ask road+people+buildings+river+evacuation_point {
+		ask road+buildings+(keep_dykes ? dyke : []) {
+			drowned <- false;
+			do build();
+		}
+		ask people+(!keep_dykes ? dyke: []) {
 			do die;
-		}
-		if (keep_dykes) {
-			ask dyke {
-				drowned <- false;
-				do build();
-			}
-		} else {
-			ask dyke {
-				do die;
-			}
 		}
 		do initialize_agents;
 	}
@@ -234,29 +223,33 @@ global control: fsm {
 	}
 
 	action init_roads {
-		create road from: clean_network(shape_file_roads.contents, 0.0, false, true);
+		if (empty(road)) {create road from: clean_network(shape_file_roads.contents, 0.0, false, true);}
 		road_network <- as_edge_graph(road);
-		road_network_usable <- as_edge_graph(road);
-		new_weights <- road as_map (each::each.shape.perimeter);
+		road_weights <- road as_map (each::each.shape.perimeter);
 	}
 	
 	action init_evac {
-		create evacuation_point from: shape_file_evacuation;
+		if (empty(evacuation_point)) {create evacuation_point from: shape_file_evacuation;}
 	}
 	
 	//action to initialize the water cells according to the river shape file and the drain
 	action init_river {
-		create river from:(river_shapefile);
-		ask cell overlapping river[0] {
-			water_height <- initial_water_height;
-			river_cells << self;
-			if (grid_y = 0) {drain_cells << self;}
+		if (empty(river)){ 
+			create river from:(river_shapefile);
+			ask cell overlapping river[0] {
+				bed_cells << self;
+				if (grid_y = 0) {drain_cells << self;}
+			}
 		}
+		ask bed_cells {water_height <- initial_water_height;}
 	}
+	
 	//initialization of the buildings
 	action init_buildings {
-		create buildings from: buildings_shapefile {
-			do init_color();
+		if (empty(buildings)) {
+			create buildings from: buildings_shapefile {
+				do init_color();
+			}
 		}
 	}
 	
@@ -269,22 +262,19 @@ global control: fsm {
 	 * Action to add water to the river cells
 	 */
 	action add_water {
-		ask river_cells {
-			float water_input <- max_water_input * rnd(100) / 100;
-			water_height <- water_height + water_input;
+		ask bed_cells {
+			water_height <- water_height + max_water_input * rnd(100) / 100;
 		}
-
 	}
+
 	/**
 	 * Action to flow the water according to the altitute and the obstacle
 	 */
 	action flow_water {
-		list<cell> cells <- cell sort_by ((each.altitude + each.water_height + each.obstacle_height));
-		ask cells {
+		ask cell sort_by ((each.altitude + each.water_height + each.obstacle_height)) {
 			already <- false;
 			do flow;
 		}
-
 	}
 
 	/**
@@ -292,9 +282,15 @@ global control: fsm {
 	 */
 	action recompute_road_graph {
 		if (!need_to_recompute_graph) {return;}
-		new_weights <- road as_map (each::each.shape.perimeter * (each.drowned ? 3.0 : 1.0));
-		road_network_usable <- as_edge_graph(road where not each.drowned);
+		road_weights <- road as_map (each::each.shape.perimeter * (each.drowned ? 3.0 : 1.0));
+		road_network <- as_edge_graph(road where not each.drowned);
 		need_to_recompute_graph <- false;
+	}
+	
+	action check_obstactles_drowning {
+		ask buildings+road+dyke {
+			if (!drowned) {do check_drowning;}
+		}
 	}
 
 	/**
@@ -336,13 +332,12 @@ species obstacle {
 	init init_cells {
 		//The cells concerned by the obstacle are the ones overlapping the obstacle
 		cells_under <- (cell overlapping self);
-		//cells_around <- remove_duplicates(cells_under + cells_under accumulate (each neighbors_at 1));
 		//The height is now computed
 		do compute_height();
 		do build();
 	}
 	
-	reflex check_drowning when: !drowned /*and update_drowning*/ {
+	action check_drowning {
 		drowned <- (cells_under first_with (each.water_height > height)) != nil;
 		if (drowned) {
 			do break();
@@ -356,7 +351,7 @@ species obstacle {
 
 /**
  *  */
-species buildings parent: obstacle {
+species buildings parent: obstacle schedules: []{
 	//The building has a height randomly chosed between 5 and 10 meters
 	action compute_height {
 		height <- 5.0 + rnd(10.0) ;
@@ -367,7 +362,7 @@ species buildings parent: obstacle {
 	}
 }
 //Species dyke which is derivated from obstacle
-species dyke parent: obstacle {
+species dyke parent: obstacle schedules: []{
 	//Action to compute the height of the dyke as the dyke_height without the mean height of the cells it overlaps
 	action compute_height {
 		height <- dyke_height - mean(cells_under collect (each.altitude));
@@ -378,20 +373,23 @@ species dyke parent: obstacle {
 		drowned <- true;
 	}
 }
-//Grid cell to discretize space, initialized using the dem file
+/**
+ * Grid cell to discretize space, initialized using the dem file
+ * The agents in the grid are not scheduled, but rather piloted by the world
+ */
 grid cell file: dem_file neighbors: 4 frequency: 0 use_regular_agents: false use_individual_shapes: false use_neighbors_cache: true schedules: [] {
 	geometry shape_union <- shape + 0.1;
 	//Altitude of the cell
-	float altitude <- grid_value;
+	float altitude <- grid_value const: true;
 	//Height of the water in the cell
-	float water_height <- 0.0 min: 0.0;
+	float water_height min: 0.0;
 	//Height of the cell
 	float height;
 	//List of all the obstacles overlapping the cell
 	list<obstacle> obstacles;
 	//Height of the obstacles
-	float obstacle_height <- 0.0;
-	bool already <- false;
+	float obstacle_height;
+	bool already;
 
 	//Action to compute the highest obstacle among the obstacles
 	float compute_highest_obstacle {
@@ -400,14 +398,23 @@ grid cell file: dem_file neighbors: 4 frequency: 0 use_regular_agents: false use
 		} else {
 			return obstacles max_of (each.height);
 		}
-
 	}
+	
+	action initialize {
+		water_height <- 0.0;
+		height <- 0.0;
+		already <- false;
+		obstacle_height <- 0.0;
+		obstacles <- [];
+	}
+	
+	
 	//Action to flow the water 
 	action flow {
 	//if the height of the water is higher than 0 then, it can flow among the neighbour cells
 		if (water_height > 0) {
 		//We get all the cells already done
-			list<cell> neighbour_cells_al <- (self neighbors_at 1) where (each.already);
+			list<cell> neighbour_cells_al <- neighbors where (each.already);
 			//If there are cells already done then we continue
 			if (!empty(neighbour_cells_al)) {
 			//We compute the height of the neighbours cells according to their altitude, water_height and obstacle_height
@@ -491,13 +498,13 @@ species people skills: [moving] control: fsm {
 	state s_fleeing {
 		enter {
 			point target;
-			using (topology(road_network_usable)) {
+			using (topology(road_network)) {
 				evacuation_point ep <- (evacuation_point closest_to self);
 				target <- ep.location;
 			}
-			path my_path <- road_network_usable path_between (location, target);
+			path my_path <- road_network path_between (location, target);
 		}
-		if my_path != nil {do follow(path: my_path, move_weights: new_weights); }
+		if my_path != nil {do follow(path: my_path, move_weights: road_weights); }
 		transition to: s_evacuated when: location = target;
 		transition to: s_drowned when: self.is_drowning();
 	}
