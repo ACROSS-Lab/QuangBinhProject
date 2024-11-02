@@ -12,10 +12,19 @@ import "Flooding Model.gaml"
 
 global {
 	
-	geometry button_frame; 
+	/*************************************************************
+	 * Attributes dedicated to the UI (images, etc.)
+	 *************************************************************/
+	
+	bool river_in_3D <- false; 
+	geometry button_frame;  
+	geometry check_frame;
 	image button_image_unselected;
 	image button_image_selected;
+	image check_image_unselected;
+	image check_image_selected;
 	bool button_selected;
+	bool check_selected;
 	
 	
 	/*************************************************************
@@ -24,15 +33,21 @@ global {
 
 	action enter_init {
 		button_frame <- nil;
+		check_frame <- nil;
 		button_image_unselected <- nil;
 		button_image_selected <- nil;
+		check_image_unselected <- nil;
+		check_image_selected <- nil;
 	} 
-	
+	 
 	action enter_diking {
 		diking_over <- false;
+		check_frame <- nil;
 		diking_timeout <- gama.machine_time + diking_duration * 1000;
 		button_image_unselected <- image("../../includes/icons/flood-line.png");
 		button_image_selected <- image("../../includes/icons/flood-fill.png");
+		check_image_unselected <- nil;
+		check_image_selected <- nil;
 	}
 	
 	action enter_flooding {
@@ -40,6 +55,8 @@ global {
 		flooding_timeout <- gama.machine_time + flooding_duration * 1000;	
 		button_image_unselected <- image("../../includes/icons/restart-line.png");
 		button_image_selected <- image("../../includes/icons/restart-fill.png");
+		check_image_unselected <- image("../../includes/icons/checkbox-blank-line.png");
+		check_image_selected <- image("../../includes/icons/checkbox-line.png");
 	}
 
 	bool init_over  { 
@@ -73,7 +90,16 @@ global {
 	
 	float diking_timeout;
 	
-	float flooding_timeout;
+	float flooding_timeout; 
+	
+	
+	/**
+	 * Reflex to update the color of the cell depending on its water height 
+	 */
+
+	reflex update_cell_colors when: river_in_3D {
+			ask cell {do update_color();}
+	}
 	
 }
 
@@ -84,16 +110,23 @@ experiment Run  type:gui autorun: true{
 	point start_point;
 	point end_point;  
 	geometry line; 
-	bool river_in_3D <- false; 
-	rgb background_color <- #lightgray; 
-	point text_position;
-	point icon_position;
-	point timer_position;
+
+	rgb background_color <- #white; 
+	point text_position <- {-2000, 500};
+	point timer_position <- {-1600, 1000};
+	point icon_position <- {-1850, 1000};
+	point check_position <- {-1850, 1300};
+	point check_text_position <- {-1600, 1300};
+
 
 
 	
 	output {
-		layout #none controls: false toolbars: false editors: false parameters: false consoles: false tabs: false;
+		
+		monitor "Average water height" value: mean(cell collect each.water_height);
+		
+		
+		layout #none controls: true toolbars: false editors: false parameters: true consoles: false tabs: false;
 		display map type: 3d axes: false background: background_color antialias: false{
 
 			species river visible: !river_in_3D transparency: 0.5{
@@ -120,6 +153,9 @@ experiment Run  type:gui autorun: true{
 					if (state = "s_diking") {diking_over <- true; start_point <- nil; end_point<- nil; return;} else
 					if (state = "s_flooding") {restart_requested <- true; start_point <- nil; end_point<- nil;return;}
 				}
+				if (check_selected) {
+					keep_dykes <- !keep_dykes;
+				}
 				if (state != "s_diking") { return;}
 		 		if (start_point = nil) {
 					start_point <- #user_location; 
@@ -139,9 +175,8 @@ experiment Run  type:gui autorun: true{
 			graphics "Text and icon"   {
 				string text <- nil;
 				string timer <- nil;
-				text_position <- {-2000,500};
-				timer_position <- {-1600,1000};
-				icon_position <- {-1850,1000};
+				string keep <- nil;
+
 								
 				switch (state) {
 					match "s_diking" {
@@ -151,25 +186,37 @@ experiment Run  type:gui autorun: true{
 						//\nPress 'f' to start immediately.";
 					}	
 					match "s_restart" {text <-  "Restarting the simulation"; timer <- nil;}
-					match "s_flooding" {text <- "Casualties: " + casualties;
+					match "s_flooding" {text <- "Casualties: " + casualties + '/' + nb_of_people;
 						float left <- flooding_timeout - gama.machine_time;
 						timer <- "Restarting in " + int(left / 1000) + " seconds.";
 						//\nPress 'r' to restart immediately.";
+						keep <- "Keep the dykes."; 
 					}
 				}
 				if (text != nil) {
 					draw text font: font ("Helvetica", 18, #bold) at: text_position anchor: #left_center color: #black;	
 				}
-				if (timer != nil) {
+				if (timer != nil) { 
 					draw timer font: font ("Helvetica", 18, #plain) at: timer_position anchor: #left_center color: #black;	
 				}
+				if (keep != nil) {
+					draw keep font: font ("Helvetica", 18, #plain) at: check_text_position anchor: #left_center color: #black;	
+				}				
 				
-				button_frame <- square(300) at_location icon_position;
-				if (button_image_unselected != nil) { draw button_selected ? button_image_selected : button_image_unselected size: 300 at: icon_position;}
+				
+				if (button_image_unselected != nil) {
+					button_frame <- square(300) at_location icon_position;
+					draw button_selected ? button_image_selected : button_image_unselected size: 300 at: icon_position;
+				}
+				if (check_image_unselected != nil) {
+					check_frame <- square(300) at_location check_position;
+					draw check_selected or keep_dykes ? check_image_selected : check_image_unselected size: 300 at: check_position;
+				}
 			}
 			
 			event "z" {
-				ask last(dyke) {do die;}
+				dyke to_kill <- last(dyke);
+				if (to_kill != nil) { ask to_kill {do die;}}
 			}
 			
 			event "f" {
@@ -184,7 +231,8 @@ experiment Run  type:gui autorun: true{
 			
 			event #mouse_move { 
 				button_selected <- button_frame != nil and button_frame overlaps #user_location;
-				if (state != "s_diking") {return;}
+				check_selected <- check_frame != nil and check_frame overlaps #user_location;
+				if (state != "s_diking") {line <- nil; return;}
 				if (start_point != nil) {
 					line <- line([start_point, #user_location]);
 				} else {
