@@ -1,60 +1,46 @@
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(QuickTest.APITest))]
-public class APITestEditor : Editor
+namespace QuickTest.Editor
 {
-    public override void OnInspectorGUI()
+    [CustomEditor(typeof(APITest))]
+    public class APITestEditor : UnityEditor.Editor
     {
-        DrawDefaultInspector();
-
-        QuickTest.APITest apiTest = (QuickTest.APITest)target;
-        // if (GUILayout.Button("Update Budget"))
-        // {
-        //     apiTest.TestUpdateBudget();
-        // }
-
-        if (GUILayout.Button("Update score"))
+        public override void OnInspectorGUI()
         {
-            apiTest.TestUpdateScore();
-        }
+            DrawDefaultInspector();
 
-        if (GUILayout.Button("Build dyke"))
-        {
-            apiTest.TestBuildDyke();
-            
-        }
+            APITest apiTest = (APITest)target;
         
-        if (GUILayout.Button("Draw dyke"))
-        {
-            apiTest.TestDrawDyke();
-            apiTest.TestBuildDyke();
-        }
+            if (GUILayout.Button("Draw dyke"))
+            {
+                apiTest.TestDrawDyke();
+            }
 
-        if (GUILayout.Button("Remove dyke"))
-        {
-            apiTest.TestRemoveDyke();
-        }
+            if (GUILayout.Button("Remove dyke"))
+            {
+                apiTest.TestRemoveDyke();
+            }
 
-        if (GUILayout.Button("Pause"))
-        {
-            apiTest.TestPause();
-        }
+            if (GUILayout.Button("Pause"))
+            {
+                apiTest.TestPause();
+            }
 
-        if (GUILayout.Button("Resume"))
-        {
-            apiTest.TestResume();
-        }
+            if (GUILayout.Button("Resume"))
+            {
+                apiTest.TestResume();
+            }
 
-        if (GUILayout.Button("End"))
-        {
-            apiTest.TestEnd();
-        }
+            if (GUILayout.Button("End"))
+            {
+                apiTest.TestEnd();
+            }
 
-        if (GUILayout.Button("Start Simulation"))
-        {
-            apiTest.TestStartSimulation();
-            ;
+            if (GUILayout.Button("Start Simulation"))
+            {
+                apiTest.TestStartSimulation();
+            }
         }
     }
 }
