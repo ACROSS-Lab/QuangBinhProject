@@ -173,15 +173,13 @@ public class SimulationManager : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (IsGameState(GameState.GAME))
+        if (ConnectionManager.Instance.IsConnectionState(ConnectionState.AUTHENTICATED) && IsGameState(GameState.GAME))
         {
-
             if (!sentStateToGama)
             {
                
                 sentStateToGama = true;
                 _apiTest.TestSetInGame();
-                
             }
         }
        
