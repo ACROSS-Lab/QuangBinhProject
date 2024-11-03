@@ -1446,6 +1446,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "SecondButton",
+                    "type": "Button",
+                    "id": "12528ef8-7ad1-44b7-a73c-b66617248b08",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -1600,6 +1609,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "MainButton",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d6c0965d-cf6a-4d49-882f-e77a2c1e7d4f",
+                    "path": "<OculusTouchController>/secondaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SecondButton",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
