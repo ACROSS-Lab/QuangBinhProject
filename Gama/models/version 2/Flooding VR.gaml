@@ -31,6 +31,7 @@ global {
 	
 	action enter_diking {
 		write "in diking state";
+		ask unity_linker {do send_static_geometries();}
 		ask unity_player {do set_status(IN_GAME);}
 		flooding_requested_from_gama <- false;
 		diking_requested_from_gama <- false;
@@ -153,7 +154,8 @@ species unity_linker parent: abstract_unity_linker {
 			}
 				
 			do add_geometries_to_send(geoms,up_dyke);	
-			do add_geometries_to_send(river,up_water);
+			do add_geometries_to_keep(river);
+			do add_geometries_to_keep(people);
 			
 			do send_world;
 			do send_current_message;
@@ -184,20 +186,30 @@ species unity_linker parent: abstract_unity_linker {
 			do die;
 		}
 	}
+	
+	
+	/**
+	 * Send dynamic geometries when it is necessary. 
+	 */
+	 
+	 action send_static_geometries {
+		if (state = "s_init") {
+			do add_geometries_to_send(people ,up_people);
+			do add_geometries_to_send(river,up_water);
+		
+		}
+	 }
 
 	
 	reflex send_agents when: not empty(unity_player) {
-		do add_geometries_to_send(people where (each.state = "s_fleeing"),up_people);
 		
-		if (not empty(dyke)) {
-			list<geometry> geoms <- dyke collect ((each.shape + 5.0) at_location {each.location.x, each.location.y, 10});
-			loop i from:0 to: length(geoms) -1 {
-				geoms[i].attributes['name'] <- dyke[i].name;
-			}
-				
-			do add_geometries_to_send(geoms ,up_dyke);	 
+		
+		if (state = "s_flooding") {
+			do add_geometries_to_send(people where (each.state = "s_fleeing"),up_people);
+			do add_geometries_to_send(river,up_water);
+			do add_geometries_to_keep(dyke);	 
+			
 		}
-		do add_geometries_to_send(river,up_water);
 		
 		
 	}
@@ -219,6 +231,7 @@ species unity_player parent: abstract_unity_player{
 	
 	init {
 		do set_status(IN_TUTORIAL);
+		ask unity_linker {do send_static_geometries();}
 	}
 	
 	action set_status(string status) {
