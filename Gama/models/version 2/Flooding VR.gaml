@@ -126,7 +126,7 @@ species unity_linker parent: abstract_unity_linker {
 		map_to_send["remaining_time"] <- int((current_timeout - gama.machine_time)/1000);
 	}
 	list<point> define_init_locations {
-		return [world.location + {0,0,100}];
+		return [world.location + {0,0,1000}];
 	} 
 
 	list<float> convert_string_to_array_of_float(string my_string) {
