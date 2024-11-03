@@ -134,7 +134,6 @@ public class SimulationManager : MonoBehaviour
     void StartTheFlood()
     {
         //StartTime = Time.time;
-        _apiTest.TestStartSimulation();
         //startButton.gameObject.SetActive(false);
     }
 

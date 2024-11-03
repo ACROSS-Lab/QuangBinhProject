@@ -36,11 +36,6 @@ namespace QuickTest.Editor
             {
                 apiTest.TestPause();
             }
-            
-            if (GUILayout.Button("End"))
-            {
-                apiTest.TestEnd();
-            }
         }
     }
 }
