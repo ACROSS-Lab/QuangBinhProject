@@ -142,46 +142,12 @@ species unity_linker parent: abstract_unity_linker {
 		point converted_end_point <- {unity_end_point_float[0], unity_end_point_float[1], unity_end_point_float[2]};
 		float price <- converted_start_point distance_to (converted_end_point) with_precision 1;
 		create dyke with: (shape: line([converted_start_point, converted_end_point]));
-		//do after_creating_dyke;
 		do send_message players: unity_player as list mes: ["ok_build_dyke_with_unity":: true];
 		ask experiment {
 			do update_outputs(true); 
 		}
 	}
-	
-//	action after_creating_dyke {
-//				
-//			do add_geometries_to_send(dyke);	
-//			do add_geometries_to_keep(river);
-//			do send_world;
-//			do send_current_message;
-//	}
-	
 
-//	action repair_dyke_with_unity(string dyke_name)
-//	{
-//		ask dyke where (each.name = dyke_name)
-//		{
-//			drowned <- false;
-//			do build();
-//		}
-//	}
-//	
-//	action break_dyke_with_unity(string dyke_name)
-//	{
-//		ask dyke where (each.name = dyke_name)
-//		{
-//			drowned <- true;
-//			do break();
-//		}
-//	}
-//	
-//	action remove_dyke_with_unity(string dyke_name)
-//	{
-//		ask dyke where (each.name = dyke_name) {
-//			do die;
-//		}
-//	}
 	
 	
 	/**
@@ -189,20 +155,19 @@ species unity_linker parent: abstract_unity_linker {
 	 */
 	 
 	 action send_static_geometries {
-			//do add_geometries_to_send(people ,up_people);
-			do add_geometries_to_send(river,up_water);
+		do add_geometries_to_send(river,up_water);
 	 }
 
 	
 	reflex send_agents when: not empty(unity_player) {
 		
 		if (state = "s_diking") {
-			do add_geometries_to_send(dyke);
+			do add_geometries_to_send(dyke, up_dyke);
 			do add_geometries_to_keep(river);
 		} else	if (state = "s_flooding") {
 			do add_geometries_to_send(people where (each.state = "s_fleeing"),up_people);
 			do add_geometries_to_send(river,up_water);
-			do add_geometries_to_send(dyke);	 
+			do add_geometries_to_send(dyke, up_dyke);	 
 		}
 		
 		
