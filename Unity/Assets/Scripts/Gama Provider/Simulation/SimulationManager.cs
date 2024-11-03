@@ -173,22 +173,15 @@ public class SimulationManager : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (ConnectionManager.Instance.IsConnectionState(ConnectionState.CONNECTED))
+        if (IsGameState(GameState.GAME))
         {
 
             if (!sentStateToGama)
             {
-                switch (SceneManager.GetActiveScene().name)
-                {
-                    case "Tutorial_cine360":
-                        sentStateToGama = true;
-                        _apiTest.TestSetInTutorial();
-                        break;
-                    case "Main Scene - Flood":
-                        sentStateToGama = true;
-                        _apiTest.TestSetInGame();
-                        break;
-                }
+               
+                sentStateToGama = true;
+                _apiTest.TestSetInGame();
+                
             }
         }
        
