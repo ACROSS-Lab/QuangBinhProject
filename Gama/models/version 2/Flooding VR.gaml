@@ -47,11 +47,11 @@ global {
 	}
 
 	bool init_over  { 
-		return empty(unity_player) or tutorial_over or gama.machine_time >= current_timeout;
+		return tutorial_over or gama.machine_time >= current_timeout;
 	} 
 	
 	bool diking_over { 
-		return empty(unity_player) or gama.machine_time >= current_timeout;
+		return  gama.machine_time >= current_timeout;
 	}
 	
 	bool flooding_over  { 
@@ -73,7 +73,7 @@ global {
 	
 	
 	// Are all the players who entered ready or has GAMA sent the beginning of the game ? 
-	bool tutorial_over -> empty(unity_player) or diking_requested_from_gama or flooding_requested_from_gama or (unity_player none_matches each.in_tutorial)  ;
+	bool tutorial_over -> !empty(unity_player) and( diking_requested_from_gama or flooding_requested_from_gama or (unity_player none_matches each.in_tutorial))  ;
 	
 	// Are all the players in the not_ready state or has GAMA sent the end of the game ?
 	bool flooding_over -> empty(unity_player) ? restart_requested_from_gama : restart_requested_from_gama or (unity_player all_match (each.in_tutorial));
