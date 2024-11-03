@@ -48,7 +48,7 @@ global {
 	}
 
 	bool init_over  { 
-		return tutorial_over or gama.machine_time >= current_timeout;
+		return tutorial_over ;//or gama.machine_time >= current_timeout;
 	} 
 	
 	bool diking_over { 
