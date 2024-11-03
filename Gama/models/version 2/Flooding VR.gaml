@@ -148,10 +148,9 @@ species unity_linker parent: abstract_unity_linker {
 	}
 	
 	action after_creating_dyke {
+				
 			do add_geometries_to_send(dyke);	
 			do add_geometries_to_keep(river);
-			//do add_geometries_to_keep(people);
-			
 			do send_world;
 			do send_current_message;
 	}
@@ -189,7 +188,7 @@ species unity_linker parent: abstract_unity_linker {
 	 
 	 action send_static_geometries {
 		if (state = "s_init") {
-			do add_geometries_to_send(people ,up_people);
+			//do add_geometries_to_send(people ,up_people);
 			do add_geometries_to_send(river,up_water);
 		
 		}
@@ -198,12 +197,13 @@ species unity_linker parent: abstract_unity_linker {
 	
 	reflex send_agents when: not empty(unity_player) {
 		
-		
-		if (state = "s_flooding") {
+		if (state = "s_diking") {
+			do add_geometries_to_send(dyke);
+			do add_geometries_to_keep(river);
+		} else	if (state = "s_flooding") {
 			do add_geometries_to_send(people where (each.state = "s_fleeing"),up_people);
 			do add_geometries_to_send(river,up_water);
 			do add_geometries_to_keep(dyke);	 
-			
 		}
 		
 		
