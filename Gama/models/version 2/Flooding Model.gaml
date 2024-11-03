@@ -234,6 +234,7 @@ global control: fsm {
 			}
 		}
 		ask bed_cells {water_height <- initial_water_height;}
+		ask river {do compute_shape;}
 	}
 	
 	/*
@@ -389,6 +390,10 @@ species road parent: obstacle schedules: [] {
 		height <- 0.5;
 	}
 	
+	action build {
+		
+	}
+	
 	action break {
 		need_to_recompute_graph <- true;
 	}
@@ -492,8 +497,13 @@ grid cell 	file: dem_file
 *************************************************************/	
 
 species river {
+
 	reflex {
-		shape <- union((cell where (each.water_height > 0)) collect each.shape_union) simplification 0.2;
+		do compute_shape();
+	}
+
+	action compute_shape {
+		shape <- union((cell where (each.water_height > 0)) collect each.shape_union) simplification 20;
 	}
 }
 

@@ -51,7 +51,7 @@ global {
 	} 
 	
 	bool diking_over { 
-		return  gama.machine_time >= current_timeout;
+		return flooding_requested_from_gama or gama.machine_time >= current_timeout;
 	}
 	
 	bool flooding_over  { 
@@ -73,10 +73,10 @@ global {
 	
 	
 	// Are all the players who entered ready or has GAMA sent the beginning of the game ? 
-	bool tutorial_over -> !empty(unity_player) and( diking_requested_from_gama or flooding_requested_from_gama or (unity_player none_matches each.in_tutorial))  ;
+	bool tutorial_over ->  (diking_requested_from_gama or flooding_requested_from_gama) or (!empty(unity_player) and(unity_player none_matches each.in_tutorial))  ;
 	
 	// Are all the players in the not_ready state or has GAMA sent the end of the game ?
-	bool flooding_over -> empty(unity_player) ? restart_requested_from_gama : restart_requested_from_gama or (unity_player all_match (each.in_tutorial));
+	bool flooding_over -> restart_requested_from_gama or (!empty(unity_player) and (unity_player all_match each.in_tutorial));
 
 	// The maximum amount of time, in seconds, we wait for players to be ready 
 	float init_duration <- 120.0;
