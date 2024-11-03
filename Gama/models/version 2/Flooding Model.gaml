@@ -507,7 +507,7 @@ species river {
 	}
 
 	action compute_shape {
-		shape <- union((cell where (each.water_height > 0)) collect each.shape_union) simplification 20;
+		shape <- without_holes(union((cell where (each.water_height > 0)) collect each.shape_union) simplification 30);
 	}
 }
 
