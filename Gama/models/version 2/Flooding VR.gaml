@@ -9,14 +9,11 @@ global {
 	 * Statuses of the player, once connected to the middleware (and to GAMA)
 	 *************************************************************/
 	 
-	 // The player has chosen a language and is officially counted as an active player
-	 string ENTERED <- "ENTERED";
+	 // The player chooses a language and is doing the tutorial
+	 string IN_TUTORIAL <- "IN_TUTORIAL";
 	 
-	 // The player has finished the tutorial and is ready to move on to the "playing" scene
-	 string READY <- "READY";
-	 	 
-	 // Default status when entering the game, or when the player has finished the game and be informed on his/her score
-	 string NOT_READY <- "NOT_READY";
+	 // The player has finished the tutorial and is "playing" the main scene (diking + flooding)
+	 string IN_GAME <- "IN_GAME";
 
 
 	/*************************************************************
@@ -25,17 +22,26 @@ global {
  
 	action enter_init {
 		write "in init state";
+		ask unity_player {do set_status(IN_TUTORIAL);}
+		flooding_requested_from_gama <- false;
+		diking_requested_from_gama <- false;
+		restart_requested_from_gama <- false;	
 		current_timeout <- gama.machine_time + init_duration * 1000;
 	} 
 	
 	action enter_diking {
 		write "in diking state";
+		ask unity_player {do set_status(IN_GAME);}
 		flooding_requested_from_gama <- false;
+		diking_requested_from_gama <- false;
+		restart_requested_from_gama <- false;	
 		current_timeout <- gama.machine_time + diking_duration * 1000;
 	}
 	
 	action enter_flooding {
 		write "in flooding state";
+		flooding_requested_from_gama <- false;
+		diking_requested_from_gama <- false;
 		restart_requested_from_gama <- false;	
 		current_timeout <- gama.machine_time + flooding_duration * 1000;	
 	}
@@ -59,15 +65,18 @@ global {
 	// Is a restart requested by the user ? 
 	bool restart_requested_from_gama;
 	
-	// Is the flooding requested by the user ? 
+	// Is the flooding stage requested by the user ? 
 	bool flooding_requested_from_gama;
+	
+	// Is the diking stage requested by the user ? 
+	bool diking_requested_from_gama; 
 	
 	
 	// Are all the players who entered ready or has GAMA sent the beginning of the game ? 
-	bool tutorial_over -> flooding_requested_from_gama or ((unity_player select each.entered) all_match (each.ready))  ;
+	bool tutorial_over -> empty(unity_player) or diking_requested_from_gama or flooding_requested_from_gama or (unity_player none_matches each.in_tutorial)  ;
 	
 	// Are all the players in the not_ready state or has GAMA sent the end of the game ?
-	bool flooding_over -> empty(unity_player) ? restart_requested_from_gama : restart_requested_from_gama or (unity_player all_match (each.not_ready));
+	bool flooding_over -> empty(unity_player) ? restart_requested_from_gama : restart_requested_from_gama or (unity_player all_match (each.in_tutorial));
 
 	// The maximum amount of time, in seconds, we wait for players to be ready 
 	float init_duration <- 120.0;
@@ -206,29 +215,14 @@ species unity_linker parent: abstract_unity_linker {
 
 species unity_player parent: abstract_unity_player{
 	
-	bool entered;
-	bool ready;
-	bool not_ready;
+	bool in_tutorial;
 	
 	init {
-		do set_status(NOT_READY);
+		do set_status(IN_TUTORIAL);
 	}
 	
 	action set_status(string status) {
-		switch status {
-			match ENTERED {
-				entered <- true;
-				not_ready <- false;
-			}
-			match READY {
-				ready <- entered;
-			}
-			match NOT_READY {
-				not_ready <- true;
-				entered <- false;
-				ready <- false;
-			}
-		}
+		in_tutorial <- status = IN_TUTORIAL;
 	}
 	
 
@@ -277,6 +271,11 @@ experiment Launch parent:"Base" autorun: true type: unity {
 			event "r" {
 				write "restart requested";
 				world.restart_requested_from_gama <- true ;
+			}
+		
+			event "d" {
+				write "diking requested";
+				world.diking_requested_from_gama <- true ;
 			}
 			
 			event "f" {
