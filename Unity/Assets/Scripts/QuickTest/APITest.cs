@@ -38,12 +38,6 @@ namespace QuickTest
             ConnectionManager.Instance.SendExecutableAsk("remove_dyke_with_unity", args);
         }
 
-        public void TestPause()
-        {
-            Dictionary<string, string> args = new Dictionary<string, string>();
-            ConnectionManager.Instance.SendExecutableAsk("pause_with_unity", args);
-        }
-        
         public void TestSetInTutorial()
         {
             Dictionary<string, string> args = new Dictionary<string, string>()
