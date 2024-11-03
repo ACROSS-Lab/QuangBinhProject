@@ -113,7 +113,7 @@ species unity_linker parent: abstract_unity_linker {
 		up_people<- geometry_properties("car", nil, car_aspect, #no_interaction, false);
 		up_dyke <- geometry_properties("dyke", "dyke", dyke_aspect, #collider, false);
 		up_water <- geometry_properties("water", nil, water_aspect, #no_interaction,false);
-		// add the up_tree unity_property to the list of unity_properties
+
 		unity_properties << up_people;
 		unity_properties << up_dyke;
 		unity_properties << up_water;
@@ -148,14 +148,9 @@ species unity_linker parent: abstract_unity_linker {
 	}
 	
 	action after_creating_dyke {
-			list<geometry> geoms <- dyke collect ((each.shape + 5.0) at_location {each.location.x, each.location.y, 10.0});
-			loop i from:0 to: length(geoms) -1 {
-				geoms[i].attributes['name'] <- dyke[i].name;
-			}
-				
-			do add_geometries_to_send(geoms,up_dyke);	
+			do add_geometries_to_send(dyke);	
 			do add_geometries_to_keep(river);
-			do add_geometries_to_keep(people);
+			//do add_geometries_to_keep(people);
 			
 			do send_world;
 			do send_current_message;
