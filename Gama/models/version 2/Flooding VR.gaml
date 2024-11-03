@@ -108,7 +108,7 @@ species unity_linker parent: abstract_unity_linker {
 	
 	init {
 		
-		unity_aspect car_aspect <- prefab_aspect("Prefabs/Visual Prefabs/City/Vehicles/Car",100,0.2,1.0,-90.0, precision);
+		unity_aspect car_aspect <- prefab_aspect("Prefabs/Visual Prefabs/People/WalkingMen",250,0.2,1.0,-90.0, precision);
 		unity_aspect dyke_aspect <- geometry_aspect(40.0, "Materials/Dike/Dike", rgb(0, 0, 0, 0.0), precision);
 		unity_aspect water_aspect <- geometry_aspect(40.0, rgb(0, 0, 255, 0.0), precision);
  	
