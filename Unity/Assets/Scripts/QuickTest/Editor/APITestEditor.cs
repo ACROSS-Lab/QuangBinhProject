@@ -11,6 +11,16 @@ namespace QuickTest.Editor
             DrawDefaultInspector();
 
             APITest apiTest = (APITest)target;
+
+            if (GUILayout.Button("Set in tutorial"))
+            {
+                apiTest.TestSetInTutorial();
+            }
+
+            if (GUILayout.Button("Set in game"))
+            {
+                apiTest.TestSetInGame();
+            }
         
             if (GUILayout.Button("Draw dyke"))
             {

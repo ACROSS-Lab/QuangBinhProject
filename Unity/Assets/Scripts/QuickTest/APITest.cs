@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Gama_Provider.Simulation;
 using UnityEngine;
 
 namespace QuickTest
@@ -59,6 +60,28 @@ namespace QuickTest
         {
             Dictionary<string, string> args = new Dictionary<string, string>();
             ConnectionManager.Instance.SendExecutableAsk("start_simulation_with_unity", args);
+        }
+
+        public void TestSetInTutorial()
+        {
+            Dictionary<string, string> args = new Dictionary<string, string>()
+            {
+                {"player_id", StaticInformation.getId()},
+                {"status", GAMAGameStatus.IN_TUTORIAL.ToString()}
+            };
+            
+            ConnectionManager.Instance.SendExecutableAsk("set_status", args);
+        }
+
+        public void TestSetInGame()
+        { 
+            Dictionary<string, string> args = new Dictionary<string, string>()
+            {
+                {"player_id", StaticInformation.getId()},
+                {"status", GAMAGameStatus.IN_GAME.ToString()}
+            };
+            
+            ConnectionManager.Instance.SendExecutableAsk("set_status", args);
         }
     }
 }
