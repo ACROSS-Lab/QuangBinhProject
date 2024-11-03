@@ -43,13 +43,7 @@ namespace QuickTest
             Dictionary<string, string> args = new Dictionary<string, string>();
             ConnectionManager.Instance.SendExecutableAsk("pause_with_unity", args);
         }
-
-        public void TestResume()
-        {
-            Dictionary<string, string> args = new Dictionary<string, string>();
-            ConnectionManager.Instance.SendExecutableAsk("resume_with_unity", args);
-        }
-
+        
         public void TestEnd()
         {
             Dictionary<string, string> args = new Dictionary<string, string>();

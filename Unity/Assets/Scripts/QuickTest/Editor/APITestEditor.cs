@@ -36,12 +36,7 @@ namespace QuickTest.Editor
             {
                 apiTest.TestPause();
             }
-
-            if (GUILayout.Button("Resume"))
-            {
-                apiTest.TestResume();
-            }
-
+            
             if (GUILayout.Button("End"))
             {
                 apiTest.TestEnd();
