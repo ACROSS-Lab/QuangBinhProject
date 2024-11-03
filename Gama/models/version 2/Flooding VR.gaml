@@ -140,14 +140,13 @@ species unity_linker parent: abstract_unity_linker {
 		list<float> unity_end_point_float <- convert_string_to_array_of_float(unity_end_point);
 		point converted_start_point <- {unity_start_point_float[0], unity_start_point_float[1], unity_start_point_float[2]};
 		point converted_end_point <- {unity_end_point_float[0], unity_end_point_float[1], unity_end_point_float[2]};
-		float price <- converted_start_point distance_to (converted_end_point) with_precision 1;
 		create dyke with: (shape: line([converted_start_point, converted_end_point]));
-		do send_message players: unity_player as list mes: ["ok_build_dyke_with_unity":: true];
+		do send_message players: unity_player as list mes: ["ok_build_dyke_with_unity " + converted_start_point + "   " + converted_end_point :: true];
 		ask experiment {
 			do update_outputs(true); 
 		}
 	}
-
+ 
 	
 	
 	/**

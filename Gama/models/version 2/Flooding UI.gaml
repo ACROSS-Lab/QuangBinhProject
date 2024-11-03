@@ -147,7 +147,7 @@ experiment Run  type:gui autorun: true{
 		display map type: 3d axes: false background: background_color antialias: false{
 
 			species river visible: !river_in_3D {
-				draw without_holes(shape simplification 30) border: brighter(brighter(river_color)) width: 5 color: river_color;
+				draw shape border: brighter(brighter(river_color)) width: 5 color: river_color;
 			}			
 
 			species road {
