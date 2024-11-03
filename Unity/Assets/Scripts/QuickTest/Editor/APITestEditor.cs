@@ -46,11 +46,6 @@ namespace QuickTest.Editor
             {
                 apiTest.TestEnd();
             }
-
-            if (GUILayout.Button("Start Simulation"))
-            {
-                apiTest.TestStartSimulation();
-            }
         }
     }
 }

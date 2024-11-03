@@ -55,13 +55,7 @@ namespace QuickTest
             Dictionary<string, string> args = new Dictionary<string, string>();
             ConnectionManager.Instance.SendExecutableAsk("end_with_unity", args);
         }
-
-        public void TestStartSimulation()
-        {
-            Dictionary<string, string> args = new Dictionary<string, string>();
-            ConnectionManager.Instance.SendExecutableAsk("start_simulation_with_unity", args);
-        }
-
+        
         public void TestSetInTutorial()
         {
             Dictionary<string, string> args = new Dictionary<string, string>()
