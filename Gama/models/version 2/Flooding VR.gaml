@@ -46,17 +46,26 @@ global {
 		restart_requested_from_gama <- false;	
 		current_timeout <- gama.machine_time + flooding_duration * 1000;	
 	}
-
+	
+	// Are all the players who entered ready or has GAMA sent the beginning of the game ? 
 	bool init_over  { 
-		return tutorial_over ;//or gama.machine_time >= current_timeout;
+		if (flooding_requested_from_gama or diking_requested_from_gama) {return true;}
+		if (empty(unity_player)) {return false;}
+		return unity_player none_matches each.in_tutorial;
 	} 
 	
 	bool diking_over { 
-		return flooding_requested_from_gama or gama.machine_time >= current_timeout;
+		if (flooding_requested_from_gama) {return true;}
+		if (gama.machine_time >= current_timeout) {return true;}
+		return false;
 	}
 	
+	// Are all the players in the not_ready state or has GAMA sent the end of the game ?
 	bool flooding_over  { 
-		return flooding_over or gama.machine_time >= current_timeout;
+		if (restart_requested_from_gama) {return true;}
+		if (gama.machine_time >= current_timeout) {return true;}
+		if (empty(unity_player)) {return false;}
+		return unity_player all_match each.in_tutorial;
 	}	
 	
 	/*************************************************************
@@ -72,13 +81,6 @@ global {
 	// Is the diking stage requested by the user ? 
 	bool diking_requested_from_gama; 
 	
-	
-	// Are all the players who entered ready or has GAMA sent the beginning of the game ? 
-	bool tutorial_over ->  (diking_requested_from_gama or flooding_requested_from_gama) or (!empty(unity_player) and(unity_player none_matches each.in_tutorial))  ;
-	
-	// Are all the players in the not_ready state or has GAMA sent the end of the game ?
-	bool flooding_over -> restart_requested_from_gama or (!empty(unity_player) and (unity_player all_match each.in_tutorial));
-
 	// The maximum amount of time, in seconds, we wait for players to be ready 
 	float init_duration <- 120.0;
 	
@@ -122,7 +124,7 @@ species unity_linker parent: abstract_unity_linker {
 
 	action add_to_send_world(map map_to_send) {
 		map_to_send["score"] <- int(100*evacuated/nb_of_people);
-		map_to_send["tutorial_over"] <- tutorial_over;
+		map_to_send["tutorial_over"] <- state != "s_init";
 		map_to_send["remaining_time"] <- int((current_timeout - gama.machine_time)/1000);
 	}
 	list<point> define_init_locations {
