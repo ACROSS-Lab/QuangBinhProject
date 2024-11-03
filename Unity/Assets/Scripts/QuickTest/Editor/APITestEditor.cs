@@ -31,11 +31,6 @@ namespace QuickTest.Editor
             {
                 apiTest.TestRemoveDyke();
             }
-
-            if (GUILayout.Button("Pause"))
-            {
-                apiTest.TestPause();
-            }
         }
     }
 }
