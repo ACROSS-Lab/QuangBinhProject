@@ -103,6 +103,7 @@ public class SimulationManager : MonoBehaviour
     protected Vector3 originalStartPosition;
     protected bool firstPositionStored;
 
+    private bool sentStateToGama = false;
 
 
     // ############################################ UNITY FUNCTIONS ############################################
@@ -172,6 +173,24 @@ public class SimulationManager : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (ConnectionManager.Instance.IsConnectionState(ConnectionState.CONNECTED))
+        {
+
+            if (!sentStateToGama)
+            {
+                switch (SceneManager.GetActiveScene().name)
+                {
+                    case "Tutorial_cine360":
+                        sentStateToGama = true;
+                        _apiTest.TestSetInTutorial();
+                        break;
+                    case "Main Scene - Flood":
+                        sentStateToGama = true;
+                        _apiTest.TestSetInGame();
+                        break;
+                }
+            }
+        }
        
         if (sendMessageToReactivatePositionSent)
         {
@@ -248,7 +267,7 @@ public class SimulationManager : MonoBehaviour
             _dykePointCnt = 0;
         }*/
 
-        UpdateTimeLeftToBuildDykes();
+        //UpdateTimeLeftToBuildDykes();
         OtherUpdate();
     }
 
