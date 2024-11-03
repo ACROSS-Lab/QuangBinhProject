@@ -367,6 +367,10 @@ species buildings parent: obstacle schedules: []{
 *************************************************************/	
 species dyke parent: obstacle schedules: []{
 	
+	init {
+		shape <- shape + 20;
+	}
+	
 	//The height of the dyke is dyke_height minus the average height of the cells it overlaps
 	action compute_height {
 		height <- dyke_height - mean(cells_under collect (each.altitude));

@@ -110,7 +110,7 @@ species unity_linker parent: abstract_unity_linker {
 		
 		unity_aspect car_aspect <- prefab_aspect("Prefabs/Visual Prefabs/City/Vehicles/Car",100,0.2,1.0,-90.0, precision);
 		unity_aspect dyke_aspect <- geometry_aspect(40.0, "Materials/Dike/Dike", rgb(0, 0, 0, 0.0), precision);
-		unity_aspect water_aspect <- geometry_aspect(40.0, "Materials/MAT_LOW_POLY_SHADER_TEST", rgb(0, 0, 0, 0.0), precision);
+		unity_aspect water_aspect <- geometry_aspect(40.0, rgb(0, 0, 255, 0.0), precision);
  	
 		up_people<- geometry_properties("car", nil, car_aspect, #no_interaction, false);
 		up_dyke <- geometry_properties("dyke", "dyke", dyke_aspect, #collider, false);
