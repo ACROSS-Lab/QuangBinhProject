@@ -453,6 +453,7 @@ MonoBehaviour:
   Speed: 2
   RightHand: 0
   minY: 0
+  maxY: 150
   stick: 1
 --- !u!114 &2610731287024547879
 MonoBehaviour:
@@ -466,8 +467,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 000b7c19ac1a44b1bb1c35009b803511, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Speed: 2
-  SpeedRotation: 20
   RightHand: 1
+  speed: 2
+  speedRotation: 10
   Strafe: 0
   stick: 1
