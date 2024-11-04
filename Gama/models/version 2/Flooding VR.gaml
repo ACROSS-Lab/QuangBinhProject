@@ -126,7 +126,10 @@ species unity_linker parent: abstract_unity_linker {
 		map_to_send["score"] <- int(100*evacuated/nb_of_people);
 		map_to_send["tutorial_over"] <- state != "s_init";
 		map_to_send["remaining_time"] <- int((current_timeout - gama.machine_time)/1000);
-	}
+		map_to_send["diking_over"] <- world.diking_over();
+		map_to_send["flooding_over"] <- world.flooding_over();
+		map_to_send["state"] <- world.state;
+	} 
 	list<point> define_init_locations {
 		return [world.location + {0,0,1000}];
 	} 

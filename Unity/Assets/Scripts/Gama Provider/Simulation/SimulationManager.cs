@@ -103,9 +103,9 @@ public class SimulationManager : MonoBehaviour
     protected Vector3 originalStartPosition;
     protected bool firstPositionStored;
 
-    private bool sentStateToGama = false;
-
-
+    private bool _sentStateToGama = false;
+    private bool _wasInDiking = false;
+    
     // ############################################ UNITY FUNCTIONS ############################################
     void Awake() {
         Instance = this;
@@ -175,17 +175,15 @@ public class SimulationManager : MonoBehaviour
     {
         if (ConnectionManager.Instance.IsConnectionState(ConnectionState.AUTHENTICATED) && IsGameState(GameState.GAME))
         {
-            if (!sentStateToGama)
+            if (!_sentStateToGama)
             {
-               
-                sentStateToGama = true;
+                _sentStateToGama = true;
                 _apiTest.TestSetInGame();
             }
         }
        
         if (sendMessageToReactivatePositionSent)
         {
-
             Dictionary<string, string> args = new Dictionary<string, string> {
             {"id",ConnectionManager.Instance.getUseMiddleware() ? ConnectionManager.Instance.GetConnectionId()  : ("\"" + ConnectionManager.Instance.GetConnectionId() +  "\"") }};
 
@@ -220,7 +218,30 @@ public class SimulationManager : MonoBehaviour
 
     }
 
+    void UpdateDisplay()
+    {
+        if (ConnectionManager.Instance.IsConnectionState(ConnectionState.AUTHENTICATED) && IsGameState(GameState.GAME) && infoWorld != null)
+        {
+            modalText.text = "Score: " + (int)infoWorld.score;
+            timeText.text = "Remaining Time: " + (int)infoWorld.remaining_time;
 
+            if (SceneManager.GetActiveScene().name == "Main Scene - Flood")
+            {
+                if (infoWorld.state == "s_diking")
+                    _wasInDiking = true;
+            }
+            
+            if (SceneManager.GetActiveScene().name == "Main Scene - Flood")
+            {
+                if (_wasInDiking && infoWorld.state == "s_init" && infoWorld.flooding_over)
+                {
+                    Debug.Log("Current state is flooding");
+                    Debug.Log("The flood has been over");
+                    SceneManager.LoadScene("Tutorial_cine360");
+                }
+            }
+        }
+    }
 
     private void Update()
     {
@@ -260,6 +281,7 @@ public class SimulationManager : MonoBehaviour
 
         //UpdateTimeLeftToBuildDykes();
         OtherUpdate();
+        UpdateDisplay();
     }
 
 
@@ -819,7 +841,6 @@ public class SimulationManager : MonoBehaviour
             case "pointsLoc":
                 if (infoWorld == null) {                    
                     infoWorld = WorldJSONInfo.CreateFromJSON(content);
-                    modalText.text = "Score: " + (int)infoWorld.score;
                     //Debug.Log("Current info world score: "  + infoWorld.score);
                     //Debug.Log("Current info world budget: " + infoWorld.budget);
                     //Debug.Log("Current info world ok_to_build_dyke: " + infoWorld.ok_build_dyke_with_unity);
@@ -877,25 +898,6 @@ public class SimulationManager : MonoBehaviour
 
     public GameState GetCurrentState() {
         return currentState;
-    }
-
-    private void UpdateTimeLeftToBuildDykes()
-    {
-        if (ConnectionManager.Instance.IsConnectionState(ConnectionState.AUTHENTICATED))
-        {
-            if (mustNotBuildDyke)
-                return;
-
-            int intermediateValue = Math.Max(0, maximumTimeToBuild - (int)Time.time);
-
-            timeText.text = "Time: " + intermediateValue;
-
-            if (intermediateValue == 0)
-            {
-                mustNotBuildDyke = true;
-                StartTheFlood();
-            }
-        }
     }
 }
 
