@@ -4,6 +4,24 @@ import "Flooding Model.gaml"
 
 global { 
 	
+	
+	/*************************************************************
+	 * Attributes dedicated to the UI in GAMA (images, colors, etc.)
+	 *************************************************************/
+	
+	rgb text_color <- rgb(232, 215, 164);
+	
+	
+	point text_position <- {-1500, 500};
+	point background_position <- text_position - {200, 200};
+	point timer_position <- {-1100, 1000};
+	point icon_position <- {-1350, 1000};
+	
+	geometry button_frame;  
+	image button_image_unselected;
+	image button_image_selected;
+	bool button_selected;
+	
 
 	/*************************************************************
 	 * Statuses of the player, once connected to the middleware (and to GAMA)
@@ -27,6 +45,9 @@ global {
 		diking_requested_from_gama <- false;
 		restart_requested_from_gama <- false;	
 		current_timeout <- gama.machine_time + init_duration * 1000;
+		button_frame <- nil;
+		button_image_unselected <- nil;
+		button_image_selected <- nil;
 	} 
 	
 	action enter_diking {
@@ -37,6 +58,8 @@ global {
 		diking_requested_from_gama <- false;
 		restart_requested_from_gama <- false;	
 		current_timeout <- gama.machine_time + diking_duration * 1000;
+		button_image_unselected <- image("../../includes/icons/flood-line.png") * rgb(232, 215, 164);
+		button_image_selected <- image("../../includes/icons/flood-fill.png") * rgb(232, 215, 164);
 	}
 	
 	action enter_flooding {
@@ -45,6 +68,8 @@ global {
 		diking_requested_from_gama <- false;
 		restart_requested_from_gama <- false;	
 		current_timeout <- gama.machine_time + flooding_duration * 1000;	
+		button_image_unselected <- image("../../includes/icons/restart-line.png");
+		button_image_selected <- image("../../includes/icons/restart-fill.png");
 	}
 	
 	// Are all the players who entered ready or has GAMA sent the beginning of the game ? 
@@ -82,13 +107,13 @@ global {
 	bool diking_requested_from_gama; 
 	
 	// The maximum amount of time, in seconds, we wait for players to be ready 
-	float init_duration <- 10.0;//120.0;
+	float init_duration <- 120.0;
 	
 	// The maximum amount of time, in seconds, for watching the water flow before restarting
-	float flooding_duration <- 10.0;//120.0;
+	float flooding_duration <- 120.0;
 	
 	// The maximum amount of time, in seconds, for building dikes 
-	float diking_duration <- 10.0;//120.0;
+	float diking_duration <- 120.0;
 	
 	// The next timeout to occur for the different stages
 	float current_timeout;
@@ -231,11 +256,15 @@ experiment Launch parent:"Base" autorun: true type: unity {
 	}
 
 	output {
+		
+		layout #none controls: false toolbars: false editors: false parameters: false consoles: false tabs: false;
+		
+		
 		 display map_VR type: 3d background: #dimgray axes: false{
 		 	
-			camera 'default' location: {1419.7968,8667.7995,4069.6711} target: {1419.7968,4303.6116,0.0};
+			//camera 'default' location: {1419.7968,8667.7995,4069.6711} target: {1419.7968,4303.6116,0.0};
 		 	species river transparency: 0.7 {
-				draw shape color: #lightseagreen depth: 10 at: location - {0, 0, 5};
+				draw shape border: brighter(brighter(#lightseagreen)) width: 5 color: #lightseagreen depth: 10 at: location - {0, 0, 5};
 			}
 			species road {
 				draw shape color: drowned ? (#cadetblue) : color depth: height border: drowned ? #white:color;
@@ -249,20 +278,30 @@ experiment Launch parent:"Base" autorun: true type: unity {
 			species people {
 				draw sphere(18) color:#darkseagreen;
 			}
-			species evacuation_point;
+			species evacuation_point {
+				draw circle(60) at: location + {0,0,40} color: #red;
+			}
+			
+			event #mouse_down {
+				if (button_selected) {
+					if (state = "s_diking") {flooding_requested_from_gama <- true; return;} else
+					if (state = "s_flooding") {restart_requested_from_gama <- true; return;}
+				}
+			}
+			
+			event #mouse_move { 
+				button_selected <- button_frame != nil and button_frame overlaps #user_location;
+			}
 
 			event "r" {
-				write "restart requested";
 				world.restart_requested_from_gama <- true ;
 			}
 		
 			event "d" {
-				write "diking requested";
 				world.diking_requested_from_gama <- true ;
 			}
 			
 			event "f" {
-				write "flooding requested";
 				world.flooding_requested_from_gama <- true ;
 			}
 		 	
@@ -270,15 +309,48 @@ experiment Launch parent:"Base" autorun: true type: unity {
 			species unity_player {
 				draw circle(30) at: location + {0, 0, 50} color: rgb(color, 0.5) ;
 			}
-			event #mouse_down{
-				 float t <- gama.machine_time;
-				 if (t - t_ref) > 500 {
-					 ask unity_linker {
-						 move_player_event <- true;
-					 }
-					 t_ref <- t;
-				 }
-			 }
+			
+			
+			graphics "Text and icon"   {
+				string text <- nil;
+				string hint <- nil;
+				string timer <- nil;
+
+								
+				switch (state) {
+					match "s_diking" {
+						text <- "Diking phase.";
+						hint <- "Press 'f' for skipping";
+						float left <- current_timeout - gama.machine_time;
+						timer <- button_selected ? "Start flooding now.": "Flooding in " + int(left / 1000) + " seconds.";
+					}	
+					match "s_flooding" {
+						text <- "Casualties: " + casualties + '/' + nb_of_people;
+						hint <- "Press 'r' for restarting";
+						float left <- current_timeout - gama.machine_time;
+						timer <- button_selected ? "Restart now.": "Restarting in " + int(left / 1000) + " seconds.";
+					}
+					match "s_init" {
+						text <- "Tutorial phase in VR.";
+						hint <- "Press 'd' for diking ";
+					}
+				}
+				if (text != nil) {
+					draw text font: font ("Helvetica", 18, #bold) at: text_position anchor: #top_left color: text_color;	
+				}
+				if (hint != nil) {
+					draw hint font: font ("Helvetica", 10, #bold) at: text_position + {0, 3000} anchor: #top_left color: text_color;	
+				}
+				if (timer != nil) { 
+					draw timer font: font ("Helvetica", 14, #plain) at: timer_position anchor: #top_left color: text_color;	
+				}
+				
+				if (button_image_unselected != nil) { 
+					button_frame <- square(300) at_location icon_position;
+					draw button_selected ? button_image_selected : button_image_unselected size: 300 at: icon_position;
+				}
+			}
+
 		 }
 	}
 }
