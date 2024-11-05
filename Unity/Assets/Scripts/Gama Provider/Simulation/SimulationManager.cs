@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.XR.Interaction.Toolkit; 
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 
@@ -14,7 +15,7 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] protected XRRayInteractor rightXRRayInteractor;
     [SerializeField] protected InputActionReference primaryRightHandButton = null;
     [SerializeField] protected InputActionReference TryReconnectButton = null;
-    [SerializeField] protected InputActionReference TriggerButton = null;
+    [SerializeField] protected InputActionReference rightHandTriggerButton = null;
 
     [Header("Base GameObjects")] 
     [SerializeField] protected GameObject player;
@@ -105,6 +106,7 @@ public class SimulationManager : MonoBehaviour
 
     private bool _sentStateToGama = false;
     private bool _inNewStage = false;
+    private bool _inTriggerPress = false;
     
     // ############################################ UNITY FUNCTIONS ############################################
     void Awake() {
@@ -300,12 +302,9 @@ public class SimulationManager : MonoBehaviour
             TryReconnect();
         }
 
-        /*if (TriggerButton != null && TriggerButton.action.triggered)
-        {
-            Debug.Log("Trigger Button activated");
-            _apiTest.TestDrawDykeWithParams(_startPoint, _endPoint);
-            _dykePointCnt = 0;
-        }*/
+
+        
+        ProcessRightHandTrigger();
 
         //UpdateTimeLeftToBuildDykes();
         OtherUpdate();
@@ -878,6 +877,48 @@ public class SimulationManager : MonoBehaviour
                 break;
         }
          
+    }
+
+    protected void ProcessRightHandTrigger()
+    {
+        if (rightHandTriggerButton != null && rightHandTriggerButton.action.triggered)
+        {
+            if (!_inTriggerPress)
+            {
+                _inTriggerPress = true;
+                if (rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit))
+                {
+                    _startPoint = raycastHit.point;
+                    startPoint.transform.position = _startPoint;
+                    startPoint.SetActive(true);
+                    endPoint.SetActive(false);
+                }
+            }
+            Debug.Log("Right Hand Trigger Button activated");
+            //_apiTest.TestDrawDykeWithParams(_startPoint, _endPoint);
+            //_dykePointCnt = 0;
+        }
+
+        if (rightHandTriggerButton != null && !rightHandTriggerButton.action.inProgress)
+        {
+            if (_inTriggerPress)
+            {
+                _inTriggerPress = false;
+                if (rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit))
+                {
+                    _endPoint = raycastHit.point;
+                    endPoint.transform.position = _endPoint;
+                    endPoint.active = true;
+                        
+                    _apiTest.TestDrawDykeWithParams(_startPoint, _endPoint);
+                    GameObject[] dykeObjects = GameObject.FindGameObjectsWithTag("dyke");
+                        
+                    Debug.Log("Number of dykes: " + dykeObjects.Length);
+                }
+            }
+        }
+        
+
     }
 
     private void HandleConnectionAttempted(bool success) {
