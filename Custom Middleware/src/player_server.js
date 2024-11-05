@@ -119,8 +119,14 @@ class PlayerServer {
                 const id_player = getIdClient(ws)
                 if (controller.model.getPlayerState(id_player) != undefined) {
                     controller.model.setPlayerConnection(id_player, false, `${new Date().getHours().toString().padStart(2, '0')}:${new Date().getMinutes().toString().padStart(2, '0')}`)
- controller.cleanAll();                    
-console.log("-> The player "+getIdClient(ws)+" disconnected");
+setTimeout(() => {
+  controller.removeInGameEveryPlayers();
+}, 1000)
+setTimeout(() => {
+   controller.cleanAll();
+}, 1000)
+
+
 		    
                 }
             })
