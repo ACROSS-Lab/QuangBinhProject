@@ -20,8 +20,8 @@ public class WorldJSONInfo
     public int numTokens;
     public bool isInit;
 
-    public double score;
-    public double remaining_time;
+    public int score;
+    public int remaining_time;
     public bool diking_over;
     public bool flooding_over;
     public string state;

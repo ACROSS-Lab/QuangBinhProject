@@ -82,13 +82,13 @@ global {
 	bool diking_requested_from_gama; 
 	
 	// The maximum amount of time, in seconds, we wait for players to be ready 
-	float init_duration <- 120.0;
+	float init_duration <- 10.0;//120.0;
 	
 	// The maximum amount of time, in seconds, for watching the water flow before restarting
-	float flooding_duration <- 120.0;
+	float flooding_duration <- 10.0;//120.0;
 	
 	// The maximum amount of time, in seconds, for building dikes 
-	float diking_duration <- 120.0;
+	float diking_duration <- 10.0;//120.0;
 	
 	// The next timeout to occur for the different stages
 	float current_timeout;
@@ -98,7 +98,7 @@ global {
 species unity_linker parent: abstract_unity_linker { 
 	string player_species <- string(unity_player);
 	int max_num_players  <- -1;
-	int min_num_players  <- 10;
+	int min_num_players  <- -1;
 	list<point> init_locations <- define_init_locations();
 	unity_property up_people;
 	unity_property up_dyke;
@@ -124,11 +124,12 @@ species unity_linker parent: abstract_unity_linker {
 
 	action add_to_send_world(map map_to_send) {
 		map_to_send["score"] <- int(100*evacuated/nb_of_people);
-		map_to_send["tutorial_over"] <- state != "s_init";
 		map_to_send["remaining_time"] <- int((current_timeout - gama.machine_time)/1000);
-		map_to_send["diking_over"] <- world.diking_over();
-		map_to_send["flooding_over"] <- world.flooding_over();
 		map_to_send["state"] <- world.state;
+	/*	map_to_send["tutorial_over"] <- state != "s_init";
+	map_to_send["diking_over"] <- world.diking_over();
+		map_to_send["flooding_over"] <- world.flooding_over();
+		map_to_send["state"] <- world.state; */
 	} 
 	list<point> define_init_locations {
 		return [world.location + {0,0,1000}];
@@ -189,7 +190,7 @@ species unity_linker parent: abstract_unity_linker {
 species unity_player parent: abstract_unity_player{
 	
 	bool in_tutorial;
-	
+	rgb color <- #red;
 	init {
 		do set_status(IN_TUTORIAL);
 		//ask unity_linker {do send_static_geometries();}
@@ -210,14 +211,22 @@ experiment Launch parent:"Base" autorun: true type: unity {
 	action create_player(string id) {
 		ask unity_linker {
 			do create_player(id);
+			write sample(id);
 		}
 	}
 
 	action remove_player(string id_input) {
 		if (not empty(unity_player)) {
-			ask first(unity_player where (each.name = id_input)) {
-				do die;
+			ask unity_linker {
+				unity_player pl <- player_agents[id_input];
+				write sample(pl);
+				if (pl != nil) {
+					remove key: id_input from: player_agents ;
+					ask pl {do die;}
+				}
+				write sample(player_agents);
 			}
+			
 		}
 	}
 
