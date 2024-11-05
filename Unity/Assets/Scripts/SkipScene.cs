@@ -17,7 +17,7 @@ public class SkipScene : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (mainButton != null && mainButton.action.triggered && secondButton != null && secondButton.action.triggered) {
+        if (mainButton != null && mainButton.action.triggered && secondButton != null && secondButton.action.triggered || Input.GetKeyDown(KeyCode.Space)) {
             SceneManager.LoadScene("Main Scene - Flood");
         }
     }
