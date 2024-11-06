@@ -20,9 +20,11 @@ public class WorldJSONInfo
     public int numTokens;
     public bool isInit;
 
-    public double score;
-    //public double budget;
-    public double ok_build_dyke_with_unity;
+    public int score;
+    public int remaining_time;
+    public bool diking_over;
+    public bool flooding_over;
+    public string state;
     public static WorldJSONInfo CreateFromJSON(string jsonString)
     {
         return JsonUtility.FromJson<WorldJSONInfo>(jsonString);

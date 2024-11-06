@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.XR.Interaction.Toolkit; 
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 
@@ -14,7 +15,7 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] protected XRRayInteractor rightXRRayInteractor;
     [SerializeField] protected InputActionReference primaryRightHandButton = null;
     [SerializeField] protected InputActionReference TryReconnectButton = null;
-    [SerializeField] protected InputActionReference TriggerButton = null;
+    [SerializeField] protected InputActionReference rightHandTriggerButton = null;
 
     [Header("Base GameObjects")] 
     [SerializeField] protected GameObject player;
@@ -56,11 +57,11 @@ public class SimulationManager : MonoBehaviour
     protected bool handleGeometriesRequested;
     protected bool handleGroundParametersRequested;
 
-    protected CoordinateConverter converter;
-    protected PolygonGenerator polyGen;
-    protected ConnectionParameter parameters;
-    protected AllProperties propertiesGAMA;
-    protected WorldJSONInfo infoWorld;
+    protected CoordinateConverter converter =  null;
+    protected PolygonGenerator polyGen = null;
+    protected ConnectionParameter parameters = null;
+    protected AllProperties propertiesGAMA = null;
+    protected WorldJSONInfo infoWorld = null;
     
     protected GameState currentState;
 
@@ -103,9 +104,10 @@ public class SimulationManager : MonoBehaviour
     protected Vector3 originalStartPosition;
     protected bool firstPositionStored;
 
-    private bool sentStateToGama = false;
-
-
+    private bool _sentStateToGama = false;
+    private bool _inNewStage = false;
+    private bool _inTriggerPress = false;
+    
     // ############################################ UNITY FUNCTIONS ############################################
     void Awake() {
         Instance = this;
@@ -166,6 +168,7 @@ public class SimulationManager : MonoBehaviour
         handleGeometriesRequested = false;
        // handlePlayerParametersRequested = false;
         handleGroundParametersRequested = false;
+        infoWorld = null;
         interactionManager = player.GetComponentInChildren<XRInteractionManager>();
         OnEnable();
     }
@@ -173,19 +176,17 @@ public class SimulationManager : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (ConnectionManager.Instance.IsConnectionState(ConnectionState.AUTHENTICATED) && IsGameState(GameState.GAME))
+        if (IsGameState(GameState.GAME))
         {
-            if (!sentStateToGama)
+            if (!_sentStateToGama)
             {
-               
-                sentStateToGama = true;
+                _sentStateToGama = true;
                 _apiTest.TestSetInGame();
             }
         }
        
         if (sendMessageToReactivatePositionSent)
         {
-
             Dictionary<string, string> args = new Dictionary<string, string> {
             {"id",ConnectionManager.Instance.getUseMiddleware() ? ConnectionManager.Instance.GetConnectionId()  : ("\"" + ConnectionManager.Instance.GetConnectionId() +  "\"") }};
 
@@ -199,9 +200,17 @@ public class SimulationManager : MonoBehaviour
             handleGroundParametersRequested = false;
 
         }
-        if (handleGeometriesRequested && infoWorld != null && infoWorld.isInit && propertyMap != null)
+      /*  Debug.Log("infoWorld: " + (infoWorld != null) + " propertyMap: " + (propertyMap != null) + " handleGeometriesRequested:" + handleGeometriesRequested);
+
+        if (infoWorld != null )
         {
-           
+            Debug.Log("infoWorld: " + (infoWorld.isInit) + " propertyMap: " + (propertyMap != null) + " handleGeometriesRequested:" + handleGeometriesRequested);
+
+        }*/
+        if (handleGeometriesRequested && infoWorld != null && propertyMap != null)
+        {
+
+            
             sendMessageToReactivatePositionSent = true;
             GenerateGeometries(true, new List<string>());
             handleGeometriesRequested = false;
@@ -219,8 +228,50 @@ public class SimulationManager : MonoBehaviour
         }
 
     }
+    private string currentStage = "s_init";
 
+    void UpdateGame()
+    {
+        if (IsGameState(GameState.GAME) && infoWorld != null)
+        {
+            if (currentStage != infoWorld.state)
+            {
+                if (infoWorld.state == "s_flooding")
+                {
+                    Debug.Log("Current state is flooding");
+                    modalText.enabled = false;
+                    timeText.enabled = false;
+                }
+                else if (infoWorld.state == "s_diking")
+                {
+                    Debug.Log("Current state is diking");
+                    modalText.enabled = false;
+                    timeText.enabled = true;
+                }
+                if (infoWorld.state == "s_init")
+                {
+                    Debug.Log("TRANSITION TO TUTORIAL");
+                    ConnectionManager.Instance.DisconnectProperly();
+                    SceneManager.LoadScene("Tutorial_cine360");
+                }
+                Debug.Log("BEGIN OF STAGE : " + infoWorld.state);
+                currentStage = infoWorld.state;
+            }
+            if (infoWorld.state == "s_flooding")
+             {
+                modalText.text = "Score: " + infoWorld.score;
+                        
+               }
+              else if (infoWorld.state == "s_diking")
+               {
+                   timeText.text = "Remaining Time: " + Math.Max(0, infoWorld.remaining_time);
+               }
+               
 
+            
+         
+        }
+    }
 
     private void Update()
     {
@@ -251,15 +302,13 @@ public class SimulationManager : MonoBehaviour
             TryReconnect();
         }
 
-        /*if (TriggerButton != null && TriggerButton.action.triggered)
-        {
-            Debug.Log("Trigger Button activated");
-            _apiTest.TestDrawDykeWithParams(_startPoint, _endPoint);
-            _dykePointCnt = 0;
-        }*/
+
+        
+        ProcessRightHandTrigger();
 
         //UpdateTimeLeftToBuildDykes();
         OtherUpdate();
+        UpdateGame();
     }
 
 
@@ -286,8 +335,7 @@ public class SimulationManager : MonoBehaviour
 
     void GenerateGeometries(bool initGame, List<string> toRemove)
     {
-
-        if (infoWorld.position != null && infoWorld.position.Count > 1 && (initGame || !sendMessageToReactivatePositionSent))
+         if (infoWorld.position != null && infoWorld.position.Count > 1 && (initGame || !sendMessageToReactivatePositionSent))
         {
             Vector3 pos = converter.fromGAMACRS(infoWorld.position[0], infoWorld.position[1], infoWorld.position[2]);
              player.transform.position = pos;
@@ -307,7 +355,6 @@ public class SimulationManager : MonoBehaviour
         for (int i = 0; i < infoWorld.names.Count; i++)
         {
             string name = infoWorld.names[i];
-            Debug.Log("name: " + name);
             string propId = infoWorld.propertyID[i];
          
             PropertiesGAMA prop = propertyMap[propId];
@@ -562,11 +609,7 @@ public class SimulationManager : MonoBehaviour
             {"z", "" +p[2]},
             {"angle", "" +angle}
         };
-        if (cpt < 5)
-        {
-            Debug.Log("move_player_external: " + p[0] + "," + p[1] + "," + p[2]);
-            cpt++;
-        }
+       
         ConnectionManager.Instance.SendExecutableAsk("move_player_external", args);
 
         if (Math.Abs(originalStartPosition.x - v.x) >= 0.1 ||
@@ -819,7 +862,6 @@ public class SimulationManager : MonoBehaviour
             case "pointsLoc":
                 if (infoWorld == null) {                    
                     infoWorld = WorldJSONInfo.CreateFromJSON(content);
-                    modalText.text = "Score: " + (int)infoWorld.score;
                     //Debug.Log("Current info world score: "  + infoWorld.score);
                     //Debug.Log("Current info world budget: " + infoWorld.budget);
                     //Debug.Log("Current info world ok_to_build_dyke: " + infoWorld.ok_build_dyke_with_unity);
@@ -835,6 +877,48 @@ public class SimulationManager : MonoBehaviour
                 break;
         }
          
+    }
+
+    protected void ProcessRightHandTrigger()
+    {
+        if (rightHandTriggerButton != null && rightHandTriggerButton.action.triggered)
+        {
+            if (!_inTriggerPress)
+            {
+                _inTriggerPress = true;
+                if (rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit))
+                {
+                    _startPoint = raycastHit.point;
+                    startPoint.transform.position = _startPoint;
+                    startPoint.SetActive(true);
+                    endPoint.SetActive(false);
+                }
+            }
+            Debug.Log("Right Hand Trigger Button activated");
+            //_apiTest.TestDrawDykeWithParams(_startPoint, _endPoint);
+            //_dykePointCnt = 0;
+        }
+
+        if (rightHandTriggerButton != null && !rightHandTriggerButton.action.inProgress)
+        {
+            if (_inTriggerPress)
+            {
+                _inTriggerPress = false;
+                if (rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit))
+                {
+                    _endPoint = raycastHit.point;
+                    endPoint.transform.position = _endPoint;
+                    endPoint.active = true;
+                        
+                    _apiTest.TestDrawDykeWithParams(_startPoint, _endPoint);
+                    GameObject[] dykeObjects = GameObject.FindGameObjectsWithTag("dyke");
+                        
+                    Debug.Log("Number of dykes: " + dykeObjects.Length);
+                }
+            }
+        }
+        
+
     }
 
     private void HandleConnectionAttempted(bool success) {
@@ -877,25 +961,6 @@ public class SimulationManager : MonoBehaviour
 
     public GameState GetCurrentState() {
         return currentState;
-    }
-
-    private void UpdateTimeLeftToBuildDykes()
-    {
-        if (ConnectionManager.Instance.IsConnectionState(ConnectionState.AUTHENTICATED))
-        {
-            if (mustNotBuildDyke)
-                return;
-
-            int intermediateValue = Math.Max(0, maximumTimeToBuild - (int)Time.time);
-
-            timeText.text = "Time: " + intermediateValue;
-
-            if (intermediateValue == 0)
-            {
-                mustNotBuildDyke = true;
-                StartTheFlood();
-            }
-        }
     }
 }
 
