@@ -3,6 +3,17 @@ model Flood_VR
 import "Flooding Model.gaml"
 
 global { 
+
+
+	/*************************************************************
+	 * "Winning" condition: determines whether the player 
+	 * has "won" or "lost" depending on the number of lives he/she
+	 * saved with the dykes
+	 *************************************************************/
+	 
+	int max_number_of_casualties <- round(nb_of_people / 5);
+
+	bool winning -> casualties < max_number_of_casualties;
 	
 	
 	/*************************************************************
@@ -13,7 +24,6 @@ global {
 	
 	
 	point text_position <- {-1500, 500};
-	point background_position <- text_position - {200, 200};
 	point timer_position <- {-1100, 1000};
 	point icon_position <- {-1350, 1000};
 	
@@ -163,10 +173,7 @@ species unity_linker parent: abstract_unity_linker {
 		map_to_send["score"] <- int(100*evacuated/nb_of_people);
 		map_to_send["remaining_time"] <- int((current_timeout - gama.machine_time)/1000);
 		map_to_send["state"] <- world.state;
-	/*	map_to_send["tutorial_over"] <- state != "s_init";
-	map_to_send["diking_over"] <- world.diking_over();
-		map_to_send["flooding_over"] <- world.flooding_over();
-		map_to_send["state"] <- world.state; */
+		map_to_send["winning"] <- winning;
 	} 
 	list<point> define_init_locations {
 		return [world.location + {0,0,1000}];
@@ -332,19 +339,19 @@ experiment Launch parent:"Base" autorun: true type: unity {
 				switch (state) {
 					match "s_diking" {
 						text <- "Diking phase.";
-						hint <- "Press 'f' for skipping";
+						hint <- "Press 'f' for skipping.";
 						float left <- current_timeout - gama.machine_time;
 						timer <- button_selected ? "Start flooding now.": "Flooding in " + int(left / 1000) + " seconds.";
 					}	
 					match "s_flooding" {
 						text <- "Casualties: " + casualties + '/' + nb_of_people;
-						hint <- "Press 'r' for restarting";
+						hint <- "Press 'r' for restarting.";
 						float left <- current_timeout - gama.machine_time;
 						timer <- button_selected ? "Restart now.": "Restarting in " + int(left / 1000) + " seconds.";
 					}
 					match "s_init" {
 						text <- "Tutorial phase in VR.";
-						hint <- "Press 'd' for diking ";
+						hint <- "Press 'd' for diking.";
 					}
 				}
 				if (text != nil) {
