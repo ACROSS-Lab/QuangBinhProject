@@ -3,6 +3,33 @@ model Flood_VR
 import "Flooding Model.gaml"
 
 global { 
+	
+	
+	/*************************************************************
+	 * Redefinition of initial parameters for people, water and obstacles
+	 *************************************************************/
+
+	// Initial number of people
+	int nb_of_people <- 500;
+	
+	// The average speed of people
+	float speed_of_people <- 20 #m / #h;
+	
+	// The maximum water input
+	float max_water_input <- 0.5;
+
+	
+	// The height of water in the river at the beginning
+	float initial_water_height <- 2.0;
+	
+	//Diffusion rate
+	float diffusion_rate <- 0.5;
+	
+	//Height of the dykes (30 m by default)
+	float dyke_height <- 15.0;
+	
+	//Width of the dyke (15 m by default)
+	float dyke_width <- 15.0;
 
 
 	/*************************************************************
@@ -61,7 +88,6 @@ global {
 	 *************************************************************/
  
 	action enter_init {
-		write "in init state";
 		ask unity_player {do set_status(IN_TUTORIAL);}
 		flooding_requested_from_gama <- false;
 		diking_requested_from_gama <- false;
@@ -73,7 +99,6 @@ global {
 	} 
 	
 	action enter_diking {
-		write "in diking state";
 		ask unity_linker {do send_static_geometries();}
 		ask unity_player {do set_status(IN_GAME);}
 		flooding_requested_from_gama <- false;
@@ -85,7 +110,6 @@ global {
 	}
 	
 	action enter_flooding {
-		write "in flooding state";
 		flooding_requested_from_gama <- false;
 		diking_requested_from_gama <- false;
 		restart_requested_from_gama <- false;	
@@ -170,6 +194,7 @@ species unity_linker parent: abstract_unity_linker {
 	}
 
 	action add_to_send_world(map map_to_send) {
+		map_to_send["evacuated"] <- int(evacuated);
 		map_to_send["score"] <- int(100*evacuated/nb_of_people);
 		map_to_send["remaining_time"] <- int((current_timeout - gama.machine_time)/1000);
 		map_to_send["state"] <- world.state;
@@ -205,20 +230,27 @@ species unity_linker parent: abstract_unity_linker {
 		do add_geometries_to_send(river,up_water);
 	 }
 
-	
+
+
+	/**
+	 * What are the agents to send to Unity, and what are the agents that remain unchanged ? 
+	 */
 	reflex send_agents when: not empty(unity_player) {
-		
 		if (state = "s_diking") {
+			// All the dykes are sent to Unity during the diking phass
 			do add_geometries_to_send(dyke, up_dyke);
+			// The river is not changed so we keep it unchanged
 			do add_geometries_to_keep(river);
 		} else	if (state = "s_flooding") {
+			// We only send the people who are evacuating 
 			do add_geometries_to_send(people where (each.state = "s_fleeing"),up_people);
+			// We send the river (supposed to change every step)
 			do add_geometries_to_send(river,up_water);
-			do add_geometries_to_send(dyke, up_dyke);	 
+			// We send only the dykes that are not underwater
+			do add_geometries_to_send(dyke select !each.drowned, up_dyke);	 
 		}
-		
-		
 	}
+
 	// Message sent by Unity to inform about the status of a specific player
 	action set_status(string player_id, string status) {
 		unity_player player <- player_agents[player_id];
@@ -281,9 +313,11 @@ experiment Launch parent:"Base" autorun: true type: unity {
 		
 		 display map_VR type: 3d background: #dimgray axes: false{
 		 	
-			//camera 'default' location: {1419.7968,8667.7995,4069.6711} target: {1419.7968,4303.6116,0.0};
 		 	species river transparency: 0.2 {
-				draw shape border: brighter(brighter(#lightseagreen)) width: 5 color: #lightseagreen  at: location - {0, 0, 5};
+		 		//draw shape + 30 color: #white wireframe: false width: 5;
+		 		//draw shape + 15 color: brighter(brighter(#lightseagreen)) wireframe: false width: 5 at: location + {0, 0, 0.5};
+		 		//draw shape color: #lightseagreen wireframe: false width: 5 at: location + {0, 0, 1};
+				draw shape border: brighter(brighter(#lightseagreen)) width: 5 color: #lightseagreen  at: location + {0, 0, 5};
 			}
 			species road {
 				draw shape color: drowned ? (#cadetblue) : color depth: height border: drowned ? #white:color;

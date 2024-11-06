@@ -12,6 +12,35 @@ import "Flooding Model.gaml"
 
 global { 
 	
+	
+	
+	
+	/*************************************************************
+	 * Redefinition of initial parameters for people, water and obstacles
+	 *************************************************************/
+
+	// Initial number of people
+	int nb_of_people <- 500;
+	
+	// The average speed of people
+	float speed_of_people <- 20 #m / #h;
+	
+	// The maximum water input
+	float max_water_input <- 0.5;
+
+	
+	// The height of water in the river at the beginning
+	float initial_water_height <- 2.0;
+	
+	//Diffusion rate
+	float diffusion_rate <- 0.5;
+	
+	//Height of the dykes (30 m by default)
+	float dyke_height <- 15.0;
+	
+	//Width of the dyke (15 m by default)
+	float dyke_width <- 15.0;
+	
 	/*************************************************************
 	 * Attributes dedicated to the UI (images, colors, frames, etc.)
 	 *************************************************************/
