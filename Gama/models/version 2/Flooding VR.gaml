@@ -22,6 +22,18 @@ global {
 	image button_image_selected;
 	bool button_selected;
 	
+	reflex change_building_colors {
+		ask buildings {
+			int nb <- cells_under count (each.water_height > 0);
+			switch (nb) {
+				match 0 {color <- #gray;}
+				match_one [1,2] {color <- rgb(214, 168, 0);}
+				match_one [3,4] {color <- rgb(237, 155, 0);}
+				default {color <- rgb(176, 32, 19);}
+			}
+		}
+	}
+	
 
 	/*************************************************************
 	 * Statuses of the player, once connected to the middleware (and to GAMA)
@@ -263,8 +275,8 @@ experiment Launch parent:"Base" autorun: true type: unity {
 		 display map_VR type: 3d background: #dimgray axes: false{
 		 	
 			//camera 'default' location: {1419.7968,8667.7995,4069.6711} target: {1419.7968,4303.6116,0.0};
-		 	species river transparency: 0.7 {
-				draw shape border: brighter(brighter(#lightseagreen)) width: 5 color: #lightseagreen depth: 10 at: location - {0, 0, 5};
+		 	species river transparency: 0.2 {
+				draw shape border: brighter(brighter(#lightseagreen)) width: 5 color: #lightseagreen  at: location - {0, 0, 5};
 			}
 			species road {
 				draw shape color: drowned ? (#cadetblue) : color depth: height border: drowned ? #white:color;
@@ -279,7 +291,7 @@ experiment Launch parent:"Base" autorun: true type: unity {
 				draw sphere(18) color:#darkseagreen;
 			}
 			species evacuation_point {
-				draw circle(60) at: location + {0,0,40} color: #red;
+				draw circle(60) at: location + {0,0,40} color: rgb(232, 215, 164);
 			}
 			
 			event #mouse_down {
@@ -339,7 +351,7 @@ experiment Launch parent:"Base" autorun: true type: unity {
 					draw text font: font ("Helvetica", 18, #bold) at: text_position anchor: #top_left color: text_color;	
 				}
 				if (hint != nil) {
-					draw hint font: font ("Helvetica", 10, #bold) at: text_position + {0, 3000} anchor: #top_left color: text_color;	
+					draw hint font: font ("Helvetica", 10, #bold) at: text_position + {0, 100} anchor: #top_left color: text_color;	
 				}
 				if (timer != nil) { 
 					draw timer font: font ("Helvetica", 14, #plain) at: timer_position anchor: #top_left color: text_color;	

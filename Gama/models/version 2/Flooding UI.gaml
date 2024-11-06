@@ -195,6 +195,7 @@ experiment Run  type:gui autorun: true{
 			graphics "Text and icon"   {
 				string text <- nil;
 				string timer <- nil;
+				string hint <- nil;
 				string keep <- nil;
 
 								
@@ -203,10 +204,13 @@ experiment Run  type:gui autorun: true{
 						text <- "Build dykes with the mouse.";
 						float left <- current_timeout - gama.machine_time;
 						timer <- button_selected ? "Start flooding now.": "Flooding in " + int(left / 1000) + " seconds.";
+						hint <- "Press 'f' for skipping.";
+						
 						//\nPress 'f' to start immediately.";
 					}	
 					match "s_flooding" {text <- "Casualties: " + casualties + '/' + nb_of_people;
 						float left <- current_timeout - gama.machine_time;
+						hint <- "Press 'r' for restarting.";
 						timer <- button_selected ? "Restart now.": "Restarting in " + int(left / 1000) + " seconds.";
 						//\nPress 'r' to restart immediately.";
 						keep <- "Keep the dykes."; 
@@ -221,7 +225,10 @@ experiment Run  type:gui autorun: true{
 				}
 				if (keep != nil) {
 					draw keep font: font ("Helvetica", 14, #plain) at: check_text_position anchor: #top_left color: text_color;	
-				}				
+				}
+				if (hint != nil) {
+					draw hint font: font ("Helvetica", 10, #bold) at: text_position + {0, 100} anchor: #top_left color: text_color;	
+				}		
 				
 				
 				if (button_image_unselected != nil) { 
