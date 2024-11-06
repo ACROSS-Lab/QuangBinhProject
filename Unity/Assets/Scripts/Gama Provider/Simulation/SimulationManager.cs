@@ -116,7 +116,7 @@ public class SimulationManager : MonoBehaviour
 
         locomotion = new List<GameObject>(GameObject.FindGameObjectsWithTag("locomotion"));
 
-        playerMovement(true);
+        playerMovement(false);
         toFollow = new List<GameObject>();
 
         _apiTest = player.AddComponent<APITest>();
@@ -316,7 +316,7 @@ public class SimulationManager : MonoBehaviour
     {
         foreach (GameObject loc in locomotion)
         {
-           // loc.active = active;
+            loc.active = active;
         }
        
 
