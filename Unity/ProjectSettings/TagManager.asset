@@ -19,6 +19,7 @@ TagManager:
   - dyke
   - startPoint
   - endPoint
+  - Zone_Fin
   layers:
   - Default
   - TransparentFX
