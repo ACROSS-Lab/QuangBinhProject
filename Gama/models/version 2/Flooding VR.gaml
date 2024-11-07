@@ -194,11 +194,13 @@ species unity_linker parent: abstract_unity_linker {
 	}
 
 	action add_to_send_world(map map_to_send) {
-		map_to_send["evacuated"] <- int(evacuated);
-		map_to_send["score"] <- int(100*evacuated/nb_of_people);
+		//map_to_send["evacuated"] <- int(evacuated);
+		//map_to_send["score"] <- int(100*evacuated/nb_of_people);
 		map_to_send["remaining_time"] <- int((current_timeout - gama.machine_time)/1000);
 		map_to_send["state"] <- world.state;
 		map_to_send["winning"] <- winning;
+		map_to_send["casualties"] <- casualties;
+		map_to_send["max_number_of_casualties"] <- max_number_of_casualties;
 	} 
 	list<point> define_init_locations {
 		return [world.location + {0,0,1000}];

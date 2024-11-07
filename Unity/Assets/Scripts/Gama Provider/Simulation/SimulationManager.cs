@@ -17,7 +17,7 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] protected InputActionReference TryReconnectButton = null;
     [SerializeField] protected InputActionReference rightHandTriggerButton = null;
 
-    [Header("Base GameObjects")] 
+    [Header("Base GameObjects")]
     [SerializeField] protected GameObject player;
     [SerializeField] protected GameObject Ground;
 
@@ -57,12 +57,12 @@ public class SimulationManager : MonoBehaviour
     protected bool handleGeometriesRequested;
     protected bool handleGroundParametersRequested;
 
-    protected CoordinateConverter converter =  null;
+    protected CoordinateConverter converter = null;
     protected PolygonGenerator polyGen = null;
     protected ConnectionParameter parameters = null;
     protected AllProperties propertiesGAMA = null;
     protected WorldJSONInfo infoWorld = null;
-    
+
     protected GameState currentState;
 
     public static SimulationManager Instance = null;
@@ -70,7 +70,7 @@ public class SimulationManager : MonoBehaviour
     protected float timeWithoutInteraction = 1.0f; //in second
     protected float remainingTime = 0.0f;
 
-   
+
     protected bool sendMessageToReactivatePositionSent = false;
 
     protected float maxTimePing = 1.0f;
@@ -87,7 +87,7 @@ public class SimulationManager : MonoBehaviour
     protected APITest _apiTest;
 
     protected int _dykePointCnt = 0;
-    
+
     protected Vector3 _startPoint;
     protected Vector3 _endPoint;
 
@@ -112,6 +112,21 @@ public class SimulationManager : MonoBehaviour
     protected PropertiesGAMA propFutureDike;
     protected bool DisplayFutureDike = false;
 
+    protected Vector3 FinalPositionPlayer = new Vector3(854, 1200, -3425);
+    [SerializeField] protected GameObject FinalScene;
+    [SerializeField] protected GameObject WinAnimtion;
+    [SerializeField] protected GameObject LooseAnimtion;
+
+    protected bool endOfGame = false;
+    protected float TimeEndOfGame = 17.0f;
+    protected float TimerEndOfGame = 0.0f;
+
+    [SerializeField] protected InputActionReference mainButton = null;
+    [SerializeField] protected InputActionReference secondButton = null;
+
+    [SerializeField] protected GameObject tutorial;
+
+    bool activeButton = false;
 
     // ############################################ UNITY FUNCTIONS ############################################
     void Awake() {
@@ -128,7 +143,7 @@ public class SimulationManager : MonoBehaviour
 
         startPoint = GameObject.FindGameObjectWithTag("startPoint");
         endPoint = GameObject.FindGameObjectWithTag("endPoint");
-        
+
         if (endPoint != null)
             endPoint.active = false;
         if (startPoint != null)
@@ -148,13 +163,13 @@ public class SimulationManager : MonoBehaviour
         //startButton.onClick.AddListener(StartGame);
     }
 
-    void StartTheFlood() 
+    void StartTheFlood()
     {
         //StartTime = Time.time;
         //startButton.gameObject.SetActive(false);
     }
 
-    
+
     void OnEnable() {
         if (ConnectionManager.Instance != null) {
             ConnectionManager.Instance.OnServerMessageReceived += HandleServerMessageReceived;
@@ -173,14 +188,14 @@ public class SimulationManager : MonoBehaviour
         ConnectionManager.Instance.OnConnectionStateChanged -= HandleConnectionStateChanged;
     }
 
-    void OnDestroy () {
+    void OnDestroy() {
         Debug.Log("SimulationManager: OnDestroy");
     }
 
     void Start() {
         geometryMap = new Dictionary<string, List<object>>();
         handleGeometriesRequested = false;
-       // handlePlayerParametersRequested = false;
+        // handlePlayerParametersRequested = false;
         handleGroundParametersRequested = false;
         infoWorld = null;
         interactionManager = player.GetComponentInChildren<XRInteractionManager>();
@@ -190,6 +205,17 @@ public class SimulationManager : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (endOfGame)
+        {
+            if (TimerEndOfGame > 0)
+                TimerEndOfGame -= Time.deltaTime;
+
+            if (TimerEndOfGame <= 0.0f || (mainButton != null && mainButton.action.triggered && secondButton != null && secondButton.action.triggered || Input.GetKeyDown(KeyCode.Space)))
+            {
+                endOfGame = false;
+                TransitionToTutorial();
+            }
+        }
         if (IsGameState(GameState.GAME))
         {
             if (!_sentStateToGama)
@@ -198,7 +224,7 @@ public class SimulationManager : MonoBehaviour
                 _apiTest.TestSetInGame();
             }
         }
-       
+
         if (sendMessageToReactivatePositionSent)
         {
             Dictionary<string, string> args = new Dictionary<string, string> {
@@ -214,13 +240,13 @@ public class SimulationManager : MonoBehaviour
             handleGroundParametersRequested = false;
 
         }
-      /*  Debug.Log("infoWorld: " + (infoWorld != null) + " propertyMap: " + (propertyMap != null) + " handleGeometriesRequested:" + handleGeometriesRequested);
+        /*  Debug.Log("infoWorld: " + (infoWorld != null) + " propertyMap: " + (propertyMap != null) + " handleGeometriesRequested:" + handleGeometriesRequested);
 
-        if (infoWorld != null )
-        {
-            Debug.Log("infoWorld: " + (infoWorld.isInit) + " propertyMap: " + (propertyMap != null) + " handleGeometriesRequested:" + handleGeometriesRequested);
+          if (infoWorld != null )
+          {
+              Debug.Log("infoWorld: " + (infoWorld.isInit) + " propertyMap: " + (propertyMap != null) + " handleGeometriesRequested:" + handleGeometriesRequested);
 
-        }*/
+          }*/
         if (handleGeometriesRequested && infoWorld != null && propertyMap != null)
         {
 
@@ -255,37 +281,48 @@ public class SimulationManager : MonoBehaviour
                     Debug.Log("Current state is flooding");
                     modalText.enabled = false;
                     timeText.enabled = false;
+                    tutorial.SetActive(false);
+                    activeButton = false;
                 }
                 else if (infoWorld.state == "s_diking")
                 {
                     Debug.Log("Current state is diking");
                     modalText.enabled = false;
                     timeText.enabled = true;
+                    tutorial.SetActive(true);
+                    activeButton = true;
                 }
                 if (infoWorld.state == "s_init")
                 {
-                    Debug.Log("TRANSITION TO TUTORIAL");
-                    ConnectionManager.Instance.DisconnectProperly();
-                    SceneManager.LoadScene("Tutorial_cine360");
+                      
+//    [SerializeField] protected GameObject WinAnimtion;
+ //   [SerializeField] protected GameObject LooseAnimtion;
+                 FinalScene.SetActive(true);
+                 WinAnimtion.SetActive(true);
+                  playerMovement(false);
+                 player.transform.position = FinalPositionPlayer;
+                    endOfGame = true;
+                    TimerEndOfGame = TimeEndOfGame;
                 }
-                Debug.Log("BEGIN OF STAGE : " + infoWorld.state);
+            Debug.Log("BEGIN OF STAGE : " + infoWorld.state);
                 currentStage = infoWorld.state;
             }
             if (infoWorld.state == "s_flooding")
-             {
-                modalText.text = "Score: " + infoWorld.score;
-                        
-               }
-              else if (infoWorld.state == "s_diking")
-               {
-                   timeText.text = "Remaining Time: " + Math.Max(0, infoWorld.remaining_time);
-               }
-               
+            {
+                modalText.text = "Casualties: " + infoWorld.casualties;
 
-            
-         
+            }
+            else if (infoWorld.state == "s_diking")
+            {
+                timeText.text = "Remaining Time: " + Math.Max(0, infoWorld.remaining_time);
+            }
+
+
+
+
         }
     }
+
 
     private void Update()
     {
@@ -304,7 +341,7 @@ public class SimulationManager : MonoBehaviour
                 ConnectionManager.Instance.Reconnect();
             }
         }
-          
+
 
         if (primaryRightHandButton != null && primaryRightHandButton.action.triggered)
         {
@@ -332,21 +369,25 @@ public class SimulationManager : MonoBehaviour
         {
             loc.active = active;
         }
-       
 
-       /* MoveHorizontal mh = this.GetComponentInChildren<MoveHorizontal>();
-        if (mh != null)
-        {
-            mh.enabled = active;
-        }
-        MoveVertical mv = this.GetComponentInChildren<MoveVertical>();
-        if (mv != null)
-        {
-            mv.enabled = active;
-        }*/
+
+        /* MoveHorizontal mh = this.GetComponentInChildren<MoveHorizontal>();
+         if (mh != null)
+         {
+             mh.enabled = active;
+         }
+         MoveVertical mv = this.GetComponentInChildren<MoveVertical>();
+         if (mv != null)
+         {
+             mv.enabled = active;
+         }*/
     }
 
-
+    private void TransitionToTutorial(){
+        Debug.Log("TRANSITION TO TUTORIAL");
+        ConnectionManager.Instance.DisconnectProperly();
+        SceneManager.LoadScene("Tutorial_cine360");
+    }
     void GenerateGeometries(bool initGame, List<string> toRemove)
     {
          if (infoWorld.position != null && infoWorld.position.Count > 1 && (initGame || !sendMessageToReactivatePositionSent))
@@ -895,6 +936,12 @@ public class SimulationManager : MonoBehaviour
 
     protected void ProcessRightHandTrigger()
     {
+        if (activeButton == false)
+        {
+            startPoint.SetActive(false);
+            endPoint.SetActive(false);
+            return;
+        }
         if (rightHandTriggerButton != null && rightHandTriggerButton.action.triggered)
         {
             if (!_inTriggerPress)
