@@ -128,6 +128,7 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] protected GameObject tutorial;
 
     bool activeButton = false;
+    bool is_a_win = true;
 
     // ############################################ UNITY FUNCTIONS ############################################
     void Awake() {
@@ -279,6 +280,7 @@ public class SimulationManager : MonoBehaviour
     {
         if (IsGameState(GameState.GAME) && infoWorld != null)
         {
+
             if (currentStage != infoWorld.state)
             {
                 if (infoWorld.state == "s_flooding")
@@ -310,12 +312,17 @@ public class SimulationManager : MonoBehaviour
                 }
                 if (infoWorld.state == "s_init")
                 {
-                      
-//    [SerializeField] protected GameObject WinAnimtion;
- //   [SerializeField] protected GameObject LooseAnimtion;
-                 FinalScene.SetActive(true);
-                 WinAnimtion.SetActive(true);
-                  playerMovement(false);
+                    FinalScene.SetActive(true);
+                    if (is_a_win)
+                    {
+                        WinAnimtion.SetActive(true);
+                        LooseAnimtion.SetActive(false);
+                    }
+                    else { 
+                        LooseAnimtion.SetActive(true);
+                        WinAnimtion.SetActive(false);
+                    }
+                    playerMovement(false);
                     XROrigin.localPosition = FinalPositionPlayer;
                     endOfGame = true;
                     TimerEndOfGame = TimeEndOfGame;
@@ -326,6 +333,8 @@ public class SimulationManager : MonoBehaviour
             if (infoWorld.state == "s_flooding")
             {
                 modalText.text = "Casualties: " + infoWorld.casualties;
+                is_a_win = infoWorld.winning;
+
 
             }
             else if (infoWorld.state == "s_diking")
