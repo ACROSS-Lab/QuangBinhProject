@@ -30,6 +30,7 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] protected float GamaCRSOffsetY = 0.0f;
 
 
+    protected Transform XROrigin;
 
     // Z offset and scale
     [SerializeField] protected float GamaCRSOffsetZ = 0.0f;
@@ -112,7 +113,7 @@ public class SimulationManager : MonoBehaviour
     protected PropertiesGAMA propFutureDike;
     protected bool DisplayFutureDike = false;
 
-    protected Vector3 FinalPositionPlayer = new Vector3(854, 1200, -3425);
+    protected Vector3 FinalPositionPlayer = new Vector3(872, 1205.2f, -3427); 
     [SerializeField] protected GameObject FinalScene;
     [SerializeField] protected GameObject WinAnimtion;
     [SerializeField] protected GameObject LooseAnimtion;
@@ -161,6 +162,10 @@ public class SimulationManager : MonoBehaviour
         propFutureDike.is3D = true;
         propFutureDike.visible = true;
         //startButton.onClick.AddListener(StartGame);
+
+
+
+        XROrigin = player.transform.Find("XR Origin (XR Rig)");
     }
 
     void StartTheFlood()
@@ -283,6 +288,17 @@ public class SimulationManager : MonoBehaviour
                     timeText.enabled = false;
                     tutorial.SetActive(false);
                     activeButton = false;
+                    if (FutureDike != null)
+                    {
+                        FutureDike.SetActive(false);
+                        GameObject.DestroyImmediate(FutureDike);
+
+                        FutureDike = null;
+
+                    }
+                    DisplayFutureDike = false;
+
+
                 }
                 else if (infoWorld.state == "s_diking")
                 {
@@ -300,7 +316,7 @@ public class SimulationManager : MonoBehaviour
                  FinalScene.SetActive(true);
                  WinAnimtion.SetActive(true);
                   playerMovement(false);
-                 player.transform.position = FinalPositionPlayer;
+                    XROrigin.localPosition = FinalPositionPlayer;
                     endOfGame = true;
                     TimerEndOfGame = TimeEndOfGame;
                 }
@@ -388,15 +404,17 @@ public class SimulationManager : MonoBehaviour
         ConnectionManager.Instance.DisconnectProperly();
         SceneManager.LoadScene("Tutorial_cine360");
     }
+
+
     void GenerateGeometries(bool initGame, List<string> toRemove)
     {
          if (infoWorld.position != null && infoWorld.position.Count > 1 && (initGame || !sendMessageToReactivatePositionSent))
         {
             Vector3 pos = converter.fromGAMACRS(infoWorld.position[0], infoWorld.position[1], infoWorld.position[2]);
-             player.transform.position = pos;
+           XROrigin.localPosition = pos;
             //Camera.main.transform.position = pos;
 
-           // Debug.Log("player.transform.position: " + pos[0] + "," + pos[1] + "," + pos[2]);
+            // Debug.Log("player.transform.position: " + pos[0] + "," + pos[1] + "," + pos[2]);
             sendMessageToReactivatePositionSent = true;
             readyToSendPosition = true;
             TimerSendPosition = TimeSendPosition;
