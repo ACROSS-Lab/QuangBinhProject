@@ -40,17 +40,23 @@ public class PolygonGenerator
     }
 
 
-
     public GameObject GeneratePolygons(bool editMode, String name, List<int> points, PropertiesGAMA prop, int precision)
     {
-   
         List<Vector2> pts = new List<Vector2>();
-        for (int i = 0; i < points.Count - 1; i = i+2)
+        for (int i = 0; i < points.Count - 1; i = i + 2)
         {
             Vector2 p = converter.fromGAMACRS2D(points[i], points[i + 1]);
             pts.Add(p);
         }
         Vector2[] MeshDataPoints = pts.ToArray();
+        return GeneratePolygons(editMode, name, MeshDataPoints, prop, precision);
+    }
+
+
+    public GameObject GeneratePolygons(bool editMode, String name, Vector2[] MeshDataPoints, PropertiesGAMA prop, int precision)
+    {
+   
+       
         //Color32 col = new Color32(BitConverter.GetBytes(prop.color[0])[0], BitConverter.GetBytes(prop.color[1])[0],
         //          BitConverter.GetBytes(prop.color[2])[0], BitConverter.GetBytes(prop.color[3])[0]);
 

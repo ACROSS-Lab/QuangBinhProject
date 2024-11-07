@@ -9,85 +9,59 @@ using UnityEngine.InputSystem;
 
 public class SimulationManagerSolo : SimulationManager
 {
-    protected bool isNight = false;
-    protected override void TriggerMainButton()
+    
+
+
+
+    protected override void GenerateFutureDike()
     {
-        GameObject water = GameObject.Find("water_0.0");
-
-        if (water != null)
+        if (polyGen == null)
         {
-            Debug.Log("Water position: " + water.transform.position.x + " " + water.transform.position.y + " " + water.transform.position.z);
-            Debug.Log("Water scale: " + water.transform.localScale.x + " " + water.transform.localScale.y + " " + water.transform.localScale.z);
+            polyGen = PolygonGenerator.GetInstance();
+            polyGen.Init(converter);
         }
-        //isNight = !isNight;
-        //Light[] lights = FindObjectsOfType(typeof(Light)) as Light[];
-        //foreach (Light light in lights)
-        //{
-        //    light.intensity = isNight ? 0 : 1.0f;
-        //}
-        if (rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit))
-        {
-            _dykePointCnt++;
-            Debug.Log("Dyke point count: " + _dykePointCnt);
-            GameObject groundObject = GameObject.Find("road");
-            switch (_dykePointCnt)
+
+       if (rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit))
+                {
+
+                if(FutureDike != null)
             {
-                case 1:
-                {
-                    {
-                        GameObject hitGameObject = raycastHit.collider.gameObject;
-                        _startPoint = raycastHit.point;
-                            startPoint.transform.position = _startPoint;
-                            startPoint.active = true;
-                            endPoint.active = false;
-                            Debug.Log("hitGameObject: " + hitGameObject.name);
-                        Debug.Log(
-                            "startPoint of dyke: " + _startPoint.x + " " + _startPoint.y + " " + _startPoint.z);
-                        Debug.Log("Coordinate of the ground: " + groundObject.transform.position.x + " " + groundObject.transform.position.y + " " + groundObject.transform.position.z);
-                    }
-                    //_startPoint = 
-                    break;
-                }
-                case 2:
-                {
-                    {
-                        GameObject hitGameObject = raycastHit.collider.gameObject;
-                        _endPoint = raycastHit.point;
-                            endPoint.transform.position = _endPoint;
-                            endPoint.active = true;
-                            Debug.Log("hitGameObject: " + hitGameObject.name);
-                        Debug.Log(
-                            "endPoint of dyke: " + _endPoint.x + " " + _endPoint.y + " " + _endPoint.z);
-                        
-                        _apiTest.TestDrawDykeWithParams(_startPoint, _endPoint);
+                FutureDike.SetActive(false);
 
-                        Debug.Log("Coordinate of the ground: " + groundObject.transform.position.x + " " + groundObject.transform.position.y + " " + groundObject.transform.position.z);
-                        GameObject[] dykeObjects = GameObject.FindGameObjectsWithTag("dyke");
-                        
-                        Debug.Log("Number of dykes: " + dykeObjects.Length);
-                        _dykePointCnt = 0;
-                    }
-                    break;
-                }
-                /*default:
-                {
-                    _dykePointCnt = 0;
-                       endPoint.active = false;
-                        endPoint.active = false;
-                        break;
-                }*/
+                GameObject.DestroyImmediate(FutureDike);
             }
-        }
+                 Vector2[] pts = new Vector2[5];
+                  Vector3 _endPoint = raycastHit.point;
+                    Vector2 direction = new Vector2(_endPoint.x - _startPoint.x, _endPoint.z - _startPoint.z).normalized;
+                    Vector2 Per = Vector2.Perpendicular(direction);
+                    Per = new Vector2(Per.x * 10.0f, Per.y * 10.0f);
+                   
+                    pts[0] = new Vector2(_startPoint.x + Per.x, _startPoint.z + Per.y);
+                    pts[1] = new Vector2(_endPoint.x + Per.x, _endPoint.z + Per.y);
+                    pts[2] = new Vector2(_endPoint.x - Per.x, _endPoint.z - Per.y);
+                    pts[3] = new Vector2(_startPoint.x - Per.x, _startPoint.z - Per.y);
+                    pts[4] = pts[0];
+       
+
+                 FutureDike = polyGen.GeneratePolygons(false, "FutureDike", pts, propFutureDike, parameters.precision);
+
+                }
+        
+
     }
 
     protected override void ManageOtherInformation()
     {
 
-    }
+    }  
 
     protected override void OtherUpdate()
     {
-
+       
+        if (DisplayFutureDike)
+        {
+            GenerateFutureDike();
+        }
     }
 
     protected override void ManageOtherMessages(string content)

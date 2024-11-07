@@ -107,7 +107,12 @@ public class SimulationManager : MonoBehaviour
     private bool _sentStateToGama = false;
     private bool _inNewStage = false;
     private bool _inTriggerPress = false;
-    
+
+    protected GameObject FutureDike = null;
+    protected PropertiesGAMA propFutureDike;
+    protected bool DisplayFutureDike = false;
+
+
     // ############################################ UNITY FUNCTIONS ############################################
     void Awake() {
         Instance = this;
@@ -131,10 +136,19 @@ public class SimulationManager : MonoBehaviour
 
         maximumTimeToBuild += (int)Time.time;
 
+        propFutureDike = new PropertiesGAMA();
+        propFutureDike.red = 0;
+        propFutureDike.blue = 0;
+        propFutureDike.green = 255;
+        propFutureDike.hasCollider = false;
+        propFutureDike.hasPrefab = false;
+        propFutureDike.height = 40 * 10000;
+        propFutureDike.is3D = true;
+        propFutureDike.visible = true;
         //startButton.onClick.AddListener(StartGame);
     }
 
-    void StartTheFlood()
+    void StartTheFlood() 
     {
         //StartTime = Time.time;
         //startButton.gameObject.SetActive(false);
@@ -210,7 +224,7 @@ public class SimulationManager : MonoBehaviour
         if (handleGeometriesRequested && infoWorld != null && propertyMap != null)
         {
 
-            
+
             sendMessageToReactivatePositionSent = true;
             GenerateGeometries(true, new List<string>());
             handleGeometriesRequested = false;
@@ -618,7 +632,6 @@ public class SimulationManager : MonoBehaviour
             movementText.gameObject.SetActive(false);
         }
     }
-    private int cpt = 0;
    
 
     private void instantiateGO(GameObject obj,  String name, PropertiesGAMA prop)
@@ -633,52 +646,50 @@ public class SimulationManager : MonoBehaviour
          
         if (prop.isInteractable){
         XRBaseInteractable interaction = null;
-        if (prop.isGrabable)
-        {
-            interaction = obj.AddComponent<XRGrabInteractable>();
-            Rigidbody rb = obj.GetComponent<Rigidbody>();
-            if (prop.constraints != null && prop.constraints.Count == 6)
+            if (prop.isGrabable)
             {
-                    if (prop.constraints[0])
-                        rb.constraints = rb.constraints | RigidbodyConstraints.FreezePositionX;
-                    if (prop.constraints[1])
-                        rb.constraints = rb.constraints | RigidbodyConstraints.FreezePositionY;
-                    if (prop.constraints[2])
-                        rb.constraints = rb.constraints | RigidbodyConstraints.FreezePositionZ;
-                    if (prop.constraints[3])
-                        rb.constraints = rb.constraints | RigidbodyConstraints.FreezeRotationX;
-                    if (prop.constraints[4])
-                        rb.constraints = rb.constraints | RigidbodyConstraints.FreezeRotationY;
-                    if (prop.constraints[5])
-                        rb.constraints = rb.constraints | RigidbodyConstraints.FreezeRotationZ;
-                }
+                interaction = obj.AddComponent<XRGrabInteractable>();
+                Rigidbody rb = obj.GetComponent<Rigidbody>();
+                if (prop.constraints != null && prop.constraints.Count == 6)
+                {
+                        if (prop.constraints[0])
+                            rb.constraints = rb.constraints | RigidbodyConstraints.FreezePositionX;
+                        if (prop.constraints[1])
+                            rb.constraints = rb.constraints | RigidbodyConstraints.FreezePositionY;
+                        if (prop.constraints[2])
+                            rb.constraints = rb.constraints | RigidbodyConstraints.FreezePositionZ;
+                        if (prop.constraints[3])
+                            rb.constraints = rb.constraints | RigidbodyConstraints.FreezeRotationX;
+                        if (prop.constraints[4])
+                            rb.constraints = rb.constraints | RigidbodyConstraints.FreezeRotationY;
+                        if (prop.constraints[5])
+                            rb.constraints = rb.constraints | RigidbodyConstraints.FreezeRotationZ;
+                    }
 
                 
-        }
-        else {
+                 }
+                else {
 
-            interaction = obj.AddComponent<XRSimpleInteractable>();
-           
-            
-        }
-       if(interaction.colliders.Count == 0)
-        {
-           Collider[] cs = obj.GetComponentsInChildren<Collider>();
-           if (cs != null)
-           {
-               foreach (Collider c in cs)
-               {
-                        interaction.colliders.Add(c);
-               }
-           }
-        }
-        interaction.interactionManager = interactionManager;
-        interaction.selectEntered.AddListener(SelectInteraction);
-        interaction.firstHoverEntered.AddListener(HoverEnterInteraction);
-        interaction.hoverExited.AddListener(HoverExitInteraction);
+                     interaction = obj.AddComponent<XRSimpleInteractable>();
+                }
+               if(interaction.colliders.Count == 0)
+                {
+                   Collider[] cs = obj.GetComponentsInChildren<Collider>();
+                   if (cs != null)
+                   {
+                       foreach (Collider c in cs)
+                       {
+                                interaction.colliders.Add(c);
+                       }
+                   }
+                }
+                interaction.interactionManager = interactionManager;
+                interaction.selectEntered.AddListener(SelectInteraction);
+                interaction.firstHoverEntered.AddListener(HoverEnterInteraction);
+                interaction.hoverExited.AddListener(HoverExitInteraction);
           
-    }
-}
+         }
+     }
 
    
 
@@ -765,7 +776,10 @@ public class SimulationManager : MonoBehaviour
         }
     }
 
+    protected virtual void GenerateFutureDike()
+    {
 
+    }
     protected virtual void OtherUpdate()
     {
 
@@ -837,7 +851,7 @@ public class SimulationManager : MonoBehaviour
 
                 parameters = ConnectionParameter.CreateFromJSON(content);
                 converter = new CoordinateConverter(parameters.precision, GamaCRSCoefX, GamaCRSCoefY, GamaCRSCoefY, GamaCRSOffsetX, GamaCRSOffsetY, GamaCRSOffsetZ);
-               
+
                 Debug.Log("SimulationManager: Received simulation parameters");
                 // Init ground and player
                 // await Task.Run(() => InitGroundParameters());
@@ -892,6 +906,7 @@ public class SimulationManager : MonoBehaviour
                     startPoint.transform.position = _startPoint;
                     startPoint.SetActive(true);
                     endPoint.SetActive(false);
+                    DisplayFutureDike = true;
                 }
             }
             Debug.Log("Right Hand Trigger Button activated");
@@ -909,11 +924,16 @@ public class SimulationManager : MonoBehaviour
                     _endPoint = raycastHit.point;
                     endPoint.transform.position = _endPoint;
                     endPoint.active = true;
-                        
+                    DisplayFutureDike = false;
+                    FutureDike.SetActive(false);
+                    GameObject.DestroyImmediate(FutureDike);
+
+                    FutureDike = null;
+
                     _apiTest.TestDrawDykeWithParams(_startPoint, _endPoint);
                     GameObject[] dykeObjects = GameObject.FindGameObjectsWithTag("dyke");
                         
-                    Debug.Log("Number of dykes: " + dykeObjects.Length);
+                  //  Debug.Log("Number of dykes: " + dykeObjects.Length);
                 }
             }
         }
