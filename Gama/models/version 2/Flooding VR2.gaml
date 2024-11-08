@@ -81,6 +81,8 @@ global {
 	 
 	 // The player has finished the tutorial and is "playing" the main scene (diking + flooding)
 	 string IN_GAME <- "IN_GAME";
+	 
+	 string START_PRESSED <- "START_PRESSED";
 
 
 	/*************************************************************
@@ -88,7 +90,7 @@ global {
 	 *************************************************************/
  
 	action enter_init {
-		if (!recording) {
+		if (!recording and empty(people_positions)) {
 			matrix<float> mf <- matrix(csv_file("people_positions.csv", ",",float));
 			people_positions <- [];
 			loop times: mf.rows / nb_of_people {
@@ -96,7 +98,6 @@ global {
 			}
 			loop line over: rows_list(mf) {
 				people_positions[int(line[0])] << point(line[1],line[2]);
-				//write "add at " + int(line[0]) + " : " + point(line[1],line[2]);
  			}
 			river_geometries <- shape_file("river_geometries.shp").contents;
 			write "steps " + length(people_positions);
@@ -114,6 +115,19 @@ global {
 		current_step <- 0;
 	}
 	
+	action enter_start {
+		init_requested_from_gama <- false;
+		flooding_requested_from_gama <- false;
+		diking_requested_from_gama <- false;
+		restart_requested_from_gama <- false;	
+		ask unity_player {
+			start_pressed <- false;
+		}	
+		button_frame <- nil;
+		button_image_unselected <- nil;
+		button_image_selected <- nil;
+	}
+	
 	action exit_flooding {
 		if (recording) {
 			string total <- "";
@@ -126,6 +140,7 @@ global {
 			save total to: "people_positions.csv" format:"txt";
 			save river_geometries to: "river_geometries.shp" format: "shp";
 		}
+		ask experiment {do compact_memory;}
 	}
 	
 	
@@ -166,6 +181,13 @@ global {
 		return unity_player none_matches each.in_tutorial;
 	} 
 	
+	bool start_over {
+		if (init_requested_from_gama) {return true;}
+		if (empty(unity_player)) {return false;}
+		return unity_player all_match each.start_pressed;
+	}
+	
+	
 	bool diking_over { 
 		if (flooding_requested_from_gama) {return true;}
 		if (gama.machine_time >= current_timeout) {return true;}
@@ -196,8 +218,9 @@ global {
 		if (current_step = length(people_positions)) {
 			return;
 		}
+		int first <- first(people).index;
 		ask people {
-			location <- people_positions[current_step][self.index];
+			location <- people_positions[current_step][self.index - first];
 		}
 		ask river {
 			shape <- river_geometries[current_step];
@@ -227,6 +250,9 @@ global {
 	
 	// Is the flooding stage requested by the user ? 
 	bool flooding_requested_from_gama;
+	
+	// Is the initial flooding stage requested by the user ? 
+	bool init_requested_from_gama;
 	
 	// Is the diking stage requested by the user ? 
 	bool diking_requested_from_gama; 
@@ -348,14 +374,15 @@ species unity_linker parent: abstract_unity_linker {
 species unity_player parent: abstract_unity_player{
 	
 	bool in_tutorial;
+	bool start_pressed;
 	rgb color <- #red;
 	init {
 		do set_status(IN_TUTORIAL);
-		//ask unity_linker {do send_static_geometries();}
 	}
 	
 	action set_status(string status) {
 		in_tutorial <- status = IN_TUTORIAL;
+		start_pressed <- status = START_PRESSED;
 	}
 	
 
@@ -396,9 +423,6 @@ experiment Launch parent:"Base" autorun: true type: unity {
 		 display map_VR type: 3d background: #dimgray axes: false{
 		 	
 		 	species river transparency: 0.2 {
-		 		//draw shape + 30 color: #white wireframe: false width: 5;
-		 		//draw shape + 15 color: brighter(brighter(#lightseagreen)) wireframe: false width: 5 at: location + {0, 0, 0.5};
-		 		//draw shape color: #lightseagreen wireframe: false width: 5 at: location + {0, 0, 1};
 				draw shape border: brighter(brighter(#lightseagreen)) width: 5 color: #lightseagreen  at: location + {0, 0, 5};
 			}
 			species road {
@@ -427,6 +451,10 @@ experiment Launch parent:"Base" autorun: true type: unity {
 			event #mouse_move { 
 				button_selected <- button_frame != nil and button_frame overlaps #user_location;
 			}
+			
+			event "s" {
+				world.init_requested_from_gama <- true;
+			}
 
 			event "r" {
 				world.restart_requested_from_gama <- true ;
@@ -453,6 +481,9 @@ experiment Launch parent:"Base" autorun: true type: unity {
 
 								
 				switch (state) {
+					match "s_start" {
+						text <- "Press 's' to start.";
+					}
 					match "s_diking" {
 						text <- "Diking phase.";
 						hint <- "Press 'f' for skipping.";
@@ -483,7 +514,7 @@ experiment Launch parent:"Base" autorun: true type: unity {
 				if (button_image_unselected != nil) { 
 					button_frame <- square(300) at_location icon_position;
 					draw button_selected ? button_image_selected : button_image_unselected size: 300 at: icon_position;
-				}
+				} 
 			}
 
 		 }

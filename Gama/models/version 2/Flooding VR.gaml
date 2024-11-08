@@ -119,6 +119,14 @@ global {
 	}
 	
 	// Are all the players who entered ready or has GAMA sent the beginning of the game ? 
+	
+	
+	bool start_over {
+		if (init_requested_from_gama) {return true;}
+		if (empty(unity_player)) {return false;}
+		return unity_player all each.language_chosen;
+	}
+	
 	bool init_over  { 
 		if (flooding_requested_from_gama or diking_requested_from_gama) {return true;}
 		if (empty(unity_player)) {return false;}
@@ -268,6 +276,7 @@ species unity_linker parent: abstract_unity_linker {
 species unity_player parent: abstract_unity_player{
 	
 	bool in_tutorial;
+	bool start_pressed;
 	rgb color <- #red;
 	init {
 		do set_status(IN_TUTORIAL);

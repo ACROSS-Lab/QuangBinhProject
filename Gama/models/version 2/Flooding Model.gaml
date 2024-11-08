@@ -19,7 +19,15 @@ global control: fsm {
 	 * Global states
 	 *************************************************************/	
 	
-	state s_init initial: true{
+	state s_start initial: true {
+		enter {
+			do enter_start();
+		}
+		
+		transition to: s_init when: start_over();
+	}
+	
+	state s_init {
 		enter {
 			do enter_init();
 		}
@@ -62,7 +70,7 @@ global control: fsm {
 		exit {
 			do exit_flooding();
 		}
-		transition to: s_init when: flooding_over() {
+		transition to: s_start when: flooding_over() {
 			do restart();
 		}
 	}
@@ -78,6 +86,8 @@ global control: fsm {
 	
 	action enter_flooding virtual: true;
 	
+	action enter_start virtual: true;
+	
 	action exit_flooding;
 	
 	action exit_diking;
@@ -89,6 +99,8 @@ global control: fsm {
 	bool diking_over virtual: true;
 	
 	bool flooding_over virtual: true;
+	
+	bool start_over virtual: true;
 	
 	action body_init {}
 	
