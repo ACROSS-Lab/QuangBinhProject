@@ -16,7 +16,8 @@ public class UIController : MonoBehaviour
 
     public void SetInVietnamese(bool value)
     {
-        InVietnamese = value;
+        Debug.Log("Game in vitenamese:" + value);
+	InVietnamese = value;
     }
 
     public void StartDikingPhase()
