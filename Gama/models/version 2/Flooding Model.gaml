@@ -23,6 +23,10 @@ global control: fsm {
 		enter {
 			do enter_init();
 		}
+		do body_init();
+		exit {
+			do exit_init();
+		}
 		transition to: s_diking when: init_over();
 	}
 
@@ -33,6 +37,10 @@ global control: fsm {
 	state s_diking {
 		enter {
 			do enter_diking();
+		}
+		do body_diking();
+		exit {
+			do exit_diking();
 		}
 		transition to: s_flooding when: diking_over();
 		
@@ -50,6 +58,10 @@ global control: fsm {
 		do check_obstactles_drowning();
 		do recompute_road_graph();
 		do drain_water();
+		do body_flooding();
+		exit {
+			do exit_flooding();
+		}
 		transition to: s_init when: flooding_over() {
 			do restart();
 		}
@@ -65,12 +77,24 @@ global control: fsm {
 	action enter_diking virtual: true;
 	
 	action enter_flooding virtual: true;
+	
+	action exit_flooding;
+	
+	action exit_diking;
+	
+	action exit_init;
 
 	bool init_over virtual: true;
 	
 	bool diking_over virtual: true;
 	
 	bool flooding_over virtual: true;
+	
+	action body_init {}
+	
+	action body_diking {}
+	
+	action body_flooding {}
  	
 	/*************************************************************
 	 * Built-in parameters to control the simulations
@@ -503,7 +527,7 @@ grid cell 	file: dem_file
 species river {
 
 	reflex {
-		do compute_shape();
+		if (state != "s_init") {do compute_shape();}
 	}
 
 	action compute_shape {
@@ -528,26 +552,28 @@ species people skills: [moving] control: fsm {
 	
 	state s_fleeing {
 		enter {
+			path my_path <- nil;
 			point target;
 			using (topology(road_network)) {
 				evacuation_point ep <- (evacuation_point closest_to self);
-				target <- ep.location;
+				if (ep != nil) {target <- ep.location;}
 			}
-			path my_path <- road_network path_between (location, target);
+			if (target != nil) {my_path <- road_network path_between (location, target);}
 		}
 		if my_path != nil {do follow(path: my_path, move_weights: road_weights); }
 		transition to: s_evacuated when: location = target;
 		transition to: s_drowned when: self.is_drowning();
+		transition to: s_fleeing when: my_path = nil;
 	}
 	
 	state s_evacuated final: true {
-		evacuated <- evacuated+1;
-		do die;
+		enter{evacuated <- evacuated+1;}
+		//do die;
 	}
 	
 	state s_drowned final: true {
-		casualties <- casualties + 1;
-		do die;
+		enter {casualties <- casualties + 1;}
+		//do die;
 	}
 
 	bool is_drowning {
