@@ -210,6 +210,7 @@ species unity_linker parent: abstract_unity_linker {
 		map_to_send["casualties"] <- casualties;
 		map_to_send["max_number_of_casualties"] <- max_number_of_casualties;
 	} 
+	
 	list<point> define_init_locations {
 		return [world.location + {0,0,1000}];
 	} 
