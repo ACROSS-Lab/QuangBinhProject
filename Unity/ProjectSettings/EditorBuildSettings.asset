@@ -35,15 +35,18 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/Code Example/Send Receive Message.unity
     guid: 8e9bc112fa33a4f8385dfe61e2ae03a0
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Tutorial_cine360.unity
     guid: cca27fdf5614ae54bb4c995864472624
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Main Scene - Flood.unity
     guid: fb69449e6dd6949199d93ff7faa54a9b
   - enabled: 0
     path: Assets/Scenes/Tutorial.unity
     guid: d0eae431aa6fb4bb0a8374443a3b1c6d
+  - enabled: 1
+    path: Assets/Scenes/Main Scene - test UI.unity
+    guid: c60f13840e10144feb79a853c387d4a3
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: bfa1182bd221b4ca89619141f66f1260, type: 2}
     Unity.XR.WindowsMR.Settings: {fileID: 11400000, guid: dc5a169419fa04987b057f65238cf3ba, type: 2}
