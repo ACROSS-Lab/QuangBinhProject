@@ -88,6 +88,8 @@ global {
 	/*************************************************************
 	 * Functions that control the transitions between the states
 	 *************************************************************/
+	 
+	bool river_already_sent_in_diking_phase;
  
 	action enter_init {
 		if (!recording and empty(people_positions)) {
@@ -165,6 +167,7 @@ global {
 	}
 	
 	action enter_flooding {
+		river_already_sent_in_diking_phase <- false;
 		flooding_requested_from_gama <- false;
 		diking_requested_from_gama <- false;
 		restart_requested_from_gama <- false;	
@@ -348,7 +351,8 @@ species unity_linker parent: abstract_unity_linker {
 			// All the dykes are sent to Unity during the diking phass
 			do add_geometries_to_send(dyke, up_dyke);
 			// The river is not changed so we keep it unchanged
-			do add_geometries_to_keep(river);
+			if (river_already_sent_in_diking_phase) {do add_geometries_to_keep(river);} else {do add_geometries_to_send(river, up_water); river_already_sent_in_diking_phase <- true;}
+			
 		} else	if (state = "s_flooding") {
 			// We only send the people who are evacuating 
 			do add_geometries_to_send(people where (each.state = "s_fleeing"),up_people);

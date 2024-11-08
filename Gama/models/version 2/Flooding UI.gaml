@@ -20,7 +20,7 @@ global {
 	 *************************************************************/
 
 	// Initial number of people
-	int nb_of_people <- 500;
+	int nb_of_people <- 500; 
 	
 	// The average speed of people
 	float speed_of_people <- 20 #m / #h;
