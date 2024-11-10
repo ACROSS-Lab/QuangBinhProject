@@ -40,7 +40,7 @@ global {
 	 
 	int max_number_of_casualties <- round(nb_of_people / 5);
 
-	bool winning -> casualties < max_number_of_casualties;
+	//bool winning -> casualties < max_number_of_casualties;
 	
 	
 	/*************************************************************
@@ -102,8 +102,8 @@ global {
 				people_positions[int(line[0])] << point(line[1],line[2]);
  			}
 			river_geometries <- shape_file("river_geometries.shp").contents;
-			write "steps " + length(people_positions);
-			write "size of pop " + length(people_positions[0]);
+			//write "steps " + length(people_positions);
+			//write "size of pop " + length(people_positions[0]);
 		}
 
 		ask unity_player {do set_status(IN_TUTORIAL);}
@@ -216,9 +216,11 @@ global {
 	list<geometry> river_geometries;
 	
 	int current_step;
+	bool playback_finished;
 	
 	action playback {
-		if (current_step = length(people_positions)) {
+		playback_finished <- current_step = length(people_positions);
+		if playback_finished {
 			return;
 		}
 		int first <- first(people).index;
@@ -306,7 +308,8 @@ species unity_linker parent: abstract_unity_linker {
 		map_to_send["score"] <- int(100*evacuated/nb_of_people);
 		map_to_send["remaining_time"] <- int((current_timeout - gama.machine_time)/1000);
 		map_to_send["state"] <- world.state;
-		map_to_send["winning"] <- winning;
+		//map_to_send["winning"] <- winning;
+		map_to_send["playback_finished"] <- playback_finished;
 	} 
 	list<point> define_init_locations {
 		return [world.location + {0,0,1000}];
