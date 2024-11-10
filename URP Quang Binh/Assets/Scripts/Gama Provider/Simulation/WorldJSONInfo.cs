@@ -26,6 +26,7 @@ public class WorldJSONInfo
 
     public bool winning;
     public int max_number_of_casualties;
+    public bool playback_finished;
 
     public static WorldJSONInfo CreateFromJSON(string jsonString)
     {
