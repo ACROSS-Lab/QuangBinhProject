@@ -333,7 +333,7 @@ public class SimulationManager : MonoBehaviour
             if (infoWorld.state == "s_flooding")
             {
                 modalText.text = "Casualties: " + infoWorld.casualties;
-                is_a_win = infoWorld.winning;
+                //is_a_win = infoWorld.winning;
 
 
             }
