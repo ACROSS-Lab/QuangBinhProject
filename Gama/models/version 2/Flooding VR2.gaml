@@ -90,6 +90,8 @@ global {
 	 *************************************************************/
 	 
 	bool river_already_sent_in_diking_phase;
+	
+	int number_of_milliseconds_to_wait_in_playback <- 100;
  
 	action enter_init {
 		if (!recording and empty(people_positions)) {
@@ -230,6 +232,8 @@ global {
 		ask river {
 			shape <- river_geometries[current_step];
 		}
+		float t2 <- gama.machine_time + number_of_milliseconds_to_wait_in_playback;
+		loop while: gama.machine_time < t2 {}
 		current_step <- current_step + 1;
 
 	}
