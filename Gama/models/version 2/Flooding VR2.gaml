@@ -26,7 +26,7 @@ global {
 	float diffusion_rate <- 0.5;
 	
 	//Height of the dykes (30 m by default)
-	float dyke_height <- 15.0;
+	float dyke_height <- 30.0;
 	 
 	//Width of the dyke (15 m by default)
 	float dyke_width <- 15.0;
