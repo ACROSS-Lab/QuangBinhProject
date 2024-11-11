@@ -36,11 +36,6 @@ namespace QuickTest.Editor
             {
                 apiTest.TestRemoveDyke();
             }
-
-            if (GUILayout.Button("Start dyking"))
-            {
-                apiTest.TestStartDykingPressed();
-            }
         }
     }
 }

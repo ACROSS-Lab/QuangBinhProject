@@ -132,13 +132,14 @@ public class SimulationManager : MonoBehaviour
     bool activeButton = false;
     bool is_a_win = true;
 
-    public bool startDykingPressed;
+    //public bool startDykingPressed;
 
     [SerializeField] protected GameObject languageSelection;
     [SerializeField] protected Button vietnameseButton, englishButton;
     [SerializeField] protected Button startButton;
     [SerializeField] protected Button restartButton;
-    
+
+    private bool _languageChosen;
 
     // ############################################ UNITY FUNCTIONS ############################################
     void Awake() {
@@ -183,8 +184,9 @@ public class SimulationManager : MonoBehaviour
                 //languageSelection.SetActive(false);
                 _apiTest.TestSetStartPressed();
                 startButton.transform.root.gameObject.SetActive(true);
-                vietnameseButton.gameObject.SetActive(false);
+                //vietnameseButton.gameObject.SetActive(false);
                 vietnameseButton.transform.root.gameObject.SetActive(false);
+                _languageChosen = true;
                 Debug.Log("Vietnamese button successfully");
             }
         });
@@ -196,9 +198,10 @@ public class SimulationManager : MonoBehaviour
                 //globalVolume.SetActive(false);
                 _apiTest.TestSetStartPressed();
                 //languageSelection.SetActive(false);
-                englishButton.gameObject.SetActive(false);
+                //englishButton.gameObject.SetActive(false);
                 startButton.transform.root.gameObject.SetActive(true);
                 englishButton.transform.root.gameObject.SetActive(false);
+                _languageChosen = true;
                 Debug.Log("English button successfully");
             }
         });
@@ -208,9 +211,8 @@ public class SimulationManager : MonoBehaviour
             //globalVolume.SetActive(false);
 
             Debug.Log("Press start button");
-            startButton.gameObject.SetActive(false);
+            //startButton.gameObject.SetActive(false);
             startButton.transform.root.gameObject.SetActive(false);
-            _apiTest.TestStartDykingPressed();
             _apiTest.TestSetInGame();
             Debug.Log("Start button successfully");
         });
@@ -336,6 +338,13 @@ public class SimulationManager : MonoBehaviour
     {
         if (infoWorld != null)
         {
+            Debug.Log(infoWorld.state);
+            if (infoWorld.state == "s_start")
+            {
+                if (!_languageChosen)
+                    languageSelection.transform.root.gameObject.SetActive(true);
+            }
+            
             if (infoWorld != null)
                 Debug.Log(infoWorld.playback_finished);
             
@@ -356,6 +365,10 @@ public class SimulationManager : MonoBehaviour
         
         if (IsGameState(GameState.GAME) && infoWorld != null)
         {
+            if (infoWorld.state == "s_flooding" || infoWorld.state == "s_diking")
+            {
+                _languageChosen = false;
+            }
 
             if (currentStage != infoWorld.state)
             {
