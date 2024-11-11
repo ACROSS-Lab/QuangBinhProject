@@ -27,11 +27,6 @@ namespace QuickTest.Editor
                 apiTest.TestSetInGame();
             }
 
-            if (GUILayout.Button("Set start pressed"))
-            {
-                apiTest.TestSetStartPressed();
-            }
-        
             if (GUILayout.Button("Draw dyke"))
             {
                 apiTest.TestDrawDyke();
@@ -40,6 +35,11 @@ namespace QuickTest.Editor
             if (GUILayout.Button("Remove dyke"))
             {
                 apiTest.TestRemoveDyke();
+            }
+
+            if (GUILayout.Button("Start dyking"))
+            {
+                apiTest.TestStartDykingPressed();
             }
         }
     }

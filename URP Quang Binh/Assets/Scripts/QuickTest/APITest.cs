@@ -70,5 +70,10 @@ namespace QuickTest
             
             ConnectionManager.Instance.SendExecutableAsk("set_status", args);
         }
+
+        public void TestStartDykingPressed()
+        {
+            SimulationManager.Instance.startDykingPressed = true;
+        }
     }
 }

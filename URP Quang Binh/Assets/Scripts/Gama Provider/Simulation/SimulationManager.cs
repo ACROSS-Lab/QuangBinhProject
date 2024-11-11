@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using QuickTest;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.XR.Interaction.Toolkit; 
@@ -125,10 +126,19 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] protected InputActionReference mainButton = null;
     [SerializeField] protected InputActionReference secondButton = null;
 
-    [SerializeField] protected GameObject tutorial;
-
+    //[SerializeField] protected GameObject tutorial;
+    [SerializeField] protected GameObject globalVolume;
+    
     bool activeButton = false;
     bool is_a_win = true;
+
+    public bool startDykingPressed;
+
+    [SerializeField] protected GameObject languageSelection;
+    [SerializeField] protected Button vietnameseButton, englishButton;
+    [SerializeField] protected Button startButton;
+    [SerializeField] protected Button restartButton;
+    
 
     // ############################################ UNITY FUNCTIONS ############################################
     void Awake() {
@@ -164,11 +174,57 @@ public class SimulationManager : MonoBehaviour
         propFutureDike.visible = true;
         //startButton.onClick.AddListener(StartGame);
 
+        vietnameseButton.onClick.AddListener(() =>
+        {
+            {
+                Debug.Log("Vietnamese button clicked");
+                //globalVolume.SetActive(false);
+                //_apiTest.TestSetStartPressed();
+                //languageSelection.SetActive(false);
+                _apiTest.TestSetStartPressed();
+                startButton.transform.root.gameObject.SetActive(true);
+                vietnameseButton.gameObject.SetActive(false);
+                vietnameseButton.transform.root.gameObject.SetActive(false);
+                Debug.Log("Vietnamese button successfully");
+            }
+        });
+        
+        englishButton.onClick.AddListener(() =>
+        {
+            {
+                Debug.Log("English button clicked");
+                //globalVolume.SetActive(false);
+                _apiTest.TestSetStartPressed();
+                //languageSelection.SetActive(false);
+                englishButton.gameObject.SetActive(false);
+                startButton.transform.root.gameObject.SetActive(true);
+                englishButton.transform.root.gameObject.SetActive(false);
+                Debug.Log("English button successfully");
+            }
+        });
+        
+        startButton.onClick.AddListener(() =>
+        {
+            //globalVolume.SetActive(false);
 
-
+            Debug.Log("Press start button");
+            startButton.gameObject.SetActive(false);
+            startButton.transform.root.gameObject.SetActive(false);
+            _apiTest.TestStartDykingPressed();
+            _apiTest.TestSetInGame();
+            Debug.Log("Start button successfully");
+        });
+        
+        restartButton.onClick.AddListener(() =>
+        {
+            _apiTest.TestSetInTutorial();
+            languageSelection.SetActive(true);
+            globalVolume.SetActive(true);
+        });
+        
         XROrigin = player.transform.Find("XR Origin (XR Rig)");
     }
-
+    
     void StartTheFlood()
     {
         //StartTime = Time.time;
@@ -278,6 +334,26 @@ public class SimulationManager : MonoBehaviour
 
     void UpdateGame()
     {
+        if (infoWorld != null)
+        {
+            if (infoWorld != null)
+                Debug.Log(infoWorld.playback_finished);
+            
+            // if (infoWorld.playback_finished && !startDykingPressed)
+            //     globalVolume.SetActive(true);
+
+            // if (startDykingPressed)
+            // {
+            //     globalVolume.SetActive(false);
+            // }
+
+            // if (startDykingPressed && infoWorld.remaining_time <= 5f)
+            // {
+            //     globalVolume.SetActive(true);
+            // }
+        }
+        
+        
         if (IsGameState(GameState.GAME) && infoWorld != null)
         {
 
@@ -286,10 +362,10 @@ public class SimulationManager : MonoBehaviour
                 if (infoWorld.state == "s_flooding")
                 {
                     Debug.Log("Current state is flooding");
-                    modalText.enabled = false;
-                    timeText.enabled = false;
-                    tutorial.SetActive(false);
-                    activeButton = false;
+                    //modalText.enabled = false;
+                    //timeText.enabled = false;
+                    //tutorial.SetActive(false);
+                    //activeButton = false;
                     if (FutureDike != null)
                     {
                         FutureDike.SetActive(false);
@@ -305,9 +381,9 @@ public class SimulationManager : MonoBehaviour
                 else if (infoWorld.state == "s_diking")
                 {
                     Debug.Log("Current state is diking");
-                    modalText.enabled = false;
-                    timeText.enabled = true;
-                    tutorial.SetActive(true);
+                    //modalText.enabled = false;
+                    //timeText.enabled = true;
+                    //tutorial.SetActive(true);
                     activeButton = true;
                 }
                 // if (infoWorld.state == "s_init")
@@ -332,14 +408,14 @@ public class SimulationManager : MonoBehaviour
             }
             if (infoWorld.state == "s_flooding")
             {
-                modalText.text = "Casualties: " + infoWorld.casualties;
+                //modalText.text = "Casualties: " + infoWorld.casualties;
                 //is_a_win = infoWorld.winning;
 
 
             }
             else if (infoWorld.state == "s_diking")
             {
-                timeText.text = "Remaining Time: " + Math.Max(0, infoWorld.remaining_time);
+                //timeText.text = "Remaining Time: " + Math.Max(0, infoWorld.remaining_time);
             }
 
 
