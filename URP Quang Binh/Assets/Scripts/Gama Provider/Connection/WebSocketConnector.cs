@@ -17,7 +17,7 @@ public abstract class WebSocketConnector : MonoBehaviour
     protected bool UseHeartbeat = true; //only for middleware mode
     protected bool DesktopMode = false;
     protected bool fixedProperties = true;
-    protected string DefaultIP = "10.2.6.85";
+    protected string DefaultIP = "localhost";
     protected string DefaultPort = "8080";
     protected bool UseMiddlewareDM = true; 
 
