@@ -38,6 +38,8 @@ global control: fsm {
 		transition to: s_diking when: init_over();
 	}
 
+
+
 	
 	/**
 	 * This state represents the state where the user(s) is(are) able to build dikes 
@@ -50,8 +52,12 @@ global control: fsm {
 		exit {
 			do exit_diking();
 		}
-		transition to: s_flooding when: diking_over();
+		transition to: wait_flooding when: diking_over();
 		
+	}
+	
+	state wait_flooding {
+		transition to: s_flooding when: flooding_ready() ;
 	}
 	
 	/**
@@ -93,6 +99,9 @@ global control: fsm {
 	action exit_diking;
 	
 	action exit_init;
+	
+	
+	bool flooding_ready virtual: true;
 
 	bool init_over virtual: true;
 	
@@ -543,7 +552,7 @@ species river {
 	}
 
 	action compute_shape {
-		shape <- /*without_holes*/(union((cell where (each.water_height > 0)) collect each.shape_union) simplification 30);
+		shape <- /*without_holes*/(union((cell where (each.water_height > 0)) collect each.shape_union) simplification 30) ;
 	}
 }
 

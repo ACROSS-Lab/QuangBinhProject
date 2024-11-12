@@ -84,6 +84,7 @@ global {
 	 
 	 string START_PRESSED <- "START_PRESSED";
 
+	string IN_FLOOD <- "IN_FLOOD";
 
 	/*************************************************************
 	 * Functions that control the transitions between the states
@@ -91,7 +92,7 @@ global {
 	 
 	bool river_already_sent_in_diking_phase;
 	
-	int number_of_milliseconds_to_wait_in_playback <- 100;
+	int number_of_milliseconds_to_wait_in_playback <- 10;//100;
  
 	action enter_init {
 		if (!recording and empty(people_positions)) {
@@ -126,6 +127,7 @@ global {
 		restart_requested_from_gama <- false;	
 		ask unity_player {
 			start_pressed <- false;
+			do set_status(IN_TUTORIAL);
 		}	
 		button_frame <- nil;
 		button_image_unselected <- nil;
@@ -133,6 +135,7 @@ global {
 	}
 	
 	action exit_flooding {
+		ask unity_linker {do sendEndGame;}
 		if (recording) {
 			string total <- "";
 			loop i from: 0 to: current_step - 1 {
@@ -178,6 +181,10 @@ global {
 		button_image_selected <- image("../../includes/icons/restart-fill.png");
 		current_step <- 0;
 	}
+	
+	bool flooding_ready {
+		return unity_player all_match each.in_flood;
+	} 
 	
 	// Are all the players who entered ready or has GAMA sent the beginning of the game ? 
 	bool init_over  { 
@@ -270,10 +277,10 @@ global {
 	float init_duration <- 120.0;
 	
 	// The maximum amount of time, in seconds, for watching the water flow before restarting
-	float flooding_duration <- 120.0;
+	float flooding_duration <- 10.0;//120.0;
 	
 	// The maximum amount of time, in seconds, for building dikes 
-	float diking_duration <- 120.0;
+	float diking_duration <- 10.0;//120.0;
 	
 	// The next timeout to occur for the different stages
 	float current_timeout;
@@ -295,7 +302,7 @@ species unity_linker parent: abstract_unity_linker {
 		
 		unity_aspect car_aspect <- prefab_aspect("Prefabs/Visual Prefabs/People/WalkingMen",250,0.2,1.0,-90.0, precision);
 		unity_aspect dyke_aspect <- geometry_aspect(40.0, "Materials/Dike/Dike", rgb(204, 119, 34, 1.0), precision);
-		unity_aspect water_aspect <- geometry_aspect(40.0, rgb(90, 188, 216, 0.0), precision);
+		unity_aspect water_aspect <- geometry_aspect(20.0, rgb(90, 188, 216, 0.0), precision);
  	
 		up_people<- geometry_properties("car", nil, car_aspect, #no_interaction, false);
 		up_dyke <- geometry_properties("dyke", "dyke", dyke_aspect, #collider, false);
@@ -307,13 +314,20 @@ species unity_linker parent: abstract_unity_linker {
 		
 	}
 
-	action add_to_send_world(map map_to_send) {
+	action sendEndGame {
+		//write "send_message score : " +  int(100*evacuated/nb_of_people);
+		
+		do send_message players: unity_player as list mes: ["score":: int(100*evacuated/nb_of_people)];
+	}
+		action add_to_send_world(map map_to_send) {
 		map_to_send["evacuated"] <- int(evacuated);
 		map_to_send["score"] <- int(100*evacuated/nb_of_people);
 		map_to_send["remaining_time"] <- int((current_timeout - gama.machine_time)/1000);
 		map_to_send["state"] <- world.state;
 		//map_to_send["winning"] <- winning;
 		map_to_send["playback_finished"] <- playback_finished;
+		
+		//write sample(world.state) + " " + sample(playback_finished);
 	} 
 	list<point> define_init_locations {
 		return [world.location + {0,0,1000}];
@@ -351,7 +365,7 @@ species unity_linker parent: abstract_unity_linker {
 	 * What are the agents to send to Unity, and what are the agents that remain unchanged ? 
 	 */
 	reflex send_agents when: not empty(unity_player) {
-		if (state = "s_init" and !recording) {
+		if (state = "s_init" and !recording) and not playback_finished {
 			do add_geometries_to_send(people, up_people);
 			do add_geometries_to_send(river, up_water);
 		} else if (state = "s_diking") {
@@ -373,6 +387,7 @@ species unity_linker parent: abstract_unity_linker {
 	// Message sent by Unity to inform about the status of a specific player
 	action set_status(string player_id, string status) {
 		unity_player player <- player_agents[player_id];
+		//write "set status: " + sample(player_id) + " " + sample(player) + " " + sample(status);
 		if (player != nil) {
 			ask player {do set_status(status);}
 		}
@@ -385,6 +400,7 @@ species unity_linker parent: abstract_unity_linker {
 species unity_player parent: abstract_unity_player{
 	
 	bool in_tutorial;
+	bool in_flood;
 	bool start_pressed;
 	rgb color <- #red;
 	init {
@@ -394,16 +410,19 @@ species unity_player parent: abstract_unity_player{
 	action set_status(string status) {
 		in_tutorial <- status = IN_TUTORIAL;
 		start_pressed <- status = START_PRESSED;
+		in_flood <- status = IN_FLOOD;
 	}
 	
 
 }
 
-experiment Launch parent:"Base" autorun: true type: unity {
+experiment Launch  autorun: true type: unity {
+
 
 	string unity_linker_species <- string(unity_linker);
 	float t_ref;
-
+	float minimum_cycle_duration <- 0.1;
+	 	
 	action create_player(string id) {
 		ask unity_linker {
 			do create_player(id);

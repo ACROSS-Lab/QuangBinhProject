@@ -4,7 +4,7 @@ using Gama_Provider.Simulation;
 using QuickTest;
 using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.SceneManagement;
+//using UnityEngine.SceneManagement;
 using UnityEngine.XR.Interaction.Toolkit; 
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
@@ -31,6 +31,10 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] protected float GamaCRSOffsetX = 0.0f;
     [SerializeField] protected float GamaCRSOffsetY = 0.0f;
 
+    protected Boolean StartMenuDone = false;
+    private string currentStage = "s_start";
+
+
 
     protected Transform XROrigin;
 
@@ -54,7 +58,6 @@ public class SimulationManager : MonoBehaviour
     protected Dictionary<string, List<object>> geometryMap;
     protected Dictionary<string, PropertiesGAMA> propertyMap = null;
 
-    protected List<GameObject> SelectedObjects;
 
 
     protected bool handleGeometriesRequested;
@@ -86,9 +89,6 @@ public class SimulationManager : MonoBehaviour
     protected float TimeSendPosition = 1.0f;
     protected float TimerSendPosition = 0.0f;
 
-    protected List<GameObject> locomotion;
-    protected APITest _apiTest;
-
     protected int _dykePointCnt = 0;
 
     protected Vector3 _startPoint;
@@ -96,6 +96,8 @@ public class SimulationManager : MonoBehaviour
 
     protected GameObject startPoint;
     protected GameObject endPoint;
+
+    protected ScoreMessage scoreM;
 
     [SerializeField] protected Text modalText;
     //[SerializeField] protected Button startButton;
@@ -107,13 +109,13 @@ public class SimulationManager : MonoBehaviour
     protected Vector3 originalStartPosition;
     protected bool firstPositionStored;
 
-    private bool _sentStateToGama = false;
-    private bool _inNewStage = false;
+
     private bool _inTriggerPress = false;
 
-    protected GameObject FutureDike = null;
+    public GameObject FutureDike = null;
     protected PropertiesGAMA propFutureDike;
-    protected bool DisplayFutureDike = false;
+    public bool DisplayFutureDike = false;
+    protected bool StartFloodingDone = false;
 
     protected Vector3 FinalPositionPlayer = new Vector3(872, 1205.2f, -3427); 
     [SerializeField] protected GameObject FinalScene;
@@ -130,42 +132,26 @@ public class SimulationManager : MonoBehaviour
     //[SerializeField] protected GameObject tutorial;
     [SerializeField] protected GameObject globalVolume;
     
-    bool activeButton = false;
-    bool is_a_win = true;
-
+ 
     //public bool startDykingPressed;
-
-    [SerializeField] protected GameObject languageSelection;
-    [SerializeField] protected Button vietnameseButton, englishButton;
-    [SerializeField] protected Button startButton;
-    [SerializeField] protected Button restartButton;
 
     [SerializeField] protected StatusEffectManager timer;
     [SerializeField] protected StatusEffectManager safeRateCount;
 
-    private bool _languageChosen;
-    private bool _initializedDikingTime, _initializedFloodingTime;
-
+   
     // ############################################ UNITY FUNCTIONS ############################################
     void Awake() {
         Instance = this;
-        SelectedObjects = new List<GameObject>();
         // toDelete = new List<GameObject>();
 
-        locomotion = new List<GameObject>(GameObject.FindGameObjectsWithTag("locomotion"));
-
-        playerMovement(false);
-        toFollow = new List<GameObject>();
-
-        _apiTest = player.AddComponent<APITest>();
 
         startPoint = GameObject.FindGameObjectWithTag("startPoint");
         endPoint = GameObject.FindGameObjectWithTag("endPoint");
 
         if (endPoint != null)
-            endPoint.active = false;
+            endPoint.SetActive(false);
         if (startPoint != null)
-            startPoint.active = false;
+            startPoint.SetActive(false);
 
         maximumTimeToBuild += (int)Time.time;
 
@@ -180,55 +166,8 @@ public class SimulationManager : MonoBehaviour
         propFutureDike.visible = true;
         //startButton.onClick.AddListener(StartGame);
 
-        vietnameseButton.onClick.AddListener(() =>
-        {
-            {
-                Debug.Log("Vietnamese button clicked");
-                //globalVolume.SetActive(false);
-                //_apiTest.TestSetStartPressed();
-                //languageSelection.SetActive(false);
-                _apiTest.TestSetStartPressed();
-                startButton.transform.root.gameObject.SetActive(true);
-                //vietnameseButton.gameObject.SetActive(false);
-                vietnameseButton.transform.root.gameObject.SetActive(false);
-                _languageChosen = true;
-                Debug.Log("Vietnamese button successfully");
-            }
-        });
-        
-        englishButton.onClick.AddListener(() =>
-        {
-            {
-                Debug.Log("English button clicked");
-                //globalVolume.SetActive(false);
-                _apiTest.TestSetStartPressed();
-                //languageSelection.SetActive(false);
-                //englishButton.gameObject.SetActive(false);
-                startButton.transform.root.gameObject.SetActive(true);
-                englishButton.transform.root.gameObject.SetActive(false);
-                _languageChosen = true;
-                Debug.Log("English button successfully");
-            }
-        });
-        
-        startButton.onClick.AddListener(() =>
-        {
-            //globalVolume.SetActive(false);
-
-            Debug.Log("Press start button");
-            //startButton.gameObject.SetActive(false);
-            startButton.transform.root.gameObject.SetActive(false);
-            _apiTest.TestSetInGame();
-            Debug.Log("Start button successfully");
-        });
-        
-        restartButton.onClick.AddListener(() =>
-        {
-            _apiTest.TestSetInTutorial();
-            languageSelection.SetActive(true);
-            globalVolume.SetActive(true);
-        });
-        
+     
+     
         XROrigin = player.transform.Find("XR Origin (XR Rig)");
     }
     
@@ -274,26 +213,8 @@ public class SimulationManager : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (endOfGame)
-        {
-            if (TimerEndOfGame > 0)
-                TimerEndOfGame -= Time.deltaTime;
-
-            if (TimerEndOfGame <= 0.0f || (mainButton != null && mainButton.action.triggered && secondButton != null && secondButton.action.triggered || Input.GetKeyDown(KeyCode.Space)))
-            {
-                endOfGame = false;
-                TransitionToTutorial();
-            }
-        }
-        if (IsGameState(GameState.GAME))
-        {
-            if (!_sentStateToGama)
-            {
-                _sentStateToGama = true;
-                _apiTest.TestSetInGame();
-            }
-        }
-
+        
+        
         if (sendMessageToReactivatePositionSent)
         {
             Dictionary<string, string> args = new Dictionary<string, string> {
@@ -309,13 +230,7 @@ public class SimulationManager : MonoBehaviour
             handleGroundParametersRequested = false;
 
         }
-        /*  Debug.Log("infoWorld: " + (infoWorld != null) + " propertyMap: " + (propertyMap != null) + " handleGeometriesRequested:" + handleGeometriesRequested);
-
-          if (infoWorld != null )
-          {
-              Debug.Log("infoWorld: " + (infoWorld.isInit) + " propertyMap: " + (propertyMap != null) + " handleGeometriesRequested:" + handleGeometriesRequested);
-
-          }*/
+      
         if (handleGeometriesRequested && infoWorld != null && propertyMap != null)
         {
 
@@ -331,72 +246,35 @@ public class SimulationManager : MonoBehaviour
         {
             if (readyToSendPosition && TimerSendPosition <= 0.0f)
                 UpdatePlayerPosition();
-            UpdateGameToFollowPosition();
             if (infoWorld != null && !infoWorld.isInit)
                 UpdateAgentsList();
         }
 
     }
-    private string currentStage = "s_init";
-
+    
     void UpdateGame()
     {
-        if (infoWorld != null)
-        {
-            Debug.Log(infoWorld.state);
-            if (infoWorld.state == "s_start")
-            {
-                _initializedFloodingTime = false;
-                _initializedDikingTime = false;
-                safeRateCount.gameObject.SetActive(false);
-                timer.gameObject.SetActive(false);
-                if (!_languageChosen)
-                    languageSelection.transform.root.gameObject.SetActive(true);
-            }
-            
-            if (infoWorld != null)
-                Debug.Log(infoWorld.playback_finished);
-            
-            // if (infoWorld.playback_finished && !startDykingPressed)
-            //     globalVolume.SetActive(true);
-
-            // if (startDykingPressed)
-            // {
-            //     globalVolume.SetActive(false);
-            // }
-
-            // if (startDykingPressed && infoWorld.remaining_time <= 5f)
-            // {
-            //     globalVolume.SetActive(true);
-            // }
-        }
-        
         
         if (IsGameState(GameState.GAME) && infoWorld != null)
         {
-            if (infoWorld.state == "s_flooding" || infoWorld.state == "s_diking")
-            {
-                _languageChosen = false;
-            }
-
+          
             if (currentStage != infoWorld.state)
             {
-                if (infoWorld.state == "s_flooding")
+                
+                Debug.Log("BEGIN OF STAGE : " + infoWorld.state);
+                currentStage = infoWorld.state;
+                if (currentStage == "s_flooding")
                 {
-                    if (!_initializedFloodingTime)
-                    {
-                        if (infoWorld.remaining_time != 0)
-                        {
-                            timer.gameObject.SetActive(true);
-                            timer.StartEnergizedEffect(infoWorld.remaining_time);
-                            _initializedFloodingTime = true;
-                        }
-                    }
-                    Debug.Log("Current state is flooding");
-                    //modalText.enabled = false;
-                    //timeText.enabled = false;
-                    //tutorial.SetActive(false);
-                    //activeButton = false;
+                  
+                }
+            }
+
+            if (infoWorld.state == "wait_flooding")
+            {
+                if (!StartFloodingDone)
+                {
+                    StartMenuDone = false;
+                    UIController.Instance.StartFloodingPhase();
                     if (FutureDike != null)
                     {
                         FutureDike.SetActive(false);
@@ -406,50 +284,18 @@ public class SimulationManager : MonoBehaviour
 
                     }
                     DisplayFutureDike = false;
-
-
+                    StartFloodingDone = true;
                 }
-                else if (infoWorld.state == "s_diking")
-                {
-                    if (!_initializedDikingTime)
-                    {
-                        if (infoWorld.remaining_time != 0)
-                        {
-                            timer.gameObject.SetActive(true);
-                            timer.StartEnergizedEffect(infoWorld.remaining_time);
-                            _initializedDikingTime = true;
-                        }
-                    }
-                    Debug.Log("Current state is diking");
-                    //modalText.enabled = false;
-                    //timeText.enabled = true;
-                    //tutorial.SetActive(true);
-                    activeButton = true;
-                }
-                // if (infoWorld.state == "s_init")
-                // {
-                //     FinalScene.SetActive(true);
-                //     if (is_a_win)
-                //     {
-                //         WinAnimtion.SetActive(true);
-                //         LooseAnimtion.SetActive(false);
-                //     }
-                //     else { 
-                //         LooseAnimtion.SetActive(true);
-                //         WinAnimtion.SetActive(false);
-                //     }
-                //     playerMovement(false);
-                //     XROrigin.localPosition = FinalPositionPlayer;
-                //     endOfGame = true;
-                //     TimerEndOfGame = TimeEndOfGame;
-                // }
-            Debug.Log("BEGIN OF STAGE : " + infoWorld.state);
-                currentStage = infoWorld.state;
+
             }
-            if (infoWorld.state == "s_flooding")
+            if (infoWorld.state == "s_init")
             {
-                //modalText.text = "Casualties: " + infoWorld.casualties;
-                //is_a_win = infoWorld.winning;
+                if (!StartMenuDone && infoWorld.playback_finished)
+                {
+                    UIController.Instance.StartMenuDikingPhase();
+                    StartMenuDone = true;
+                    StartFloodingDone = false;
+                }
 
 
             }
@@ -494,41 +340,27 @@ public class SimulationManager : MonoBehaviour
             TryReconnect();
         }
 
-
-        if (ConnectionManager.Instance.IsConnectionState(ConnectionState.AUTHENTICATED) && IsGameState(GameState.GAME) && currentStage == "s_diking")
+       // Debug.Log("currentStage: " + currentStage + " IsGameState(GameState.GAME) :" +IsGameState(GameState.GAME));
+        if ( IsGameState(GameState.GAME) && UIController.Instance.DikingStart)
             ProcessRightHandTrigger();
 
         //UpdateTimeLeftToBuildDykes();
         OtherUpdate();
         UpdateGame();
-    }
-
-
-    void playerMovement(Boolean active)
-    {
-        foreach (GameObject loc in locomotion)
-        {
-            loc.active = active;
+        if (scoreM != null){
+            UIController.Instance.EndGame(scoreM.score);
+            scoreM = null;
         }
 
+         
 
-        /* MoveHorizontal mh = this.GetComponentInChildren<MoveHorizontal>();
-         if (mh != null)
-         {
-             mh.enabled = active;
-         }
-         MoveVertical mv = this.GetComponentInChildren<MoveVertical>();
-         if (mv != null)
-         {
-             mv.enabled = active;
-         }*/
+
     }
 
-    private void TransitionToTutorial(){
-        Debug.Log("TRANSITION TO TUTORIAL");
-        ConnectionManager.Instance.DisconnectProperly();
-        SceneManager.LoadScene("Tutorial_cine360");
-    }
+
+   
+
+   
 
 
     void GenerateGeometries(bool initGame, List<string> toRemove)
@@ -544,7 +376,6 @@ public class SimulationManager : MonoBehaviour
             readyToSendPosition = true;
             TimerSendPosition = TimeSendPosition;
 
-            playerMovement(true);
         }
         foreach (string n in infoWorld.keepNames) 
             toRemove.Remove(n);
@@ -628,8 +459,6 @@ public class SimulationManager : MonoBehaviour
                     GameObject objOld = (GameObject)geometryMap[name][0];
                    // objOld.transform.position = new Vector3(0, -100, 0);
                     geometryMap.Remove(name);
-                    if (toFollow.Contains(objOld))
-                        toFollow.Remove(objOld);
                     GameObject.Destroy(objOld);
                 }
                 List<object> pL = new List<object>();
@@ -650,27 +479,11 @@ public class SimulationManager : MonoBehaviour
 
 
         }
-       if (initGame)
-            AdditionalInitAfterGeomLoading();
+     
         infoWorld = null;
     }
 
-    void AdditionalInitAfterGeomLoading()
-    {
-        if (parameters.hotspots != null && parameters.hotspots.Count > 0) 
-        {
-            GameObject[] blocks = GameObject.FindGameObjectsWithTag("selectable");
-           
-            foreach (GameObject gameObj in blocks)
-            {
-                if (parameters.hotspots.Contains(gameObj.name))
-                {
-                    SelectedObjects.Add(gameObj);
-                    ChangeColor(gameObj, Color.red);
-                } 
-            } 
-        }
-    }
+   
 
 
    
@@ -731,7 +544,7 @@ public class SimulationManager : MonoBehaviour
             return;
         }
         Vector3 ls = converter.fromGAMACRS(parameters.world[0], parameters.world[1], 0);
-       
+        
         if (ls.z < 0)
             ls.z = -ls.z;
         if (ls.x < 0)
@@ -746,37 +559,9 @@ public class SimulationManager : MonoBehaviour
     }
 
 
-    private void UpdateGameToFollowPosition()
-    {
-        if (toFollow.Count > 0)
-        {
+ 
 
 
-           String names = "";
-           String points = "";
-             string sep = ConnectionManager.Instance.MessageSeparator;
-       
-            foreach (GameObject obj in toFollow)
-            {
-                names += obj.name + sep;
-                List<int> p = converter.toGAMACRS3D(obj.transform.position);
-
-                points += p[0] + sep;
-
-                points += p[1] + sep;
-                points += p[2] + sep;
-
-            }
-            Dictionary<string, string> args = new Dictionary<string, string> {
-            {"ids", names  },
-            {"points", points},
-            {"sep", sep}
-            };
-
-      ConnectionManager.Instance.SendExecutableAsk("move_geoms_followed", args);
-        
-    }
-}
 
 
     // ############################################ UPDATERS ############################################
@@ -936,8 +721,6 @@ public class SimulationManager : MonoBehaviour
             GameObject obj = (GameObject)o[0];
             obj.transform.position = new Vector3(0, -100, 0);
             geometryMap.Remove(id);
-            if (toFollow.Contains(obj))
-                toFollow.Remove(obj);
             GameObject.Destroy(obj);
         }
         
@@ -1045,6 +828,11 @@ public class SimulationManager : MonoBehaviour
 
 
             break;
+            case "score":
+
+               scoreM = ScoreMessage.CreateFromJSON(content);
+              
+                break;
 
             case "properties":
                 propertiesGAMA = AllProperties.CreateFromJSON(content);
@@ -1064,11 +852,7 @@ public class SimulationManager : MonoBehaviour
                     //Debug.Log("Current info world ok_to_build_dyke: " + infoWorld.ok_build_dyke_with_unity);
                 }
                 break;
-            case "endOfGame":
-                EndOfGameInfo infoEoG = EndOfGameInfo.CreateFromJSON(content);
-                StaticInformation.endOfGame = infoEoG.endOfGame;
-                SceneManager.LoadScene("End of Game Menu");
-                break;
+           
             default:
                 ManageOtherMessages(content);
                 break;
@@ -1078,12 +862,6 @@ public class SimulationManager : MonoBehaviour
 
     protected void ProcessRightHandTrigger()
     {
-        if (activeButton == false)
-        {
-            startPoint.SetActive(false);
-            endPoint.SetActive(false);
-            return;
-        }
         if (rightHandTriggerButton != null && rightHandTriggerButton.action.triggered)
         {
             if (!_inTriggerPress)
@@ -1093,12 +871,11 @@ public class SimulationManager : MonoBehaviour
                 {
                     _startPoint = raycastHit.point;
                     startPoint.transform.position = _startPoint;
-                    startPoint.SetActive(true);
-                    endPoint.SetActive(false);
+                   // startPoint.SetActive(true);
+                    //endPoint.SetActive(false);
                     DisplayFutureDike = true;
                 }
             }
-            Debug.Log("Right Hand Trigger Button activated");
             //_apiTest.TestDrawDykeWithParams(_startPoint, _endPoint);
             //_dykePointCnt = 0;
         }
@@ -1112,15 +889,18 @@ public class SimulationManager : MonoBehaviour
                 {
                     _endPoint = raycastHit.point;
                     endPoint.transform.position = _endPoint;
-                    endPoint.active = true;
+                   // endPoint.active = true;
                     DisplayFutureDike = false;
-                    FutureDike.SetActive(false);
-                    GameObject.DestroyImmediate(FutureDike);
+                    if (FutureDike != null)
+                    {
+                        FutureDike.SetActive(false);
+                        GameObject.DestroyImmediate(FutureDike);
 
-                    FutureDike = null;
+                        FutureDike = null;
+                    }
+                   
 
-                    _apiTest.TestDrawDykeWithParams(_startPoint, _endPoint);
-                    GameObject[] dykeObjects = GameObject.FindGameObjectsWithTag("dyke");
+                    APITest.Instance.TestDrawDykeWithParams(_startPoint, _endPoint);
                         
                   //  Debug.Log("Number of dykes: " + dykeObjects.Length);
                 }
@@ -1158,11 +938,6 @@ public class SimulationManager : MonoBehaviour
     // ############################################# UTILITY FUNCTIONS ########################################
 
 
-    public void RestartGame() {
-        OnGameRestarted?.Invoke();        
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-    }
-
     public bool IsGameState(GameState state) {
         return currentState == state;
     }
@@ -1187,6 +962,23 @@ public enum GameState {
     END, 
     CRASH
 }
+
+
+
+[System.Serializable]
+public class ScoreMessage
+{
+
+
+    public int score;
+
+    public static ScoreMessage CreateFromJSON(string jsonString)
+    {
+        return JsonUtility.FromJson<ScoreMessage>(jsonString);
+    }
+
+}
+
 
 
 

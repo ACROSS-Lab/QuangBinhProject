@@ -4,6 +4,7 @@ namespace Gama_Provider.Simulation
     {
         IN_TUTORIAL,
         IN_GAME,
-        START_PRESSED
+        START_PRESSED,
+        IN_FLOOD
     }
 }

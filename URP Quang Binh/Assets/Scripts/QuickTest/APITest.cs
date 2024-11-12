@@ -7,6 +7,14 @@ namespace QuickTest
     public class APITest : MonoBehaviour
     {
 
+        public static APITest Instance = null;
+
+
+        void Start()
+        {
+            Instance = this;
+        }
+
         public void TestDrawDyke()
         {
             Dictionary<string, string> args = new Dictionary<string, string>()
@@ -62,6 +70,7 @@ namespace QuickTest
 
         public void TestSetStartPressed()
         {
+            Debug.Log("TestSetStartPressed");
             Dictionary<string, string> args = new Dictionary<string, string>()
             {
                 {"player_id", StaticInformation.getId()},
@@ -69,6 +78,20 @@ namespace QuickTest
             };
             
             ConnectionManager.Instance.SendExecutableAsk("set_status", args);
+
+        }
+
+        public void TestSetInFlood() 
+        {
+            Debug.Log("TestSetStartPressed");
+            Dictionary<string, string> args = new Dictionary<string, string>()
+            {
+                {"player_id", StaticInformation.getId()},
+                {"status", GAMAGameStatus.IN_FLOOD.ToString()}
+            };
+
+            ConnectionManager.Instance.SendExecutableAsk("set_status", args);
+
         }
     }
 }
