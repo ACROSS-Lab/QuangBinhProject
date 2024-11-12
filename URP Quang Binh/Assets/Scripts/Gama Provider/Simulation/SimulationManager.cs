@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Gama_Provider.Simulation;
 using QuickTest;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -139,7 +140,11 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] protected Button startButton;
     [SerializeField] protected Button restartButton;
 
+    [SerializeField] protected StatusEffectManager timer;
+    [SerializeField] protected StatusEffectManager safeRateCount;
+
     private bool _languageChosen;
+    private bool _initializedDikingTime, _initializedFloodingTime;
 
     // ############################################ UNITY FUNCTIONS ############################################
     void Awake() {
@@ -341,6 +346,10 @@ public class SimulationManager : MonoBehaviour
             Debug.Log(infoWorld.state);
             if (infoWorld.state == "s_start")
             {
+                _initializedFloodingTime = false;
+                _initializedDikingTime = false;
+                safeRateCount.gameObject.SetActive(false);
+                timer.gameObject.SetActive(false);
                 if (!_languageChosen)
                     languageSelection.transform.root.gameObject.SetActive(true);
             }
@@ -374,6 +383,15 @@ public class SimulationManager : MonoBehaviour
             {
                 if (infoWorld.state == "s_flooding")
                 {
+                    if (!_initializedFloodingTime)
+                    {
+                        if (infoWorld.remaining_time != 0)
+                        {
+                            timer.gameObject.SetActive(true);
+                            timer.StartEnergizedEffect(infoWorld.remaining_time);
+                            _initializedFloodingTime = true;
+                        }
+                    }
                     Debug.Log("Current state is flooding");
                     //modalText.enabled = false;
                     //timeText.enabled = false;
@@ -393,6 +411,15 @@ public class SimulationManager : MonoBehaviour
                 }
                 else if (infoWorld.state == "s_diking")
                 {
+                    if (!_initializedDikingTime)
+                    {
+                        if (infoWorld.remaining_time != 0)
+                        {
+                            timer.gameObject.SetActive(true);
+                            timer.StartEnergizedEffect(infoWorld.remaining_time);
+                            _initializedDikingTime = true;
+                        }
+                    }
                     Debug.Log("Current state is diking");
                     //modalText.enabled = false;
                     //timeText.enabled = true;
@@ -914,7 +941,6 @@ public class SimulationManager : MonoBehaviour
             GameObject.Destroy(obj);
         }
         
-
         infoWorld = null;
     }
 

@@ -20,7 +20,8 @@ namespace Gama_Provider.Simulation
         public void StartEnergizedEffect(float customDuration)
         {
             energizedEffect.SetActive(true);
-            energizedEffect.transform.Find("RadialProgressBar").GetComponent<CircularProgressBar>()
+
+            energizedEffect.GetComponentInChildren<CircularProgressBar>()
                 .ActivateCountdown(customDuration);
 
             StartCoroutine(EndEnergizedEffect(customDuration));
