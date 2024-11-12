@@ -19,9 +19,7 @@ public class UIController : MonoBehaviour
     public Text TextEndEng; 
     public Text TextEndViet;
 
-    [SerializeField] protected StatusEffectManager timer;
-    [SerializeField] protected StatusEffectManager safeRateCount;
-
+   
     protected float TimeForDisplayingFloodUI = 2.0f; // in second
     protected float TimerForDisplayingFloodUI = 0.0f;
 

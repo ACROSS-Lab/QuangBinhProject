@@ -277,10 +277,10 @@ global {
 	float init_duration <- 120.0;
 	
 	// The maximum amount of time, in seconds, for watching the water flow before restarting
-	float flooding_duration <- 10.0;//120.0;
+	float flooding_duration <- 120.0;
 	
 	// The maximum amount of time, in seconds, for building dikes 
-	float diking_duration <- 10.0;//120.0;
+	float diking_duration <- 120.0;
 	
 	// The next timeout to occur for the different stages
 	float current_timeout;

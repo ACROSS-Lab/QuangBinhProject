@@ -126,6 +126,8 @@ public class SimulationManager : MonoBehaviour
     protected float TimeEndOfGame = 17.0f;
     protected float TimerEndOfGame = 0.0f;
 
+    protected bool _initializedFloodingTime = false;
+
     [SerializeField] protected InputActionReference mainButton = null;
     [SerializeField] protected InputActionReference secondButton = null;
 
@@ -248,6 +250,7 @@ public class SimulationManager : MonoBehaviour
                 UpdatePlayerPosition();
             if (infoWorld != null && !infoWorld.isInit)
                 UpdateAgentsList();
+            
         }
 
     }
@@ -299,8 +302,11 @@ public class SimulationManager : MonoBehaviour
 
 
             }
-            else if (infoWorld.state == "s_diking")
+            else if (infoWorld.state == "s_diking" && firstTime)
             {
+                timer.gameObject.SetActive(true);
+                firstTime = false;
+                timer.StartEnergizedEffect(infoWorld.remaining_time);
                 //timeText.text = "Remaining Time: " + Math.Max(0, infoWorld.remaining_time);
             }
 
@@ -309,7 +315,7 @@ public class SimulationManager : MonoBehaviour
 
         }
     }
-
+    bool firstTime = true;
 
     private void Update()
     {
