@@ -111,7 +111,7 @@ public class SimulationManager : MonoBehaviour
     private bool _inTriggerPress = false;
 
     protected GameObject FutureDike = null;
-    protected PropertiesGAMA propFutureDike, propDeletedDike;
+    protected PropertiesGAMA propFutureDike;
     protected bool DisplayFutureDike = false;
 
     protected Vector3 FinalPositionPlayer = new Vector3(872, 1205.2f, -3427); 
@@ -173,16 +173,6 @@ public class SimulationManager : MonoBehaviour
         propFutureDike.height = 40 * 10000;
         propFutureDike.is3D = true;
         propFutureDike.visible = true;
-        
-        propDeletedDike = new PropertiesGAMA();
-        propDeletedDike.red = 255;
-        propDeletedDike.blue = 0;
-        propDeletedDike.green = 0;
-        propDeletedDike.hasCollider = false;
-        propDeletedDike.hasPrefab = false;
-        propDeletedDike.height = 40 * 10000;
-        propDeletedDike.is3D = true;
-        propDeletedDike.visible = true;
         //startButton.onClick.AddListener(StartGame);
 
         vietnameseButton.onClick.AddListener(() =>
@@ -342,7 +332,7 @@ public class SimulationManager : MonoBehaviour
         }
 
     }
-    protected string currentStage = "s_init";
+    private string currentStage = "s_init";
 
     void UpdateGame()
     {
@@ -478,7 +468,7 @@ public class SimulationManager : MonoBehaviour
         }
 
 
-        if (ConnectionManager.Instance.IsConnectionState(ConnectionState.AUTHENTICATED) && IsGameState(GameState.GAME) && currentStage is "s_diking" or "s_flooding")
+        if (ConnectionManager.Instance.IsConnectionState(ConnectionState.AUTHENTICATED) && IsGameState(GameState.GAME))
             ProcessRightHandTrigger();
 
         //UpdateTimeLeftToBuildDykes();
@@ -1099,15 +1089,11 @@ public class SimulationManager : MonoBehaviour
                     endPoint.active = true;
                     DisplayFutureDike = false;
                     FutureDike.SetActive(false);
-                    
-                    if (FutureDike.GetComponentInChildren<PolyExtruder>().prismColor.g == 255) 
-                        _apiTest.TestDrawDykeWithParams(_startPoint, _endPoint);
-
                     GameObject.DestroyImmediate(FutureDike);
 
                     FutureDike = null;
-                    
 
+                    _apiTest.TestDrawDykeWithParams(_startPoint, _endPoint);
                     GameObject[] dykeObjects = GameObject.FindGameObjectsWithTag("dyke");
                         
                   //  Debug.Log("Number of dykes: " + dykeObjects.Length);
