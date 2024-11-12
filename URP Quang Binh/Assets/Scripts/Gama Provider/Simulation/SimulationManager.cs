@@ -468,7 +468,7 @@ public class SimulationManager : MonoBehaviour
         }
 
 
-        if (ConnectionManager.Instance.IsConnectionState(ConnectionState.AUTHENTICATED) && IsGameState(GameState.GAME))
+        if (ConnectionManager.Instance.IsConnectionState(ConnectionState.AUTHENTICATED) && IsGameState(GameState.GAME) && currentStage == "s_diking")
             ProcessRightHandTrigger();
 
         //UpdateTimeLeftToBuildDykes();
