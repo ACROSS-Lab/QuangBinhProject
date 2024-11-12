@@ -299,7 +299,7 @@ species unity_linker parent: abstract_unity_linker {
  	
 		up_people<- geometry_properties("car", nil, car_aspect, #no_interaction, false);
 		up_dyke <- geometry_properties("dyke", "dyke", dyke_aspect, #collider, false);
-		up_water <- geometry_properties("water", nil, water_aspect, #no_interaction,false);
+		up_water <- geometry_properties("water", "water", water_aspect, #collider,false);
 
 		unity_properties << up_people;
 		unity_properties << up_dyke;

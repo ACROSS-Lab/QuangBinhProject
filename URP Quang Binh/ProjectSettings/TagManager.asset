@@ -12,6 +12,7 @@ TagManager:
   - Anchor
   - locomotion
   - dyke
+  - water
   layers:
   - Default
   - TransparentFX
