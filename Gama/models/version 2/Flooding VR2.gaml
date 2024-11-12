@@ -462,10 +462,6 @@ experiment Launch parent:"Base" autorun: true type: unity {
 			event #mouse_move { 
 				button_selected <- button_frame != nil and button_frame overlaps #user_location;
 			}
-			
-			event "s" {
-				world.init_requested_from_gama <- true;
-			}
 
 			event "r" {
 				world.restart_requested_from_gama <- true ;
@@ -493,7 +489,7 @@ experiment Launch parent:"Base" autorun: true type: unity {
 								
 				switch (state) {
 					match "s_start" {
-						text <- "Press 's' to start.";
+						text <- "Waiting for player to begin.";
 					}
 					match "s_diking" {
 						text <- "Diking phase.";
