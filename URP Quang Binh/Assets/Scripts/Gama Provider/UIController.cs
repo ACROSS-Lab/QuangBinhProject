@@ -47,30 +47,27 @@ public class UIController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space) && UI_ChoiceOfLanguage.active)
         {
-            globalVolume.SetActive(true);
+            globalVolume.SetActive(false);
             SetInVietnamese(false);
         }
         if (Input.GetKeyDown(KeyCode.Space) && UI_DykingPhase_eng.active)
         {
-            globalVolume.SetActive(false);
             StartDikingPhase();
         }
         if (Input.GetKeyDown(KeyCode.Space) && UI_EndingPhase_eng.active)
         {
-            globalVolume.SetActive(true);
             RestartGame();
         }
         if (FloodingPhase)
         {
+            globalVolume.SetActive(true);
             if (TimerForDisplayingFloodUI > 0)
             {
-                globalVolume.SetActive(true);
                 TimerForDisplayingFloodUI -= Time.deltaTime;
             }
 
             if (TimerForDisplayingFloodUI <= 0)
             {
-                globalVolume.SetActive(false);
                 if (InVietnamese)
                 {
                     UI_FloodingPhase_viet.SetActive(false);
@@ -91,6 +88,10 @@ public class UIController : MonoBehaviour
                     
                 FloodingPhase = false;
             }
+        }
+        else
+        {
+            globalVolume.SetActive(false);
         }
        
     }

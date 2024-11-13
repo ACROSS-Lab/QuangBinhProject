@@ -172,6 +172,7 @@ public class SimulationManager : MonoBehaviour
      
      
         XROrigin = player.transform.Find("XR Origin (XR Rig)");
+        timer.gameObject.SetActive(false);
     }
     
     void StartTheFlood()
