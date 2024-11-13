@@ -31,6 +31,8 @@ public class UIController : MonoBehaviour
 
 
     public bool DikingStart = false;
+
+    public GameObject globalVolume;
     // Use this for initialization
     void Start()
     {
@@ -45,23 +47,30 @@ public class UIController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space) && UI_ChoiceOfLanguage.active)
         {
+            globalVolume.SetActive(true);
             SetInVietnamese(false);
         }
         if (Input.GetKeyDown(KeyCode.Space) && UI_DykingPhase_eng.active)
         {
+            globalVolume.SetActive(false);
             StartDikingPhase();
         }
         if (Input.GetKeyDown(KeyCode.Space) && UI_EndingPhase_eng.active)
         {
+            globalVolume.SetActive(true);
             RestartGame();
         }
         if (FloodingPhase)
         {
             if (TimerForDisplayingFloodUI > 0)
+            {
+                globalVolume.SetActive(true);
                 TimerForDisplayingFloodUI -= Time.deltaTime;
+            }
 
             if (TimerForDisplayingFloodUI <= 0)
             {
+                globalVolume.SetActive(false);
                 if (InVietnamese)
                 {
                     UI_FloodingPhase_viet.SetActive(false);
@@ -108,12 +117,9 @@ public class UIController : MonoBehaviour
         if (InVietnamese)
             UI_DykingPhase_viet.SetActive(true);
         else UI_DykingPhase_eng.SetActive(true);
-        
-
     }
     public void StartDikingPhase()
     {
-
         DikingStart = true;
         Debug.Log("StartDikingPhase");
         if (InVietnamese)
