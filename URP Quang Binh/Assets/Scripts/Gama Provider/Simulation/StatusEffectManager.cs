@@ -30,7 +30,7 @@ namespace Gama_Provider.Simulation
         IEnumerator EndEnergizedEffect(float delay)
         {
             yield return new WaitForSeconds(delay);
-            energizedEffect.SetActive(false);
+            //energizedEffect.SetActive(false);
         }
     }
 }
