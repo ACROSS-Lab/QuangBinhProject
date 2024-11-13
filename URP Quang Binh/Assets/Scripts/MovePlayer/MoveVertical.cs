@@ -5,7 +5,7 @@ using UnityEngine.XR;
 public class MoveVertical  : InputData
 {
     
-    public float Speed = 2.0f; 
+    public float Speed = 200.0f; 
     public bool RightHand = false;
 
     public float minY = 0.0f;

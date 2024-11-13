@@ -9,7 +9,7 @@ public class MoveHorizontal : InputData
 {
     public bool RightHand = true;
 
-    [SerializeField] private float speed = 2.0f;
+    [SerializeField] private float speed = 200.0f;
     [SerializeField] private float speedRotation = 10.0f;
     [SerializeField] private bool Strafe = false;
     public InputHelpers.Axis2D stick = InputHelpers.Axis2D.PrimaryAxis2D;
