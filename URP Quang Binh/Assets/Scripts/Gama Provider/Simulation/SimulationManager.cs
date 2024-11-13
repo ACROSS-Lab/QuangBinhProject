@@ -311,13 +311,15 @@ public class SimulationManager : MonoBehaviour
 
             }
             
-            if (infoWorld.remaining_time > LastTime)
+            if (infoWorld.state != "s_init" && infoWorld.remaining_time > LastTime)
             {
                 timer.gameObject.SetActive(true);
-                //InitDikingTimer = true;
                 Debug.Log("Remaining time: " + infoWorld.remaining_time);
                 timer.StartEnergizedEffect(infoWorld.remaining_time);
             }
+            
+            if (infoWorld.state == "s_init" || UIController.Instance.UI_EndingPhase_eng.activeSelf || UIController.Instance.UI_EndingPhase_viet.activeSelf)
+                timer.gameObject.SetActive(false);
             
             LastTime = infoWorld.remaining_time;
         }

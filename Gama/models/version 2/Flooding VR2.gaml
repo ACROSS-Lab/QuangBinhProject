@@ -320,8 +320,6 @@ species unity_linker parent: abstract_unity_linker {
 		do send_message players: unity_player as list mes: ["score":: int(100*evacuated/nb_of_people)];
 	}
 		action add_to_send_world(map map_to_send) {
-		map_to_send["evacuated"] <- int(evacuated);
-		map_to_send["score"] <- int(100*evacuated/nb_of_people);
 		map_to_send["remaining_time"] <- int((current_timeout - gama.machine_time)/1000);
 		map_to_send["state"] <- world.state;
 		//map_to_send["winning"] <- winning;
