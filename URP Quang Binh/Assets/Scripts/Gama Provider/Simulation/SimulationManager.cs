@@ -140,6 +140,7 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] protected StatusEffectManager timer;
     [SerializeField] protected StatusEffectManager safeRateCount;
 
+    protected float LastTime;
    
     // ############################################ UNITY FUNCTIONS ############################################
     void Awake() {
@@ -268,7 +269,7 @@ public class SimulationManager : MonoBehaviour
                 currentStage = infoWorld.state;
                 if (currentStage == "s_flooding")
                 {
-                  
+                    
                 }
             }
 
@@ -299,23 +300,27 @@ public class SimulationManager : MonoBehaviour
                     StartMenuDone = true;
                     StartFloodingDone = false;
                 }
-
-
             }
-            else if (infoWorld.state == "s_diking" && firstTime)
+            else if (infoWorld.state == "s_diking")
             {
-                timer.gameObject.SetActive(true);
-                firstTime = false;
-                timer.StartEnergizedEffect(infoWorld.remaining_time);
                 //timeText.text = "Remaining Time: " + Math.Max(0, infoWorld.remaining_time);
             }
+            else if (infoWorld.state == "s_flooding")
+            {
 
-
-
-
+            }
+            
+            if (infoWorld.remaining_time > LastTime)
+            {
+                timer.gameObject.SetActive(true);
+                //InitDikingTimer = true;
+                Debug.Log("Remaining time: " + infoWorld.remaining_time);
+                timer.StartEnergizedEffect(infoWorld.remaining_time);
+            }
+            
+            LastTime = infoWorld.remaining_time;
         }
     }
-    bool firstTime = true;
 
     private void Update()
     {
