@@ -1,0 +1,23 @@
+How to start LuLut VR (Flooding URP VR Game about Quang Binh) with the CUSTOM MIDDLEWARE. 
+
+- In the GitHub folder
+	- Go to QuangBinhProject
+	- Go to Custom Middleware
+	- open "start" 
+	- It open a terminal window
+	- Take the number : "Listening the port : xxxx (it should be 8000 or 8080)"
+	- Open Web browser : Localhost:8000 (put here the number) then enter 
+	- It open a web window with the old version of the middleware. 
+
+- Open Gama, and start the simulation (go through the folders of the Flooding Project) 
+
+- Build and run the Unity project, with the Headset link with a cable to the computer
+It launch automatically, you have nothing more to do
+
+- Finally check if you are connected on the same WIFI i the computer and in the Headset, 
+and check if both GAMA and the Meta Quest are OK on the Custom Middleware Browser. 
+
+Enjoy ! 
+
+PS. If the game in the MQ show black screen:
+ Just cut the wifi. It should happend when the MQ is not connected to GAMA & Middleware. 
