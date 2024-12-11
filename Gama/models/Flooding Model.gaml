@@ -8,114 +8,14 @@
 * This model can be experimented using either the classical UI of GAMA (see Flooding UI.gaml)
 * or a VR environment (see Flooding VR.gaml)
 */
-@no_experiment
 @no_info
+@no_experiment
+
 
 model Flooding
 
 global control: fsm {
-	
-	/*************************************************************
-	 * Global states
-	 *************************************************************/	
-	
-	state s_start initial: true {
-		enter {
-			do enter_start();
-		}
-		
-		transition to: s_init when: start_over();
-	}
-	
-	state s_init {
-		enter {
-			do enter_init();
-		}
-		do body_init();
-		exit {
-			do exit_init();
-		}
-		transition to: s_diking when: init_over();
-	}
 
-
-
-	
-	/**
-	 * This state represents the state where the user(s) is(are) able to build dikes 
-	 */
-	state s_diking {
-		enter {
-			do enter_diking();
-		}
-		do body_diking();
-		exit {
-			do exit_diking();
-		}
-		transition to: wait_flooding when: diking_over();
-		
-	}
-	
-	state wait_flooding {
-		transition to: s_flooding when: flooding_ready() ;
-	}
-	
-	/**
-	 * This state represents the state where the flooding dynamics is simulated 
-	 */
-	state s_flooding {
-		enter {
-			do enter_flooding();
-		}		
-		do add_water();
-		do flow_water();
-		do check_obstactles_drowning();
-		do recompute_road_graph();
-		do drain_water();
-		do body_flooding();
-		exit {
-			do exit_flooding();
-		}
-		transition to: s_start when: flooding_over() {
-			do restart();
-		}
-	}
-
-	/*************************************************************
-	 * Functions that control the transitions between the states. 
-	 * Must be redefined in sub-models
-	 *************************************************************/
-	 
-	action enter_init virtual: true;
-	
-	action enter_diking virtual: true;
-	
-	action enter_flooding virtual: true;
-	
-	action enter_start virtual: true;
-	
-	action exit_flooding;
-	
-	action exit_diking;
-	
-	action exit_init;
-	
-	
-	bool flooding_ready virtual: true;
-
-	bool init_over virtual: true;
-	
-	bool diking_over virtual: true;
-	
-	bool flooding_over virtual: true;
-	
-	bool start_over virtual: true;
-	
-	action body_init {}
-	
-	action body_diking {}
-	
-	action body_flooding {}
  	
 	/*************************************************************
 	 * Built-in parameters to control the simulations
@@ -158,18 +58,18 @@ global control: fsm {
 	float speed_of_people <- 20 #m / #h;
 	
 	// The maximum water input
-	float max_water_input <- 1.0;
+	float max_water_input <- 0.5;
 
 	
 	// The height of water in the river at the beginning
-	float initial_water_height <- 5.0;
+	float initial_water_height <- 2.0;
 	
 	//Diffusion rate
 	float diffusion_rate <- 0.5;
 	
 	//Height of the dykes (30 m by default)
 	float dyke_height <- 30.0;
-	
+	 
 	//Width of the dyke (15 m by default)
 	float dyke_width <- 15.0;
 	
@@ -548,7 +448,7 @@ grid cell 	file: dem_file
 species river {
 
 	reflex {
-		if (state != "s_init") {do compute_shape();}
+		if (state != "PLAYBACK") {do compute_shape();}
 	}
 
 	action compute_shape {
@@ -558,7 +458,7 @@ species river {
 
 /*************************************************************
 * People are moving agents that can be in different states 
-* (idle, fleeing, drowned, evacuated). When evacuating, they 
+* (s_idle, s_fleeing, s_drowned, s_evacuated). When evacuating, they 
 * try to move to the closest @code{evacuation_point}
 *************************************************************/	
 
@@ -608,6 +508,7 @@ species people skills: [moving] control: fsm {
 * No behaviour is attached to these agents
 *************************************************************/	
 species evacuation_point schedules: [];
+
 
 
 
