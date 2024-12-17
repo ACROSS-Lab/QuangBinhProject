@@ -30,9 +30,14 @@ global control: fsm {
 	state s_init {
 		enter {
 			do enter_init();
+			
 		}
 		do body_init();
 		exit {
+			ask people {
+				do die;
+			}
+			do init_people;
 			do exit_init();
 		}
 		transition to: s_diking when: init_over();
@@ -76,9 +81,13 @@ global control: fsm {
 		exit {
 			do exit_flooding();
 		}
-		transition to: s_start when: flooding_over() {
+		transition to: s_start when: (current_round >= num_rounds) and  flooding_over() {
 			do restart();
 		}
+		 transition to: s_diking when: (current_round < num_rounds) and flooding_over() {
+			do restart();
+		}
+		 
 	}
 
 	/*************************************************************
@@ -117,6 +126,146 @@ global control: fsm {
 	
 	action body_flooding {}
  	
+ 	bool recording <- false;
+ 	
+ 	bool save_results <- false;
+ 	string id_sim <- "Game_" + (#now).year +"_" + (#now).month+"_"+(#now).day+ "_"+(#now).hour+ "_"+(#now).minute;
+	
+	list<list<point>> people_positions;
+	list<list<int>> people_evacuated_casualties;
+	list<geometry> river_geometries;
+	
+	int current_step;
+	bool playback_finished;
+	int num_step <- 120;
+	
+		// The next timeout to occur for the different stages
+	float current_timeout;
+	
+	int number_of_milliseconds_to_wait_in_playback <- 10;//100;
+	
+		
+	
+	// The maximum amount of time, in seconds, for building dikes 
+	float diking_duration <- 120.0;
+	
+	int num_rounds <- 2;
+	
+	int current_round <- 1;
+	
+	bool use_tell <- true;
+	 
+	 
+	 action reset_game {
+	 	if (save_results and not recording) {
+	 		id_sim <- "Game_" + (#now).year +"_" + (#now).month+"_"+(#now).day+ "_"+(#now).hour+ "_"+(#now).minute;
+	 		save "round,dyke_length,evacuated,casualties" to:id_sim+"/evacuated_casualties.csv" rewrite: true format:"text";
+		}
+	 	current_round <- 1;
+	 	if (use_tell) {
+	 		do tell("Restart the new game",false);
+	 	}
+	 }
+	 action playback {
+	 	playback_finished <- current_step = length(people_positions);
+		if playback_finished {
+			return;
+		}
+		int first <- first(people).index;
+		ask people {
+			location <- people_positions[current_step][self.index - first];
+		}
+		ask river {
+			shape <- river_geometries[current_step];
+		}
+		float t2 <- gama.machine_time + number_of_milliseconds_to_wait_in_playback;
+		loop while: gama.machine_time < t2 {}
+		evacuated <- people_evacuated_casualties[current_step][0];
+		casualties <- people_evacuated_casualties[current_step][1];
+		current_step <- current_step + 1;
+		
+
+	}
+	
+	action record {
+		list<point> to_save <- [];
+		ask people {
+			to_save << self.location;
+		}
+		
+		people_positions << to_save;
+		ask river {
+			river_geometries << copy(shape);
+		}
+		people_evacuated_casualties<< [evacuated,casualties];
+	}
+	
+	action enter_flooding_base {
+		if save_results and not recording{
+			save dyke to:id_sim+"/dykes_" + current_round + ".shp"  format:"shp";
+		}
+		
+		
+	}
+	action exit_flooding_base {
+		if (recording) {
+			string total <- "";
+			loop i from: 0 to: current_step - 1 {
+				list<point> pp <- i >= length(people_positions) ? last(people_positions) : people_positions[i];
+				loop p over: pp {
+					total <- total + float(i) + "," + p.x + "," + p.y + "\n";
+				}
+			}
+			save total to: "people_positions.csv" format:"txt";
+			save river_geometries to: "river_geometries.shp" format: "shp";
+			
+			string states_ <- "";
+			loop i from: 0 to: current_step - 1 {
+				list<int> pp <- i >= length(people_evacuated_casualties) ? last(people_evacuated_casualties) : people_evacuated_casualties[i]; 
+				states_ <- states_ + pp[0] + "," + pp[1]+ "\n";
+				
+			}
+			save states_ to: "people_states.csv" format:"txt";
+		} else {
+			if (save_results and not recording) {
+				save ""+current_round+","+ dyke_length+","+evacuated+"," +casualties to:id_sim+"/evacuated_casualties.csv" rewrite: false format:"text";
+			}
+			current_round <- current_round +1;
+			if (current_round > num_rounds) {
+				do reset_game;
+			} else {
+				if (use_tell) {
+	 				do tell("Start of Round " + current_round,false);
+	 			}
+			}
+		}
+		ask experiment {do compact_memory;}
+	}
+	
+	action  enter_init_base {
+		if (!recording and empty(people_positions)) {
+			matrix<float> mf <- matrix(csv_file("people_positions.csv", ",",float));
+			people_positions <- [];
+			loop times: mf.rows / nb_of_people {
+				people_positions << [];
+			}
+			loop line over: rows_list(mf) {
+				people_positions[int(line[0])] << point(line[1],line[2]);
+ 			}
+ 			
+ 			matrix<int> ms <- matrix(csv_file("people_states.csv", ",",int));
+			people_evacuated_casualties <- [];
+			loop i from: 0 to: ms.rows -1{
+				people_evacuated_casualties << ms row_at i;
+			}
+			
+			river_geometries <- shape_file("river_geometries.shp").contents;
+			//write "steps " + length(people_positions);
+			//write "size of pop " + length(people_positions[0]);
+		}
+
+		current_step <- 0;
+	}
 	/*************************************************************
 	 * Built-in parameters to control the simulations
 	 *************************************************************/
@@ -158,11 +307,11 @@ global control: fsm {
 	float speed_of_people <- 20 #m / #h;
 	
 	// The maximum water input
-	float max_water_input <- 1.0;
+	float max_water_input <- 0.5;
 
 	
 	// The height of water in the river at the beginning
-	float initial_water_height <- 5.0;
+	float initial_water_height <- 3.0;
 	
 	//Diffusion rate
 	float diffusion_rate <- 0.5;
@@ -173,6 +322,9 @@ global control: fsm {
 	//Width of the dyke (15 m by default)
 	float dyke_width <- 15.0;
 	
+	float dyke_length_max <- 10000.0;
+	
+	float dyke_length <- 0.0;
 	/*************************************************************
 	 * Road network
 	 *************************************************************/
@@ -182,7 +334,8 @@ global control: fsm {
 	
 	// Weights associated with the road network
 	map<road, float> road_weights;
-
+	
+	bool is_ok_dyke_construction <- false;
 	
 	/*************************************************************
 	 * GIS input data
@@ -215,18 +368,25 @@ global control: fsm {
 	
 	//List of the initial river cells ("bed" of the river)
 	list<cell> bed_cells;
-	
+	 
 	/*************************************************************
 	 * Initialization and reinitialization behaviors
 	 *************************************************************/
 
 	init {
+		if (use_tell) {
+	 		do tell("Start the game: Round 1"  ,false);
+	 	}
 		do initialize_agents;
 	}
 	
 	action restart {
 		casualties <- 0;
 		evacuated <- 0;
+		ask dyke {
+			do die;
+		}
+		dyke_length <- 0.0;
 		ask cell {
 			do initialize();
 		}
@@ -238,6 +398,7 @@ global control: fsm {
 			do die;
 		}
 		do initialize_agents;
+		
 	}
 	
 	action initialize_agents {
@@ -411,7 +572,7 @@ species buildings parent: obstacle schedules: []{
 * Dykes are obstacles that are created dynamically by the user
 *************************************************************/	
 species dyke parent: obstacle schedules: []{
-	
+	float length;
 	init {
 		shape <- shape + 20;
 	}

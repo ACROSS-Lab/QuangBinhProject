@@ -527,7 +527,15 @@ public class SimulationManager : MonoBehaviour
 
             case GameState.GAME:
                 Debug.Log("SimulationManager: UpdateGameState -> GAME");
+                if (ConnectionManager.Instance.getUseMiddleware())
+                {
+                    Dictionary<string, string> args = new Dictionary<string, string> {
+                         {"id", ConnectionManager.Instance.GetConnectionId() }
+                    };
+                    ConnectionManager.Instance.SendExecutableAsk("player_ready_to_receive_geometries", args);
+                }
                 break;
+
 
             case GameState.END:
                 Debug.Log("SimulationManager: UpdateGameState -> END");

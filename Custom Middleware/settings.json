@@ -1,6 +1,6 @@
 {
   "type": "json_settings",
-  "gama_ws_port": 1000,
+  "gama_ws_port": 8080,
   "monitor_ws_port": 8001,
   "player_ws_port": 8080,
   "app_port": 8000,

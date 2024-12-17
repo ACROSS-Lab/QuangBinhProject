@@ -11,35 +11,9 @@ model FloodingUI
 import "Flooding Model.gaml"
 
 global { 
+	 
 	
-	
-	
-	
-	/*************************************************************
-	 * Redefinition of initial parameters for people, water and obstacles
-	 *************************************************************/
-
-	// Initial number of people
-	int nb_of_people <- 500; 
-	
-	// The average speed of people
-	float speed_of_people <- 20 #m / #h;
-	
-	// The maximum water input
-	float max_water_input <- 0.5;
-
-	
-	// The height of water in the river at the beginning
-	float initial_water_height <- 2.0;
-	
-	//Diffusion rate
-	float diffusion_rate <- 0.5;
-	
-	//Height of the dykes (30 m by default)
-	float dyke_height <- 15.0;
-	
-	//Width of the dyke (15 m by default)
-	float dyke_width <- 15.0;
+	 float waiting_time_in_s <- 1.5;
 	
 	/*************************************************************
 	 * Attributes dedicated to the UI (images, colors, frames, etc.)
@@ -52,7 +26,7 @@ global {
 	rgb evacuation_color <- rgb(176, 32, 19);
 	rgb road_color <- rgb(64, 64, 64);
 	rgb line_color <- rgb(156, 34, 39);
-	rgb dyke_color <- rgb(156, 34, 39);
+	rgb dyke_color <- rgb(34, 156, 39);
 	rgb text_color <- rgb(232, 215, 164);
 	list<rgb> building_colors <- [rgb(214, 168, 0),rgb(237, 155, 0),rgb(202, 103, 2),rgb(120, 167, 121)];
 	
@@ -74,13 +48,15 @@ global {
 	bool button_selected;
 	bool check_selected;
 	
-	 
 	/************************************************************* 
 	 * Functions that control the transitions between the states
 	 *************************************************************/
 
 	action enter_init {
-			
+	//	write "enter_init";
+		
+		do enter_init_base;
+		
 		ask buildings {
 			color <- one_of(building_colors);
 		}
@@ -90,9 +66,17 @@ global {
 		button_image_selected <- nil;
 		check_image_unselected <- nil;
 		check_image_selected <- nil;
+		playback_finished <- recording ? true : false;
 	} 
+	
+	action enter_start {
+		button_frame <- nil;
+		button_image_unselected <- nil;
+		button_image_selected <- nil;
+	}
 	 
 	action enter_diking {
+		
 		diking_over <- false;
 		check_frame <- nil;
 		current_timeout <- gama.machine_time + diking_duration * 1000;
@@ -100,28 +84,70 @@ global {
 		button_image_selected <- image("../../includes/icons/flood-fill.png") * rgb(232, 215, 164);
 		check_image_unselected <- nil;
 		check_image_selected <- nil;
+		diking_over <- recording;
 	}
 	
 	action enter_flooding {
+		do enter_flooding_base;
 		restart_requested <- false;	
-		current_timeout <- gama.machine_time + flooding_duration * 1000;	
 		button_image_unselected <- image("../../includes/icons/restart-line.png");
 		button_image_selected <- image("../../includes/icons/restart-fill.png");
 		check_image_unselected <- image("../../includes/icons/checkbox-blank-line.png");
 		check_image_selected <- image("../../includes/icons/checkbox-line.png");
+		current_step <- 0;
+		casualties <- 0;
+		evacuated <- 0;
 	}
-
-	bool init_over  { 
-		return true;
-	} 
 	
+	action exit_flooding {
+		float t <- gama.machine_time + (waiting_time_in_s * 1000);
+		loop while: gama.machine_time < t {
+			
+		}
+		
+		do exit_flooding_base;
+	}
+	
+	action exit_init {
+		float t <- gama.machine_time + (waiting_time_in_s * 1000);
+		loop while: gama.machine_time < t {
+			
+		}
+		
+	}
+	
+ 
+	bool init_over  { 
+		return playback_finished;
+	} 
+	 
 	bool diking_over { 
+	//	write sample((current_timeout - gama.machine_time )/1000.0);
 		return diking_over or gama.machine_time >= current_timeout;
 	}
 	
 	bool flooding_over  { 
-		return restart_requested or gama.machine_time >= current_timeout;
+		return  (current_step > num_step) or restart_requested ;
 	}	
+	
+	bool flooding_ready {
+		return true;
+	} 
+	
+	bool start_over {
+		return true;
+	}
+	
+		
+	action body_init  {
+		if (!recording) {do playback();}
+	}
+	
+	action body_flooding {
+		if (recording) {do record();}
+		current_step <- current_step +1;
+		
+	}
 	
 	/*************************************************************
 	 * Flags to control the phases in the simulations
@@ -132,15 +158,6 @@ global {
 	
 	// Is the flooding state requested by the user ? 
 	bool diking_over;
-	
-	// The maximum amount of time, in seconds, for building dikes 
-	float diking_duration <- 30.0;
-	
-	// The maximum amount of time, in seconds, for watching the water flow before restarting
-	float flooding_duration <- 60.0;
-	
-	// The time at which diking will switch to flooding or conversely
-	float current_timeout;
 	
 	
 	
@@ -161,23 +178,24 @@ global {
 		}
 	}
 }
-
+ 
 
 
 experiment Run  type:gui autorun: true{
+	float minimum_cycle_duration <- 0.1;
 	
-	point start_point;
+	point start_point; 
 	point end_point;  
 	geometry line; 
 	 
 	output {
 		
-		layout #none controls: false toolbars: false editors: false parameters: false consoles: false tabs: false;
+		layout #none controls: false toolbars: true editors: false parameters: false consoles: false tabs: false;
 		display map type: 3d axes: false background: background_color antialias: false{
 
 			species river visible: !river_in_3D {
 				draw shape border: brighter(brighter(river_color)) width: 5 color: river_color;
-			}			
+			}			 
 
 			species road {
 				draw drowned ? shape : shape + 10 color: drowned ? darker(river_color) : road_color ;
@@ -189,7 +207,7 @@ experiment Run  type:gui autorun: true{
 		 		draw shape + 5 color: drowned ? river_color : dyke_color border: drowned ? darker(river_color):dyke_color;	
 			} 
 			species people {
-				draw circle(10)  color: people_color;
+				draw circle(20)  color: people_color;
 			}
 			species evacuation_point {
 				draw circle(60) at: location + {0,0,40} color: evacuation_color;
@@ -197,6 +215,26 @@ experiment Run  type:gui autorun: true{
 
 			mesh cell above: 0 triangulation: true smooth: false color: cell collect each.color visible: river_in_3D transparency: 0.5;
 			
+			event "r" {
+				if (state != "s_diking") { return;}
+				if (start_point != nil) {
+					start_point <- nil;
+					line <- nil;
+				} else {
+					ask world {
+						geometry g <- circle(2) at_location #user_location;
+				 		list<dyke> dykes <- dyke overlapping g;
+				 		if (not empty(dykes)) {
+				 			ask dykes closest_to #user_location {
+				 				dyke_length <- dyke_length - length; 
+				 				do die;
+				 			}
+				 		}
+					}
+					
+				}
+				
+			} 
 			event #mouse_down {
 				if (button_selected) {
 					if (state = "s_diking") {diking_over <- true; start_point <- nil; end_point<- nil; return;} else
@@ -206,15 +244,20 @@ experiment Run  type:gui autorun: true{
 					keep_dykes <- !keep_dykes;
 				}
 				if (state != "s_diking") { return;}
-		 		if (start_point = nil) {
-					start_point <- #user_location; 
+				if (start_point = nil) {
+		 			start_point <- #user_location; 
 					line <- line([start_point, #user_location]);
 				} else {
 					end_point <- #user_location;
-					geometry l <- line([start_point, end_point]);
-					ask simulation { 
-						create dyke with:(shape:l + dyke_width);
+					float dist <- (start_point distance_to end_point);
+					if ((dyke_length + dist) <= dyke_length_max) {
+						geometry l <- line([start_point, end_point]);
+						dyke_length <- dyke_length + dist; 
+						ask simulation { 
+							create dyke with:(shape:l + dyke_width, length: dist);
+						}
 					}
+					
 					start_point <- nil;
 					end_point <- nil;
 				}
@@ -229,20 +272,27 @@ experiment Run  type:gui autorun: true{
 
 								
 				switch (state) {
+					match "s_init" {
+						text <-  "Previous Flood !\n" + "Casualties: " + casualties + '/' + nb_of_people;
+						float left <- current_timeout - gama.machine_time;
+						//timer <- button_selected ? "Restart now.": "Restarting in " + int(left / 1000) + " seconds.";
+						//\nPress 'r' to restart immediately.";
+						//keep <- "Keep the dykes."; 
+					}
 					match "s_diking" {
-						text <- "Build dykes with the mouse.";
+						text <- "Build dykes with the mouse. Meters of dyke built: "+ round(dyke_length) + "/" + round(dyke_length_max);
 						float left <- current_timeout - gama.machine_time;
 						timer <- button_selected ? "Start flooding now.": "Flooding in " + int(left / 1000) + " seconds.";
-						hint <- "Press 'f' for skipping.";
+						hint <- "Press 'r' to remove a dyke\nPress 'f' for skipping.";
 						
 						//\nPress 'f' to start immediately.";
 					}	
 					match "s_flooding" {text <- "Casualties: " + casualties + '/' + nb_of_people;
 						float left <- current_timeout - gama.machine_time;
-						hint <- "Press 'r' for restarting.";
-						timer <- button_selected ? "Restart now.": "Restarting in " + int(left / 1000) + " seconds.";
+						//hint <- "Press 'r' for restarting.";
+						timer <- "End in " +(num_step - current_step) + " minutes";
 						//\nPress 'r' to restart immediately.";
-						keep <- "Keep the dykes."; 
+						//keep <- "Keep the dykes."; 
 					}
 				}
 				//draw background color: darker(frame_color) width: 5 border: brighter(frame_color) at: background_position + {background.width / 2, background.height/2, -10} lighted: false ;
@@ -256,49 +306,52 @@ experiment Run  type:gui autorun: true{
 					draw keep font: font ("Helvetica", 14, #plain) at: check_text_position anchor: #top_left color: text_color;	
 				}
 				if (hint != nil) {
-					draw hint font: font ("Helvetica", 10, #bold) at: text_position + {0, 100} anchor: #top_left color: text_color;	
+					draw hint font: font ("Helvetica", 10, #bold) at: text_position + {0, 130} anchor: #top_left color: text_color;	
 				}		
 				
 				
-				if (button_image_unselected != nil) { 
+			/*	if (button_image_unselected != nil) { 
 					button_frame <- square(300) at_location icon_position;
 					draw button_selected ? button_image_selected : button_image_unselected size: 300 at: icon_position;
 				}
 				if (check_image_unselected != nil) {
 					check_frame <- square(300) at_location check_position;
 					draw check_selected or keep_dykes ? check_image_selected : check_image_unselected size: 300 at: check_position;
-				}
+				} */
 			}
 			
-			event "z" {
+			/*event "z" {
 				dyke to_kill <- last(dyke);
 				if (to_kill != nil) { ask to_kill {do die;}}
-			}
+			}*/
 			
 			event "f" {
 				if (state != "s_diking") {return;}
 				diking_over <- true;
 			}
 			
-			event "r" {
+			/*event "r" {
 				if (state != "s_flooding") {return;}
 				restart_requested <- true;
-			}
+			}*/
 			
 			event #mouse_move { 
-				button_selected <- button_frame != nil and button_frame overlaps #user_location;
-				check_selected <- check_frame != nil and check_frame overlaps #user_location;
+			//	button_selected <- button_frame != nil and button_frame overlaps #user_location;
+		//		check_selected <- check_frame != nil and check_frame overlaps #user_location;
 				if (state != "s_diking") {line <- nil; return;}
 				if (start_point != nil) {
 					line <- line([start_point, #user_location]);
+					is_ok_dyke_construction <- ((dyke_length + line.perimeter) <= dyke_length_max);
 				} else {
 					line <- nil;
 				}
 			}
 			
+			
+			
 			graphics ll {
 				if (line != nil) {
-					draw line + dyke_width + 5 color: dyke_color;
+					draw line + dyke_width + 5 color: is_ok_dyke_construction ? dyke_color : #red ;
 				}
 			}
 		}

@@ -9,27 +9,6 @@ global {
 	 * Redefinition of initial parameters for people, water and obstacles
 	 *************************************************************/
 
-	// Initial number of people
-	int nb_of_people <- 500;
-	
-	// The average speed of people
-	float speed_of_people <- 20 #m / #h;
-	
-	// The maximum water input
-	float max_water_input <- 0.5;
-
-	
-	// The height of water in the river at the beginning
-	float initial_water_height <- 2.0;
-	
-	//Diffusion rate
-	float diffusion_rate <- 0.5;
-	
-	//Height of the dykes (30 m by default)
-	float dyke_height <- 30.0;
-	 
-	//Width of the dyke (15 m by default)
-	float dyke_width <- 15.0;
 
 
 	/************************************************************* 
@@ -92,32 +71,16 @@ global {
 	 
 	bool river_already_sent_in_diking_phase;
 	
-	int number_of_milliseconds_to_wait_in_playback <- 10;//100;
- 
+  
 	action enter_init {
-		if (!recording and empty(people_positions)) {
-			matrix<float> mf <- matrix(csv_file("people_positions.csv", ",",float));
-			people_positions <- [];
-			loop times: mf.rows / nb_of_people {
-				people_positions << [];
-			}
-			loop line over: rows_list(mf) {
-				people_positions[int(line[0])] << point(line[1],line[2]);
- 			}
-			river_geometries <- shape_file("river_geometries.shp").contents;
-			//write "steps " + length(people_positions);
-			//write "size of pop " + length(people_positions[0]);
-		}
-
+		do enter_init_base;
 		ask unity_player {do set_status(IN_TUTORIAL);}
 		flooding_requested_from_gama <- false;
 		diking_requested_from_gama <- false;
 		restart_requested_from_gama <- false;	
-		current_timeout <- gama.machine_time + init_duration * 1000;
 		button_frame <- nil;
 		button_image_unselected <- nil;
 		button_image_selected <- nil;
-		current_step <- 0;
 	}
 	
 	action enter_start {
@@ -134,20 +97,10 @@ global {
 		button_image_selected <- nil;
 	}
 	
+	
 	action exit_flooding {
 		ask unity_linker {do sendEndGame;}
-		if (recording) {
-			string total <- "";
-			loop i from: 0 to: current_step - 1 {
-				list<point> pp <- people_positions[i];
-				loop p over: pp {
-					total <- total + float(i) + "," + p.x + "," + p.y + "\n";
-				}
-			}
-			save total to: "people_positions.csv" format:"txt";
-			save river_geometries to: "river_geometries.shp" format: "shp";
-		}
-		ask experiment {do compact_memory;}
+		do exit_flooding_base;
 	}
 	
 	
@@ -156,7 +109,7 @@ global {
 	}
 	
 	action body_flooding {
-		if (recording) {do record();}
+		if (recording) {do record();} 
 	}
 	
 	
@@ -176,7 +129,6 @@ global {
 		flooding_requested_from_gama <- false;
 		diking_requested_from_gama <- false;
 		restart_requested_from_gama <- false;	
-		current_timeout <- gama.machine_time + flooding_duration * 1000;	
 		button_image_unselected <- image("../../includes/icons/restart-line.png");
 		button_image_selected <- image("../../includes/icons/restart-fill.png");
 		current_step <- 0;
@@ -213,49 +165,12 @@ global {
 		if (empty(unity_player)) {return false;}
 		return unity_player all_match each.in_tutorial;
 	}	
-	
+	 
 	
 	/*************************************************************
 	 * Record and playback the initial state
 	 *************************************************************/
 	 
-	bool recording <- false;
-	
-	list<list<point>> people_positions;
-	list<geometry> river_geometries;
-	
-	int current_step;
-	bool playback_finished;
-	
-	action playback {
-		playback_finished <- current_step = length(people_positions);
-		if playback_finished {
-			return;
-		}
-		int first <- first(people).index;
-		ask people {
-			location <- people_positions[current_step][self.index - first];
-		}
-		ask river {
-			shape <- river_geometries[current_step];
-		}
-		float t2 <- gama.machine_time + number_of_milliseconds_to_wait_in_playback;
-		loop while: gama.machine_time < t2 {}
-		current_step <- current_step + 1;
-
-	}
-	
-	action record {
-		list<point> to_save <- [];
-		ask people {
-			to_save << self.location;
-		}
-		people_positions << to_save;
-		ask river {
-			river_geometries << copy(shape);
-		}
-		current_step <- current_step +1 ;
-	}
 	
 	/*************************************************************
 	 * Flags to control the phases in the simulations
@@ -272,19 +187,8 @@ global {
 	
 	// Is the diking stage requested by the user ? 
 	bool diking_requested_from_gama; 
-	
-	// The maximum amount of time, in seconds, we wait for players to be ready 
-	float init_duration <- 120.0;
-	
-	// The maximum amount of time, in seconds, for watching the water flow before restarting
-	float flooding_duration <- 120.0;
-	
-	// The maximum amount of time, in seconds, for building dikes 
-	float diking_duration <- 120.0;
-	
-	// The next timeout to occur for the different stages
-	float current_timeout;
 
+ 
 }
 
 species unity_linker parent: abstract_unity_linker { 
@@ -295,9 +199,9 @@ species unity_linker parent: abstract_unity_linker {
 	unity_property up_people;
 	unity_property up_dyke;
 	unity_property up_water;
+	bool do_send_world <- true;
 	
-	
-	
+	map<string, dyke> dykes;
 	init {
 		
 		unity_aspect car_aspect <- prefab_aspect("Prefabs/Visual Prefabs/People/WalkingMen",250,0.2,1.0,-90.0, precision);
@@ -314,12 +218,12 @@ species unity_linker parent: abstract_unity_linker {
 		
 	}
 
-	action sendEndGame {
+	action sendEndGame { 
 		//write "send_message score : " +  int(100*evacuated/nb_of_people);
 		
 		do send_message players: unity_player as list mes: ["score":: int(100*evacuated/nb_of_people)];
 	}
-		action add_to_send_world(map map_to_send) {
+	action add_to_send_world(map map_to_send) {
 		map_to_send["remaining_time"] <- int((current_timeout - gama.machine_time)/1000);
 		map_to_send["state"] <- world.state;
 		//map_to_send["winning"] <- winning;
@@ -347,6 +251,10 @@ species unity_linker parent: abstract_unity_linker {
 		}
 	}
  
+	 action destroy_dyke(string id) {
+			
+		}
+	 
 	
 	
 	/**
@@ -445,7 +353,7 @@ experiment Launch  autorun: true type: unity {
 
 	output synchronized: true{
 		
-		layout #none controls: false toolbars: false editors: false parameters: false consoles: false tabs: false;
+		layout #none controls: true toolbars: true editors: false parameters: false consoles: true tabs: true;
 		
 		
 		 display map_VR type: 3d background: #dimgray axes: false{
@@ -461,7 +369,7 @@ experiment Launch  autorun: true type: unity {
 		 	}
 		 	species dyke {
 		 		draw shape + 5 color: drowned ? (#cadetblue) : color depth: height * 2 border: drowned ? #white:color;	
-			}
+			}   
 			species people {
 				draw sphere(18) color:#darkseagreen;
 			}
