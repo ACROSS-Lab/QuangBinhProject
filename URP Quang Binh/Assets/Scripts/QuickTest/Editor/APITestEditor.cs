@@ -22,11 +22,7 @@ namespace QuickTest.Editor
                 apiTest.TestSetInTutorial();
             }
 
-            if (GUILayout.Button("Set in game"))
-            {
-                apiTest.TestSetInGame();
-            }
-
+           
             if (GUILayout.Button("Draw dyke"))
             {
                 apiTest.TestDrawDyke();

@@ -34,7 +34,8 @@ public class SimulationManager : MonoBehaviour
     protected Boolean StartMenuDone = false;
     private string currentStage = "s_start";
 
-
+    bool endInit = false;
+    bool endDiking = false;
 
     protected Transform XROrigin;
 
@@ -268,55 +269,20 @@ public class SimulationManager : MonoBehaviour
                 
                 Debug.Log("BEGIN OF STAGE : " + infoWorld.state);
                 currentStage = infoWorld.state;
-                if (currentStage == "s_flooding")
-                {
-                    
-                }
+               
             }
 
-            if (infoWorld.state == "wait_flooding")
+           
+            else if (infoWorld.state == "s_diking" && infoWorld.remaining_time >= 0)
             {
-                if (!StartFloodingDone)
-                {
-                    StartMenuDone = false;
-                    UIController.Instance.StartFloodingPhase();
-                    if (FutureDike != null)
-                    {
-                        FutureDike.SetActive(false);
-                        GameObject.DestroyImmediate(FutureDike);
-
-                        FutureDike = null;
-
-                    }
-                    DisplayFutureDike = false;
-                    StartFloodingDone = true;
-                }
-
-            }
-            if (infoWorld.state == "s_init")
-            {
-                if (!StartMenuDone && infoWorld.playback_finished)
-                {
-                    UIController.Instance.StartMenuDikingPhase();
-                    StartMenuDone = true;
-                    StartFloodingDone = false;
-                }
-            }
-            else if (infoWorld.state == "s_diking")
-            {
-                //timeText.text = "Remaining Time: " + Math.Max(0, infoWorld.remaining_time);
+               // timeText.text = "Remaining Time: " + Math.Max(0, infoWorld.remaining_time);
+                Debug.Log("Remaining time: " + infoWorld.remaining_time);
             }
             else if (infoWorld.state == "s_flooding")
             {
 
             }
-            
-            if (infoWorld.state != "s_init" && infoWorld.remaining_time > LastTime)
-            {
-                timer.gameObject.SetActive(true);
-                Debug.Log("Remaining time: " + infoWorld.remaining_time);
-                timer.StartEnergizedEffect(infoWorld.remaining_time);
-            }
+           
             
             if (infoWorld.state == "s_init" || UIController.Instance.UI_EndingPhase_eng.activeSelf || UIController.Instance.UI_EndingPhase_viet.activeSelf)
                 timer.gameObject.SetActive(false);
@@ -327,6 +293,17 @@ public class SimulationManager : MonoBehaviour
 
     private void Update()
     {
+        if (endInit)
+        {
+            UIController.Instance.StartMenuDikingPhase();
+            endInit = false;
+        }
+
+        if (endDiking)
+        {
+            UIController.Instance.StartFloodingPhase();
+            endDiking = false;
+        }
         if (remainingTime > 0)
             remainingTime -= Time.deltaTime;
         if (TimerSendPosition > 0)
@@ -362,7 +339,7 @@ public class SimulationManager : MonoBehaviour
         OtherUpdate();
         UpdateGame();
         if (scoreM != null){
-            UIController.Instance.EndGame(scoreM.score);
+            UIController.Instance.EndGame(scoreM);
             scoreM = null;
         }
 
@@ -835,6 +812,15 @@ public class SimulationManager : MonoBehaviour
        
         switch (firstKey) {
             // handle general informations about the simulation
+            case "end_init":
+                Debug.Log("End of Init phase");
+                endInit = true;
+                break;
+
+            case "end_diking":
+                Debug.Log("End of Diking phase");
+                endDiking = true;
+                break;
             case "precision":
 
                 parameters = ConnectionParameter.CreateFromJSON(content);
@@ -992,10 +978,12 @@ public class ScoreMessage
 {
 
 
-    public int score;
+    public int score; 
+    public int round;
+    public bool endgame;
 
     public static ScoreMessage CreateFromJSON(string jsonString)
-    {
+    { 
         return JsonUtility.FromJson<ScoreMessage>(jsonString);
     }
 

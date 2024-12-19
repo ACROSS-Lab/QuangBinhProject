@@ -12,42 +12,7 @@ import "Flooding Model.gaml"
 
 global { 
 	 
-	
-	 float waiting_time_in_s <- 1.5;
-	
-	/*************************************************************
-	 * Attributes dedicated to the UI (images, colors, frames, etc.)
-	 *************************************************************/
-	
-	rgb background_color <- #dimgray;
-	rgb frame_color <- rgb(1, 95, 115);
-	rgb river_color <- rgb(74, 169, 163);
-	rgb people_color <-rgb(232, 215, 164);
-	rgb evacuation_color <- rgb(176, 32, 19);
-	rgb road_color <- rgb(64, 64, 64);
-	rgb line_color <- rgb(156, 34, 39);
-	rgb dyke_color <- rgb(34, 156, 39);
-	rgb text_color <- rgb(232, 215, 164);
-	list<rgb> building_colors <- [rgb(214, 168, 0),rgb(237, 155, 0),rgb(202, 103, 2),rgb(120, 167, 121)];
-	
-	geometry background <- rectangle(1700, 1400);
-	point text_position <- {-1500, 500};
-	point background_position <- text_position - {200, 200};
-	point timer_position <- {-1100, 1000};
-	point icon_position <- {-1350, 1000};
-	point check_position <- {-1350, 1300};
-	point check_text_position <- {-1100, 1300};
-	
-	bool river_in_3D <- false; 
-	geometry button_frame;  
-	geometry check_frame;
-	image button_image_unselected;
-	image button_image_selected;
-	image check_image_unselected;
-	image check_image_selected; 
-	bool button_selected;
-	bool check_selected;
-	
+
 	/************************************************************* 
 	 * Functions that control the transitions between the states
 	 *************************************************************/
@@ -56,7 +21,7 @@ global {
 	//	write "enter_init";
 		
 		do enter_init_base;
-		
+		 
 		ask buildings {
 			color <- one_of(building_colors);
 		}
@@ -148,7 +113,7 @@ global {
 		current_step <- current_step +1;
 		
 	}
-	
+	 
 	/*************************************************************
 	 * Flags to control the phases in the simulations
 	 *************************************************************/
@@ -182,7 +147,7 @@ global {
 
 
 experiment Run  type:gui autorun: true{
-	float minimum_cycle_duration <- 0.1;
+	float minimum_cycle_duration <- cycle_duration;
 	
 	point start_point; 
 	point end_point;  

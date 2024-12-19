@@ -23,7 +23,7 @@ public class UIController : MonoBehaviour
     protected float TimeForDisplayingFloodUI = 2.0f; // in second
     protected float TimerForDisplayingFloodUI = 0.0f;
 
-    protected bool InVietnamese;
+    protected bool InVietnamese = false;
 
 
     protected bool FloodingPhase = false;
@@ -31,6 +31,8 @@ public class UIController : MonoBehaviour
 
 
     public bool DikingStart = false;
+
+    public bool EndOfGame = false;
 
     public GameObject globalVolume;
     // Use this for initialization
@@ -47,7 +49,6 @@ public class UIController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space) && UI_ChoiceOfLanguage.active)
         {
-            globalVolume.SetActive(false);
             SetInVietnamese(false);
         }
         if (Input.GetKeyDown(KeyCode.Space) && UI_DykingPhase_eng.active)
@@ -60,7 +61,10 @@ public class UIController : MonoBehaviour
         }
         if (FloodingPhase)
         {
-            globalVolume.SetActive(true);
+            Debug.Log("FloodingInitPhase: " + FloodingInitPhase + " globalVolume.activeSelf:" + globalVolume.activeSelf);
+            if (FloodingInitPhase && !globalVolume.activeSelf)
+                globalVolume.SetActive(true);
+
             if (TimerForDisplayingFloodUI > 0)
             {
                 TimerForDisplayingFloodUI -= Time.deltaTime;
@@ -76,22 +80,21 @@ public class UIController : MonoBehaviour
                 {
                     UI_FloodingPhase_eng.SetActive(false);
                 }
-               
-                if(FloodingInitPhase) {
+
+                FloodingPhase = false;
+                if (FloodingInitPhase) {
                     FloodingInitPhase = false;
                     APITest.Instance.TestSetStartPressed();
                 } else
-                {
+                { 
                     APITest.Instance.TestSetInFlood();
-                    FloodingInitPhase = true;
                 } 
-                    
-                FloodingPhase = false;
+                 
             }
         }
         else
         {
-            globalVolume.SetActive(false);
+           // globalVolume.SetActive(false);
         }
        
     }
@@ -115,9 +118,15 @@ public class UIController : MonoBehaviour
 
     public void StartMenuDikingPhase()
     {
+        globalVolume.SetActive(false);
+
+        Debug.Log("StartMenuDikingPhase ");
+        Debug.Log("InVietnamese: " + InVietnamese);
         if (InVietnamese)
             UI_DykingPhase_viet.SetActive(true);
         else UI_DykingPhase_eng.SetActive(true);
+
+        Debug.Log("UI_DykingPhase_eng: " + UI_DykingPhase_eng.activeSelf + " UI_DykingPhase_viet:" + UI_DykingPhase_viet.activeSelf);
     }
     public void StartDikingPhase()
     {
@@ -126,13 +135,12 @@ public class UIController : MonoBehaviour
         if (InVietnamese)
             UI_DykingPhase_viet.SetActive(false);
         else UI_DykingPhase_eng.SetActive(false);
-        APITest.Instance.TestSetInGame();
-
-
+        APITest.Instance.TestSetInDykeBuilding();
     }
 
     public void StartFloodingPhase()
     {
+        Debug.Log("StartFloodingPhase");
         DikingStart = false;
 
         SimulationManager.Instance.DisplayFutureDike = false;
@@ -156,30 +164,48 @@ public class UIController : MonoBehaviour
             UI_FloodingPhase_eng.SetActive(true);
         }
 
+        Debug.Log("END StartFloodingPhase: " + FloodingPhase + "  FloodingInitPhase:" + FloodingInitPhase);
 
     }
 
-    public void EndGame(int score)
+    public void EndGame(ScoreMessage score)
     {
-
+        EndOfGame = score.endgame;
         if (InVietnamese)
         {
-            TextEndViet.text = ("" + score + "%");
+            TextEndViet.text = ("Tròn: " + score.round + " Tỷ lệ người được cứu: " + score + "%");
             UI_EndingPhase_viet.SetActive(true);
         }
         else
         {
             UI_EndingPhase_eng.SetActive(true);
-            TextEndEng.text = ("" + score + "%");
+            TextEndEng.text = ("Round: " + score.round + " Percentage of people saved: " + score + "%");
         }
     }
 
     public void RestartGame()
     {
+        Debug.Log("RestartGame - EndOfGame: " + EndOfGame);
        if (InVietnamese)
-            UI_EndingPhase_viet.SetActive(false);
+            UI_EndingPhase_viet.SetActive(false); 
         else UI_EndingPhase_eng.SetActive(false);
-        UI_ChoiceOfLanguage.SetActive(true);
+        if (EndOfGame)
+        {
+            UI_ChoiceOfLanguage.SetActive(true);
+            EndOfGame = false;
+        }
+        else
+        {
+            if (InVietnamese)
+            {
+                UI_DykingPhase_viet.SetActive(true);
+            }
+            else
+            {
+                UI_DykingPhase_eng.SetActive(true);
+            }
+        }
+       
     }
 
 }

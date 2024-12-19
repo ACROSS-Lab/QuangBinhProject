@@ -57,16 +57,7 @@ namespace QuickTest
             ConnectionManager.Instance.SendExecutableAsk("set_status", args);
         }
 
-        public void TestSetInGame()
-        { 
-            Dictionary<string, string> args = new Dictionary<string, string>()
-            {
-                {"player_id", StaticInformation.getId()},
-                {"status", GAMAGameStatus.IN_GAME.ToString()}
-            };
-            
-            ConnectionManager.Instance.SendExecutableAsk("set_status", args);
-        }
+       
 
         public void TestSetStartPressed()
         {
@@ -81,13 +72,27 @@ namespace QuickTest
 
         }
 
-        public void TestSetInFlood() 
+
+        public void TestSetInFlood()
         {
-            Debug.Log("TestSetStartPressed");
+            Debug.Log("TestSetInFlood");
             Dictionary<string, string> args = new Dictionary<string, string>()
             {
                 {"player_id", StaticInformation.getId()},
                 {"status", GAMAGameStatus.IN_FLOOD.ToString()}
+            };
+
+            ConnectionManager.Instance.SendExecutableAsk("set_status", args);
+
+        }
+
+        public void TestSetInDykeBuilding() 
+        {
+            Debug.Log("TestSetInDykeBuilding");
+            Dictionary<string, string> args = new Dictionary<string, string>()
+            {
+                {"player_id", StaticInformation.getId()},
+                {"status", GAMAGameStatus.IN_DYKE_BUILDING.ToString()}
             };
 
             ConnectionManager.Instance.SendExecutableAsk("set_status", args);

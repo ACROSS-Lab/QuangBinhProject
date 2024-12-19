@@ -4,13 +4,15 @@ import "Flooding Model.gaml"
 
 global { 
 	
-	
+
+	bool use_tell <- false;
+	bool ready_to_build_dyke <- false;
 	/*************************************************************
 	 * Redefinition of initial parameters for people, water and obstacles
 	 *************************************************************/
 
 
-
+ 
 	/************************************************************* 
 	 * "Winning" condition: determines whether the player 
 	 * has "won" or "lost" depending on the number of lives he/she
@@ -25,7 +27,7 @@ global {
 	/*************************************************************
 	 * Attributes dedicated to the UI in GAMA (images, colors, etc.)
 	 *************************************************************/
-	
+	 
 	rgb text_color <- rgb(232, 215, 164);
 	
 	
@@ -58,12 +60,12 @@ global {
 	 // The player chooses a language and is doing the tutorial
 	 string IN_TUTORIAL <- "IN_TUTORIAL";
 	 
-	 // The player has finished the tutorial and is "playing" the main scene (diking + flooding)
-	 string IN_GAME <- "IN_GAME";
 	 
 	 string START_PRESSED <- "START_PRESSED";
 
 	string IN_FLOOD <- "IN_FLOOD";
+	
+	string IN_DYKE_BUILDING <- "IN_DYKE_BUILDING";
 
 	/*************************************************************
 	 * Functions that control the transitions between the states
@@ -73,6 +75,7 @@ global {
 	
   
 	action enter_init {
+		write "enter_init";
 		do enter_init_base;
 		ask unity_player {do set_status(IN_TUTORIAL);}
 		flooding_requested_from_gama <- false;
@@ -84,6 +87,7 @@ global {
 	}
 	
 	action enter_start {
+		write "enter_start";
 		init_requested_from_gama <- false;
 		flooding_requested_from_gama <- false;
 		diking_requested_from_gama <- false;
@@ -99,32 +103,59 @@ global {
 	
 	
 	action exit_flooding {
+		write "exit_flooding";
+		
 		ask unity_linker {do sendEndGame;}
 		do exit_flooding_base;
 	}
 	
+	action exit_init {
+		write "exit_init";
+		ask unity_linker {
+			do send_message players: unity_player as list mes: ["end_init"::""];
+		}
+	}
+	
+	
+	action exit_diking {
+		write "exit_diking";
+		ask unity_linker {
+			do send_message players: unity_player as list mes: ["end_diking"::""];
+		}
+	}
 	
 	action body_init  {
+		write "body_init";
 		if (!recording) {do playback();}
 	}
 	
 	action body_flooding {
+		write "body_flooding";
+		
 		if (recording) {do record();} 
+		current_step <- current_step +1;
 	}
 	
+	action body_diking {
+		if !(unity_player all_match each.in_dyke_building) {
+			current_timeout <- gama.machine_time + diking_duration * 1000;
+		}
+		
+	}
 	
 	action enter_diking {
+		write "enter_diking";
 		ask unity_linker {do send_static_geometries();}
-		ask unity_player {do set_status(IN_GAME);}
 		flooding_requested_from_gama <- false;
 		diking_requested_from_gama <- false;
 		restart_requested_from_gama <- false;	
-		current_timeout <- gama.machine_time + diking_duration * 1000;
 		button_image_unselected <- image("../../includes/icons/flood-line.png") * rgb(232, 215, 164);
 		button_image_selected <- image("../../includes/icons/flood-fill.png") * rgb(232, 215, 164);
 	}
 	
 	action enter_flooding {
+		write "enter_flooding";
+		
 		river_already_sent_in_diking_phase <- false;
 		flooding_requested_from_gama <- false;
 		diking_requested_from_gama <- false;
@@ -132,6 +163,7 @@ global {
 		button_image_unselected <- image("../../includes/icons/restart-line.png");
 		button_image_selected <- image("../../includes/icons/restart-fill.png");
 		current_step <- 0;
+		
 	}
 	
 	bool flooding_ready {
@@ -140,9 +172,8 @@ global {
 	
 	// Are all the players who entered ready or has GAMA sent the beginning of the game ? 
 	bool init_over  { 
-		if (flooding_requested_from_gama or diking_requested_from_gama) {return true;}
-		if (empty(unity_player)) {return false;}
-		return unity_player none_matches each.in_tutorial;
+		
+		return playback_finished;
 	} 
 	
 	bool start_over {
@@ -161,7 +192,7 @@ global {
 	// Are all the players in the not_ready state or has GAMA sent the end of the game ?
 	bool flooding_over  { 
 		if (restart_requested_from_gama) {return true;}
-		if (gama.machine_time >= current_timeout) {return true;} 
+		if (current_step > num_step) {return true;} 
 		if (empty(unity_player)) {return false;}
 		return unity_player all_match each.in_tutorial;
 	}	
@@ -221,13 +252,14 @@ species unity_linker parent: abstract_unity_linker {
 	action sendEndGame { 
 		//write "send_message score : " +  int(100*evacuated/nb_of_people);
 		
-		do send_message players: unity_player as list mes: ["score":: int(100*evacuated/nb_of_people)];
+		do send_message players: unity_player as list mes: ["score":: int(100* (1 - casualties/nb_of_people)), "round":: current_round, "endgame"::current_round >= num_rounds];
 	}
 	action add_to_send_world(map map_to_send) {
 		map_to_send["remaining_time"] <- int((current_timeout - gama.machine_time)/1000);
 		map_to_send["state"] <- world.state;
 		//map_to_send["winning"] <- winning;
 		map_to_send["playback_finished"] <- playback_finished;
+		
 		
 		//write sample(world.state) + " " + sample(playback_finished);
 	} 
@@ -292,6 +324,7 @@ species unity_linker parent: abstract_unity_linker {
 
 	// Message sent by Unity to inform about the status of a specific player
 	action set_status(string player_id, string status) {
+		write "NEW STATUS: " + status;
 		unity_player player <- player_agents[player_id];
 		//write "set status: " + sample(player_id) + " " + sample(player) + " " + sample(status);
 		if (player != nil) {
@@ -308,6 +341,7 @@ species unity_player parent: abstract_unity_player{
 	bool in_tutorial;
 	bool in_flood;
 	bool start_pressed;
+	bool in_dyke_building;
 	rgb color <- #red;
 	init {
 		do set_status(IN_TUTORIAL);
@@ -317,17 +351,18 @@ species unity_player parent: abstract_unity_player{
 		in_tutorial <- status = IN_TUTORIAL;
 		start_pressed <- status = START_PRESSED;
 		in_flood <- status = IN_FLOOD;
+		in_dyke_building <- status = IN_DYKE_BUILDING;
 	}
 	
 
-}
+} 
 
 experiment Launch  autorun: true type: unity {
 
 
 	string unity_linker_species <- string(unity_linker);
 	float t_ref;
-	float minimum_cycle_duration <- 0.1;
+	float minimum_cycle_duration <- cycle_duration;
 	 	
 	action create_player(string id) {
 		ask unity_linker {
@@ -353,29 +388,33 @@ experiment Launch  autorun: true type: unity {
 
 	output synchronized: true{
 		
-		layout #none controls: true toolbars: true editors: false parameters: false consoles: true tabs: true;
+		layout #none controls: false toolbars: true editors: false parameters: false consoles: true tabs: false;
 		
 		
-		 display map_VR type: 3d background: #dimgray axes: false{
-		 	
-		 	species river transparency: 0.2 {
-				draw shape border: brighter(brighter(#lightseagreen)) width: 5 color: #lightseagreen  at: location + {0, 0, 5};
-			}
+		display map type: 3d axes: false background: background_color antialias: false{
+ 	
+		 	species river visible: !river_in_3D {
+				draw shape border: brighter(brighter(river_color)) width: 5 color: river_color;
+			}			 
+
 			species road {
-				draw shape color: drowned ? (#cadetblue) : color depth: height border: drowned ? #white:color;
+				draw drowned ? shape : shape + 10 color: drowned ? darker(river_color) : road_color ;
 			}
 		 	species buildings {
-		 		draw shape color: drowned ? (#cadetblue) : color depth: height * 2 border: drowned ? #white:color;	
+		 		draw shape color: drowned ? river_color : color border: drowned ? darker(river_color):color;	
 		 	}
 		 	species dyke {
-		 		draw shape + 5 color: drowned ? (#cadetblue) : color depth: height * 2 border: drowned ? #white:color;	
-			}   
+		 		draw shape + 5 color: drowned ? river_color : dyke_color border: drowned ? darker(river_color):dyke_color;	
+			} 
 			species people {
-				draw sphere(18) color:#darkseagreen;
+				draw circle(20)  color: people_color;
 			}
 			species evacuation_point {
-				draw circle(60) at: location + {0,0,40} color: rgb(232, 215, 164);
+				draw circle(60) at: location + {0,0,40} color: evacuation_color;
 			}
+
+			mesh cell above: 0 triangulation: true smooth: false color: cell collect each.color visible: river_in_3D transparency: 0.5;
+			
 			
 			event #mouse_down {
 				if (button_selected) {
@@ -404,50 +443,54 @@ experiment Launch  autorun: true type: unity {
 			species unity_player {
 				draw circle(30) at: location + {0, 0, 50} color: rgb(color, 0.5) ;
 			}
-			
-			
 			graphics "Text and icon"   {
 				string text <- nil;
-				string hint <- nil;
 				string timer <- nil;
+				string hint <- nil;
+				string keep <- nil;
 
 								
 				switch (state) {
 					match "s_start" {
 						text <- "Waiting for player to begin.";
+					}match "s_init" {
+						text <-  "Previous Flood !\n" + "Casualties: " + casualties + '/' + nb_of_people;
+						float left <- current_timeout - gama.machine_time;
+						//timer <- button_selected ? "Restart now.": "Restarting in " + int(left / 1000) + " seconds.";
+						//\nPress 'r' to restart immediately.";
+						//keep <- "Keep the dykes."; 
 					}
 					match "s_diking" {
-						text <- "Diking phase.";
-						hint <- "Press 'f' for skipping.";
+						text <- "Build dykes with the mouse. Meters of dyke built: "+ round(dyke_length) + "/" + round(dyke_length_max);
 						float left <- current_timeout - gama.machine_time;
 						timer <- button_selected ? "Start flooding now.": "Flooding in " + int(left / 1000) + " seconds.";
+						hint <- "Press 'r' to remove a dyke\nPress 'f' for skipping.";
+						
+						//\nPress 'f' to start immediately.";
 					}	
-					match "s_flooding" {
-						text <- "Casualties: " + casualties + '/' + nb_of_people;
-						hint <- "Press 'r' for restarting.";
+					match "s_flooding" {text <- "Casualties: " + casualties + '/' + nb_of_people;
 						float left <- current_timeout - gama.machine_time;
-						timer <- button_selected ? "Restart now.": "Restarting in " + int(left / 1000) + " seconds.";
-					}
-					match "s_init" {
-						text <- "Tutorial phase in VR.";
-						hint <- "Press 'd' for diking.";
+						//hint <- "Press 'r' for restarting.";
+						timer <- "End in " +(num_step - current_step) + " minutes";
+						//\nPress 'r' to restart immediately.";
+						//keep <- "Keep the dykes."; 
 					}
 				}
+				//draw background color: darker(frame_color) width: 5 border: brighter(frame_color) at: background_position + {background.width / 2, background.height/2, -10} lighted: false ;
 				if (text != nil) {
 					draw text font: font ("Helvetica", 18, #bold) at: text_position anchor: #top_left color: text_color;	
-				}
-				if (hint != nil) {
-					draw hint font: font ("Helvetica", 10, #bold) at: text_position + {0, 100} anchor: #top_left color: text_color;	
 				}
 				if (timer != nil) { 
 					draw timer font: font ("Helvetica", 14, #plain) at: timer_position anchor: #top_left color: text_color;	
 				}
-				
-				if (button_image_unselected != nil) { 
-					button_frame <- square(300) at_location icon_position;
-					draw button_selected ? button_image_selected : button_image_unselected size: 300 at: icon_position;
-				} 
-			}
+				if (keep != nil) {
+					draw keep font: font ("Helvetica", 14, #plain) at: check_text_position anchor: #top_left color: text_color;	
+				}
+				if (hint != nil) {
+					draw hint font: font ("Helvetica", 10, #bold) at: text_position + {0, 130} anchor: #top_left color: text_color;	
+				}		
+			}	
+			
 
 		 }
 	}

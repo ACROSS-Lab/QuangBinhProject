@@ -18,10 +18,6 @@ public class EndofGameController : MonoBehaviour
        
     }
 
-    public void ResetBtn()
-    {
-        SceneManager.LoadScene("Startup Menu");
-    }
-
+   
 
 }
