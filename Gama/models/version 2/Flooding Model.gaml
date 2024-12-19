@@ -219,8 +219,17 @@ global control: fsm {
 		}
 		int first <- first(people).index;
 		ask people {
+			point prev_loc <- copy(location);
 			location <- people_positions[current_step][self.index - first];
+			if (evacuation_time = -1 and current_step > 0 and location != prev_loc) {
+				evacuation_time <- current_step;
+			}
 		}
+		if current_step = 0 {
+	 		ask people {
+				init_loc <- location;
+			}
+	 	}
 		ask river {
 			shape <- river_geometries[current_step];
 		}
@@ -460,7 +469,7 @@ global control: fsm {
 	
 	action init_people {
 		create people number: nb_of_people {
-			location <- any_location_in(one_of(buildings));
+			location <- init_loc != nil ?init_loc : any_location_in(one_of(buildings));
 		}
 	}
 
@@ -772,9 +781,12 @@ species river {
 species people skills: [moving] control: fsm { 
 	
 	float speed <- speed_of_people;
+	
+	point init_loc <- nil;
+	int evacuation_time <- -1;
 
 	state s_idle initial: true {
-		transition to: s_fleeing when: world.state = "s_flooding" and flip(0.2);
+		transition to: s_fleeing when: world.state = "s_flooding" and ((evacuation_time > -1) ? evacuation_time = current_step :flip(0.2));
 		transition to: s_drowned when: self.is_drowning();
 	}
 	

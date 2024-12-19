@@ -75,7 +75,7 @@ global {
 	
   
 	action enter_init {
-		write "enter_init";
+		//write "enter_init";
 		do enter_init_base;
 		ask unity_player {do set_status(IN_TUTORIAL);}
 		flooding_requested_from_gama <- false;
@@ -87,7 +87,7 @@ global {
 	}
 	
 	action enter_start {
-		write "enter_start";
+		//write "enter_start";
 		init_requested_from_gama <- false;
 		flooding_requested_from_gama <- false;
 		diking_requested_from_gama <- false;
@@ -103,14 +103,14 @@ global {
 	
 	
 	action exit_flooding {
-		write "exit_flooding";
+		//write "exit_flooding";
 		
 		ask unity_linker {do sendEndGame;}
 		do exit_flooding_base;
 	}
 	
 	action exit_init {
-		write "exit_init";
+		//write "exit_init";
 		ask unity_linker {
 			do send_message players: unity_player as list mes: ["end_init"::""];
 		}
@@ -118,19 +118,19 @@ global {
 	
 	
 	action exit_diking {
-		write "exit_diking";
+		//write "exit_diking";
 		ask unity_linker {
 			do send_message players: unity_player as list mes: ["end_diking"::""];
 		}
 	}
 	
 	action body_init  {
-		write "body_init";
+		//write "body_init";
 		if (!recording) {do playback();}
 	}
 	
 	action body_flooding {
-		write "body_flooding";
+		//write "body_flooding";
 		
 		if (recording) {do record();} 
 		current_step <- current_step +1;
@@ -144,7 +144,7 @@ global {
 	}
 	
 	action enter_diking {
-		write "enter_diking";
+		//write "enter_diking";
 		ask unity_linker {do send_static_geometries();}
 		flooding_requested_from_gama <- false;
 		diking_requested_from_gama <- false;
@@ -154,7 +154,7 @@ global {
 	}
 	
 	action enter_flooding {
-		write "enter_flooding";
+		//write "enter_flooding";
 		
 		river_already_sent_in_diking_phase <- false;
 		flooding_requested_from_gama <- false;
@@ -327,7 +327,7 @@ species unity_linker parent: abstract_unity_linker {
 
 	// Message sent by Unity to inform about the status of a specific player
 	action set_status(string player_id, string status) {
-		write "NEW STATUS: " + status;
+		//write "NEW STATUS: " + status;
 		unity_player player <- player_agents[player_id];
 		//write "set status: " + sample(player_id) + " " + sample(player) + " " + sample(status);
 		if (player != nil) {
@@ -378,12 +378,11 @@ experiment Launch  autorun: true type: unity {
 		if (not empty(unity_player)) {
 			ask unity_linker {
 				unity_player pl <- player_agents[id_input];
-				write sample(pl);
+				//write sample(pl);
 				if (pl != nil) {
 					remove key: id_input from: player_agents ;
 					ask pl {do die;}
 				}
-				write sample(player_agents);
 			}
 			
 		}
