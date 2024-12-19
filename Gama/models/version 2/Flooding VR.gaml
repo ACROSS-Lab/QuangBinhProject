@@ -240,7 +240,7 @@ species unity_linker parent: abstract_unity_linker {
 		unity_aspect water_aspect <- geometry_aspect(20.0, rgb(90, 188, 216, 0.0), precision);
  	
 		up_people<- geometry_properties("car", nil, car_aspect, #no_interaction, false);
-		up_dyke <- geometry_properties("dyke", "dyke", dyke_aspect, #collider, false);
+		up_dyke <- geometry_properties("dyke", "dyke", dyke_aspect, #ray_interactable, false);
 		up_water <- geometry_properties("water", nil, water_aspect, #no_interaction,false);
 
 		unity_properties << up_people;
@@ -283,9 +283,12 @@ species unity_linker parent: abstract_unity_linker {
 		}
 	}
  
-	 action destroy_dyke(string id) {
-			
-		}
+	action destroy_dyke(string id) {
+		dyke d <- dyke first_with (each.name = id);
+		if (d != nil){
+			ask d { do die;}
+		} 		
+	}
 	 
 	
 	

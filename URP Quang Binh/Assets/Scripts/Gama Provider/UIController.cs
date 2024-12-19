@@ -168,18 +168,19 @@ public class UIController : MonoBehaviour
 
     }
 
-    public void EndGame(ScoreMessage score)
+    public void EndGame(ScoreMessage finalResult)
     {
-        EndOfGame = score.endgame;
+        EndOfGame = finalResult.endgame;
+        Debug.Log("Score: " + finalResult.score);
         if (InVietnamese)
         {
-            TextEndViet.text = ("Tròn: " + score.round + " Tỷ lệ người được cứu: " + score + "%");
+            TextEndViet.text = ("Tròn: " + finalResult.round + " Tỷ lệ người được cứu: " + finalResult.score + "%");
             UI_EndingPhase_viet.SetActive(true);
         }
         else
         {
             UI_EndingPhase_eng.SetActive(true);
-            TextEndEng.text = ("Round: " + score.round + " Percentage of people saved: " + score + "%");
+            TextEndEng.text = ("Round: " + finalResult.round + " Percentage of people saved: " + finalResult.score + "%");
         }
     }
 

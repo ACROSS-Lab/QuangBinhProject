@@ -50,6 +50,42 @@ public class SimulationManagerSolo : SimulationManager
 
     }
 
+    protected override void HoverEnterInteraction(HoverEnterEventArgs ev)
+    {
+        GameObject obj = ev.interactableObject.transform.gameObject;
+        if (obj.tag.Equals("dyke"))
+            SimulationManagerSolo.ChangeColor(obj, Color.blue);
+    }
+
+    protected override void HoverExitInteraction(HoverExitEventArgs ev)
+    {
+        GameObject obj = ev.interactableObject.transform.gameObject;
+        if (obj.tag.Equals("dyke"))
+        {
+            SimulationManagerSolo.ChangeColor(obj, new Color(204,119,34));
+        }
+        
+    } 
+
+    protected override void SelectInteraction(SelectEnterEventArgs ev)
+    {
+
+        if (remainingTime <= 0.0)
+        {
+            GameObject grabbedObject = ev.interactableObject.transform.gameObject;
+
+            if (("dyke").Equals(grabbedObject.tag))
+            {
+                Dictionary<string, string> args = new Dictionary<string, string> {
+                         {"id", grabbedObject.name }
+                    };
+                ConnectionManager.Instance.SendExecutableAsk("destroy_dyke", args);
+                remainingTime = timeWithoutInteraction;
+            }
+            
+        }
+
+    }
     protected override void ManageOtherInformation()
     {
 
