@@ -18,11 +18,11 @@ global control: fsm {
 	
 	bool recording <- false;
  	
- 	bool save_results <- false;
+ 	bool save_results <- true;
  	
  	int num_step <- 120;
  	
- 	float diking_duration <- 20.0;
+ 	float diking_duration <- 60.0 * 3;
 	
 	int num_rounds <- 2;
 	

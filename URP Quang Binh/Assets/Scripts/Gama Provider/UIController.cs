@@ -61,7 +61,7 @@ public class UIController : MonoBehaviour
         }
         if (FloodingPhase)
         {
-            Debug.Log("FloodingInitPhase: " + FloodingInitPhase + " globalVolume.activeSelf:" + globalVolume.activeSelf);
+           // Debug.Log("FloodingInitPhase: " + FloodingInitPhase + " globalVolume.activeSelf:" + globalVolume.activeSelf);
             if (FloodingInitPhase && !globalVolume.activeSelf)
                 globalVolume.SetActive(true);
 
@@ -120,18 +120,16 @@ public class UIController : MonoBehaviour
     {
         globalVolume.SetActive(false);
 
-        Debug.Log("StartMenuDikingPhase ");
-        Debug.Log("InVietnamese: " + InVietnamese);
         if (InVietnamese)
             UI_DykingPhase_viet.SetActive(true);
         else UI_DykingPhase_eng.SetActive(true);
 
-        Debug.Log("UI_DykingPhase_eng: " + UI_DykingPhase_eng.activeSelf + " UI_DykingPhase_viet:" + UI_DykingPhase_viet.activeSelf);
+     //   Debug.Log("UI_DykingPhase_eng: " + UI_DykingPhase_eng.activeSelf + " UI_DykingPhase_viet:" + UI_DykingPhase_viet.activeSelf);
     }
     public void StartDikingPhase()
     {
         DikingStart = true;
-        Debug.Log("StartDikingPhase");
+     //   Debug.Log("StartDikingPhase");
         if (InVietnamese)
             UI_DykingPhase_viet.SetActive(false);
         else UI_DykingPhase_eng.SetActive(false);
@@ -140,7 +138,7 @@ public class UIController : MonoBehaviour
 
     public void StartFloodingPhase()
     {
-        Debug.Log("StartFloodingPhase");
+    //    Debug.Log("StartFloodingPhase");
         DikingStart = false;
 
         SimulationManager.Instance.DisplayFutureDike = false;
@@ -164,14 +162,14 @@ public class UIController : MonoBehaviour
             UI_FloodingPhase_eng.SetActive(true);
         }
 
-        Debug.Log("END StartFloodingPhase: " + FloodingPhase + "  FloodingInitPhase:" + FloodingInitPhase);
+      //  Debug.Log("END StartFloodingPhase: " + FloodingPhase + "  FloodingInitPhase:" + FloodingInitPhase);
 
     }
 
     public void EndGame(ScoreMessage finalResult)
     {
         EndOfGame = finalResult.endgame;
-        Debug.Log("Score: " + finalResult.score);
+      //  Debug.Log("Score: " + finalResult.score);
         if (InVietnamese)
         {
             TextEndViet.text = ("Tròn: " + finalResult.round + " Tỷ lệ người được cứu: " + finalResult.score + "%");
@@ -186,7 +184,7 @@ public class UIController : MonoBehaviour
 
     public void RestartGame()
     {
-        Debug.Log("RestartGame - EndOfGame: " + EndOfGame);
+      //  Debug.Log("RestartGame - EndOfGame: " + EndOfGame);
        if (InVietnamese)
             UI_EndingPhase_viet.SetActive(false); 
         else UI_EndingPhase_eng.SetActive(false);

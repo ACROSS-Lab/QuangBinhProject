@@ -187,7 +187,7 @@ experiment Run  type:gui autorun: true{
 					line <- nil;
 				} else {
 					ask world {
-						geometry g <- circle(2) at_location #user_location;
+						geometry g <- circle(10) at_location #user_location;
 				 		list<dyke> dykes <- dyke overlapping g;
 				 		if (not empty(dykes)) {
 				 			ask dykes closest_to #user_location {

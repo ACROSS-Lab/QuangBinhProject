@@ -276,7 +276,7 @@ public class SimulationManager : MonoBehaviour
             else if (infoWorld.state == "s_diking" && infoWorld.remaining_time >= 0)
             {
                // timeText.text = "Remaining Time: " + Math.Max(0, infoWorld.remaining_time);
-                Debug.Log("Remaining time: " + infoWorld.remaining_time);
+              //  Debug.Log("Remaining time: " + infoWorld.remaining_time);
             }
             else if (infoWorld.state == "s_flooding")
             {
