@@ -89,22 +89,22 @@ global control: fsm {
 	 *************************************************************/
 
 	//Shapefile for the river
-	file river_shapefile <- file("../../includes/gis/river.shp");
+	file river_shapefile <- file("../includes/gis/river.shp");
 	
 	//Shapefile for the buildings
-	file buildings_shapefile <- file("../../includes/gis/buildings.shp");
+	file buildings_shapefile <- file("../includes/gis/buildings.shp");
 	
 	//Shapefile for the evacuation points
-	file shape_file_evacuation <- file("../../includes/gis/evacuation_point.shp");
+	file shape_file_evacuation <- file("../includes/gis/evacuation_point.shp");
 	
 	//Shapefile for the roads
-	file shape_file_roads <- file("../../includes/gis/road.shp");
+	file shape_file_roads <- file("../includes/gis/road.shp");
 	
 	//Data elevation file : small, medium and large definition files are availables
-	file dem_file <- file("../../includes/dem/terrain_small.tif");
+	file dem_file <- file("../includes/dem/terrain_small.tif");
 	
 	//Shape of the environment using the bounding box of Quang Binh
-	geometry shape <- envelope(file("../../includes/gis/QBBB.shp"));
+	geometry shape <- envelope(file("../includes/gis/QBBB.shp"));
 	
 	/*************************************************************
 	 * Lists of the water cells used to schedule them 
