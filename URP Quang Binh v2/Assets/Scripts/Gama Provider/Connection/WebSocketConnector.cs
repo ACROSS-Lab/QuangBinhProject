@@ -6,28 +6,31 @@ using WebSocketSharp;
 public abstract class WebSocketConnector : MonoBehaviour
 {
 
-     protected string host ;
+    protected string DefaultIP = "localhost";
+    protected string DefaultPort = "8080";
+
+
+    protected string host ;
      protected string port;
 
     protected bool UseMiddleware; 
 
-    private WebSocket socket;
+    private WebSocket socket; 
 
 
-    protected bool UseHeartbeat = true; //only for middleware mode
+    protected int HeartbeatInMs = 5000; //only for middleware mode
     protected bool DesktopMode = false;
-    protected bool fixedProperties = true;
-    protected string DefaultIP = "localhost";
-    protected string DefaultPort = "8080";
-    protected bool UseMiddlewareDM = true; 
+    public bool fixedProperties = true;
+   protected bool UseMiddlewareDM = true;
 
-    public int numErrorsBeforeDeconnection = 10;
+    protected int numErrorsBeforeDeconnection = 10;
     protected int numErrors = 0;
 
     void OnEnable() {
        
        // port = PlayerPrefs.GetString("PORT"); 
-       // host = PlayerPrefs.GetString("IP");
+        host = PlayerPrefs.GetString("IP");
+        port = DefaultPort;
 
         if (DesktopMode)
         {
@@ -49,13 +52,27 @@ public abstract class WebSocketConnector : MonoBehaviour
             host = DefaultIP;
             port = DefaultPort;
             
+        } else
+        {
+            if (host == null && host.Length == 0)
+            {
+                host = DefaultIP;
+                
+            }
         }
         Debug.Log("WebSocketConnector host: " + host + " PORT: " + port + " MIDDLEWARE:" + UseMiddleware);
 
         socket = new WebSocket("ws://" + host + ":" + port + "/");
+        
+        // Enable the Per-message Compression extension.
+        // Saved some bandwidth
+        // Doesn't work on our specific installation : https://github.com/sta/websocket-sharp/issues/580
+        socket.Compression = CompressionMethod.None;//Deflate;
+        
         socket.OnOpen += HandleConnectionOpen;
         socket.OnMessage += HandleReceivedMessage;
         socket.OnClose += HandleConnectionClosed;
+        
     }
 
    void OnDestroy() {
