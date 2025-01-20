@@ -12,6 +12,10 @@ public class MoveHorizontal : InputData
     [SerializeField] private float speed = 10000.0f;
     [SerializeField] private float speedRotation = 10.0f;
     [SerializeField] private bool Strafe = false;
+    [SerializeField] private float minX = -450;
+    [SerializeField] private float maxX = 2975;
+    [SerializeField] private float minZ = -6900;
+    [SerializeField] private float maxZ = 250;
     public InputHelpers.Axis2D stick = InputHelpers.Axis2D.PrimaryAxis2D;
 
     // ############################################################
@@ -33,7 +37,10 @@ public class MoveHorizontal : InputData
         vectF.y = 0;
         vectF = Vector3.Normalize(vectF);
 
-        transform.position += (vectF * speed * Time.fixedDeltaTime * val.y);
+        Vector3 tempPosition = transform.position + (vectF * speed * Time.fixedDeltaTime * val.y);
+        
+        if (tempPosition.x >= minX && tempPosition.x <= maxX && tempPosition.z >= minZ && tempPosition.z <= maxZ)
+            transform.position += (vectF * speed * Time.fixedDeltaTime * val.y);
 
         if (Strafe)
         {
