@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Gama_Provider.Simulation;
 using QuickTest;
@@ -146,6 +147,8 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI timerText;
 
     protected float LastTime;
+
+    protected float RemainingSeconds;
    
     // ############################################ UNITY FUNCTIONS ############################################
     void Awake() {
@@ -323,17 +326,33 @@ public class SimulationManager : MonoBehaviour
                 timer.gameObject.SetActive(true);
                 Debug.Log("Remaining time: " + infoWorld.remaining_time);
                 timer.StartEnergizedEffect(infoWorld.remaining_time);
+                //RemainingSeconds = infoWorld.remaining_time;
+                StartCoroutine(CountdownCoroutine(infoWorld.remaining_time));
             }
             
             if (infoWorld.state == "s_init" || UIController.Instance.UI_EndingPhase_eng.activeSelf || UIController.Instance.UI_EndingPhase_viet.activeSelf)
                 timer.gameObject.SetActive(false);
             
             LastTime = infoWorld.remaining_time;
-            
-            TimeSpan timeSpan = TimeSpan.FromSeconds(Math.Max(0, (int)LastTime));
+
+            RemainingSeconds -= Time.unscaledDeltaTime;
+            //TimeSpan timeSpan = TimeSpan.FromSeconds(Math.Max(0, RemainingSeconds));
             Debug.Log("Remaining time span: " + Math.Max(0, (int)LastTime));
-            timerText.text = timeSpan.ToString(@"mm\:ss");
+            //timerText.text = timeSpan.ToString(@"mm\:ss");
         }
+    }
+    
+    private IEnumerator CountdownCoroutine(int currentTime)
+    {
+        while (currentTime > 0)
+        {
+            TimeSpan timeSpan = TimeSpan.FromSeconds(Math.Max(0, currentTime));
+            timerText.text = timeSpan.ToString(@"mm\:ss");
+            yield return new WaitForSecondsRealtime(1f); // Wait for 1 second, unaffected by time scale
+            currentTime--; // Decrease time
+        }
+
+        currentTime = 0;
     }
 
     private void Update()
