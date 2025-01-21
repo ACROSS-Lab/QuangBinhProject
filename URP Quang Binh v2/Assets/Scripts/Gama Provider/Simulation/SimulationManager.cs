@@ -149,6 +149,8 @@ public class SimulationManager : MonoBehaviour
     protected float LastTime;
 
     protected float RemainingSeconds;
+    
+    private Coroutine activeCoroutine = null;
    
     // ############################################ UNITY FUNCTIONS ############################################
     void Awake() {
@@ -299,6 +301,7 @@ public class SimulationManager : MonoBehaviour
 
                     }
                     DisplayFutureDike = false;
+                    Debug.Log("Display future dike is false at wait flooding");
                     StartFloodingDone = true;
                 }
 
@@ -326,8 +329,12 @@ public class SimulationManager : MonoBehaviour
                 timer.gameObject.SetActive(true);
                 Debug.Log("Remaining time: " + infoWorld.remaining_time);
                 timer.StartEnergizedEffect(infoWorld.remaining_time);
-                //RemainingSeconds = infoWorld.remaining_time;
-                StartCoroutine(CountdownCoroutine(infoWorld.remaining_time));
+                RemainingSeconds = infoWorld.remaining_time;
+                //TimeSpan timeSpan = TimeSpan.FromSeconds(RemainingSeconds);
+                //timerText.text = timeSpan.ToString(@"mm\:ss");
+                if (activeCoroutine != null)
+                    StopCoroutine(activeCoroutine);
+                activeCoroutine = StartCoroutine(CountdownCoroutine());
             }
             
             if (infoWorld.state == "s_init" || UIController.Instance.UI_EndingPhase_eng.activeSelf || UIController.Instance.UI_EndingPhase_viet.activeSelf)
@@ -335,24 +342,27 @@ public class SimulationManager : MonoBehaviour
             
             LastTime = infoWorld.remaining_time;
 
-            RemainingSeconds -= Time.unscaledDeltaTime;
+            //RemainingSeconds -= Time.unscaledDeltaTime;
             //TimeSpan timeSpan = TimeSpan.FromSeconds(Math.Max(0, RemainingSeconds));
             Debug.Log("Remaining time span: " + Math.Max(0, (int)LastTime));
             //timerText.text = timeSpan.ToString(@"mm\:ss");
+            
+            TimeSpan timeSpan = TimeSpan.FromSeconds(RemainingSeconds);
+            timerText.text = timeSpan.ToString(@"mm\:ss");
         }
     }
     
-    private IEnumerator CountdownCoroutine(int currentTime)
+    private IEnumerator CountdownCoroutine()
     {
-        while (currentTime > 0)
+        while (RemainingSeconds > 0)
         {
-            TimeSpan timeSpan = TimeSpan.FromSeconds(Math.Max(0, currentTime));
-            timerText.text = timeSpan.ToString(@"mm\:ss");
+            //TimeSpan timeSpan = TimeSpan.FromSeconds(RemainingSeconds);
+            //timerText.text = timeSpan.ToString(@"mm\:ss");
             yield return new WaitForSecondsRealtime(1f); // Wait for 1 second, unaffected by time scale
-            currentTime--; // Decrease time
+            RemainingSeconds--; // Decrease time
         }
 
-        currentTime = 0;
+        yield return null;
     }
 
     private void Update()
@@ -924,11 +934,18 @@ public class SimulationManager : MonoBehaviour
                    // startPoint.SetActive(true);
                     //endPoint.SetActive(false);
                     DisplayFutureDike = true;
+                    Debug.Log("Display future dike is true when selecting a point");
                 }
             }
             //_apiTest.TestDrawDykeWithParams(_startPoint, _endPoint);
             //_dykePointCnt = 0;
         }
+        
+        // if (DisplayFutureDike)
+        // {
+        //     Debug.Log("Display future dike is true at ProcessRightHandTrigger");
+        //     GenerateFutureDike();
+        // }
 
         if (rightHandTriggerButton != null && !rightHandTriggerButton.action.inProgress)
         {
@@ -941,6 +958,7 @@ public class SimulationManager : MonoBehaviour
                     endPoint.transform.position = _endPoint;
                    // endPoint.active = true;
                     DisplayFutureDike = false;
+                    Debug.Log("Display future dike is false when release the right hand");
                     if (FutureDike != null)
                     {
                         FutureDike.SetActive(false);
