@@ -176,10 +176,10 @@ public class UIController : MonoBehaviour
 
     public void RestartGame()
     {
-       if (InVietnamese)
+        if (InVietnamese)
             UI_EndingPhase_viet.SetActive(false);
         else UI_EndingPhase_eng.SetActive(false);
-        UI_ChoiceOfLanguage.SetActive(true);
+            UI_ChoiceOfLanguage.SetActive(true);
     }
 
 }
