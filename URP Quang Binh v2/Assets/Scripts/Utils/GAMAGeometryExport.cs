@@ -10,23 +10,22 @@ public class GAMAGeometryExport : ConnectionWithGama
 {
 
     protected ConnectionParameter parameters = null;
-    protected CoordinateConverter converter;
-
+    
     // optional: define a scale between GAMA and Unity for the location given
     public float GamaCRSCoefX = 1.0f;
     public float GamaCRSCoefY = 1.0f;
     public float GamaCRSOffsetX = 0.0f;
     public float GamaCRSOffsetY = 0.0f;
-    public static int precision;
 
     private bool continueProcess = true;
     GameObject objectToSend;
 
-
+    Dictionary<string, string> argsToSend = null;
 
     public void ManageGeometries(GameObject objectToSend_, string ip_, string port_, float x, float y, float ox, float oy)
     {
         objectToSend = objectToSend_;
+        if (objectToSend == null) return;
         parameters = null;
 
         ip = ip_;
@@ -35,44 +34,70 @@ public class GAMAGeometryExport : ConnectionWithGama
         GamaCRSCoefY = y;
         GamaCRSOffsetX = ox;
         GamaCRSOffsetY = oy;
+
+        UnityGeometry ug = new UnityGeometry(objectToSend, new CoordinateConverter(10000, x, y, ox, oy));
+
+        string message = ug.ToJSON();
+      
+        argsToSend = new Dictionary<string, string> {
+                    {"geoms", message}
+                  };
+
         socket = new WebSocket("ws://" + ip + ":" + port + "/");
 
-        socket.Connect();
-        continueProcess = true; 
+         continueProcess = true; 
 
+        socket.OnOpen += HandleConnectionOpen;
         socket.OnMessage += HandleReceivedMessage;
+        socket.OnClose += HandleConnectionClosed;
+        
+        // Enable the Per-message Compression extension.
+        // Saved some bandwidth
+        socket.Compression = CompressionMethod.None;//Deflate;
 
-       
-        System.Threading.Thread.Sleep(5000);
-        Dictionary<string, string> args = new Dictionary<string, string> {
-                    {"id", "geomExport"}
-                  };
-        SendExecutableAsk("create_init_player", args);
-        int i = 0;
+        socket.Connect();
+        
         while (continueProcess)
         {
-            i++;
-            ExportGeoms();
-            if (i > 50000) break;
-        }  
+            if (parameters != null)
+            {
+                ExportGeoms();
+                continueProcess = false;
+            }
+           
+        }
+       
     }
 
+    void HandleConnectionClosed(object sender, CloseEventArgs e)
+    {
+        continueProcess = false;
+    }
+
+    void HandleConnectionOpen(object sender, System.EventArgs e)
+    {
+        var jsonId = new Dictionary<string, string> {
+                {"type", "connection"},
+                { "id", "geomexporter" },
+                { "heartbeat", "5000"}
+            };
+        string jsonStringId = JsonConvert.SerializeObject(jsonId);
+        SendMessageToServer(jsonStringId, new Action<bool>((success) => {
+            if (success) { }
+        }));
+        Debug.Log("ConnectionManager: Connection opened");
+
+
+    }
 
     private void ExportGeoms()
     {
-        if (parameters != null && objectToSend != null)
+        Debug.Log("export Geom");
+        if (parameters != null )
         {
-            string message = "";
-            
-            UnityGeometry ug = new UnityGeometry(objectToSend, converter);
-         
-            message = ug.ToJSON();
-
-            Dictionary<string, string> args = new Dictionary<string, string> {
-                    {"geoms", message}
-                  };
+           
           
-            SendExecutableAsk("receive_geometries", args);
+            SendExecutableAsk("receive_geometries", argsToSend);
 
            
             continueProcess = false;
@@ -80,12 +105,10 @@ public class GAMAGeometryExport : ConnectionWithGama
         }
     }
 
-    private void HandleServerMessageReceived(String content)
+    void HandleServerMessageReceived(string firstKey, String content)
     {
 
-        string firstKey = "";
-        if (content.Contains("points"))
-            firstKey = "points";
+        if (content == null || content.Equals("{}")) return;
         else if (content.Contains("precision"))
             firstKey = "precision";
 
@@ -93,10 +116,7 @@ public class GAMAGeometryExport : ConnectionWithGama
         {
             // handle general informations about the simulation
             case "precision":
-
                 parameters = ConnectionParameter.CreateFromJSON(content);
-                converter = new CoordinateConverter(parameters.precision, GamaCRSCoefX, GamaCRSCoefY, GamaCRSOffsetX, GamaCRSOffsetY);
-                precision = parameters.precision;
                 Debug.Log("Received parameter data");
                 break;
 
@@ -105,8 +125,7 @@ public class GAMAGeometryExport : ConnectionWithGama
         }
 
     }
-
-    protected void HandleReceivedMessage(object sender, MessageEventArgs e)
+    void HandleReceivedMessage(object sender, MessageEventArgs e)
     {
 
         if (e.IsText)
@@ -115,16 +134,29 @@ public class GAMAGeometryExport : ConnectionWithGama
             string type = (string)jsonObj["type"];
 
 
-            if (type.Equals("SimulationOutput"))
+            if (type.Equals("json_output"))
             {
-                JValue content = (JValue)jsonObj["content"];
-                foreach (String mes in content.ToString().Split(MessageSeparator))
+                JObject content = (JObject)jsonObj["contents"];
+                String firstKey = content.Properties().Select(pp => pp.Name).FirstOrDefault();
+                HandleServerMessageReceived(firstKey, content.ToString());
+                 
+            } 
+            else if (type.Equals("json_state"))
+            {
+
+                Boolean inGame = (Boolean)jsonObj["in_game"];
+                if ( inGame)
                 {
-                    if (!mes.IsNullOrEmpty())
-                        HandleServerMessageReceived(mes);
+                    Dictionary<string, string> args = new Dictionary<string, string> {
+                         {"id", "geomexporter" }
+                    };
+                   
+                    SendExecutableAsk("send_init_data", args);
+
                 }
-            }
+            } 
         }
     }
+
 
 }

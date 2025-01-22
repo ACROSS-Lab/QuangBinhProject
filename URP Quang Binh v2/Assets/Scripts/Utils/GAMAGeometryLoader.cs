@@ -46,12 +46,17 @@ public class GAMAGeometryLoader: ConnectionWithGama
         offsetYBackgroundGeom = YOffset;
         socket = new WebSocket("ws://" + ip + ":" + port + "/");
         Debug.Log("ws://" + ip + ":" + port + "/");
-         continueProcess = true;
+
+        continueProcess = true;
 
         socket.OnMessage += HandleReceivedMessage;
         socket.OnOpen += HandleConnectionOpen;
-
-
+        socket.OnClose += HandleConnectionClosed;
+        
+        // Enable the Per-message Compression extension.
+        // Saved some bandwidth
+        socket.Compression = CompressionMethod.None;//Deflate;
+        
         socket.Connect();
 
         DateTime dt = DateTime.Now;
@@ -72,12 +77,17 @@ public class GAMAGeometryLoader: ConnectionWithGama
 
     }
 
+    void HandleConnectionClosed(object sender, CloseEventArgs e)
+    {
+        continueProcess = false;
+    }
+
     void HandleConnectionOpen(object sender, System.EventArgs e)
     {
             var jsonId = new Dictionary<string, string> {
                 {"type", "connection"},
                 { "id", "geomloader" },
-                { "set_heartbeat", "false" }
+                { "heartbeat", "5000" }
             };
             string jsonStringId = JsonConvert.SerializeObject(jsonId);
             SendMessageToServer(jsonStringId, new Action<bool>((success) => {
@@ -165,7 +175,7 @@ public class GAMAGeometryLoader: ConnectionWithGama
                 interaction = obj.AddComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRSimpleInteractable>();
 
 
-            }
+            } 
             if (interaction.colliders.Count == 0)
             {
                 Collider[] cs = obj.GetComponentsInChildren<Collider>();
@@ -223,8 +233,10 @@ public class GAMAGeometryLoader: ConnectionWithGama
                     polyGen.Init(converter);
                 }
                 List<int> pt = infoWorld.pointsGeom[cptGeom].c;
-
+                float YoffSet = (0.0f + infoWorld.offsetYGeom[cptGeom]) / (0.0f + parameters.precision);
+                
                 obj = polyGen.GeneratePolygons(true, name, pt, prop, parameters.precision);
+                obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + YoffSet, obj.transform.position.z);
                 if (prop.hasCollider)
                 {
 
@@ -314,9 +326,7 @@ public class GAMAGeometryLoader: ConnectionWithGama
                 if (infoWorld == null)
                 {
                     infoWorld = WorldJSONInfo.CreateFromJSON(content);
-                    //Debug.Log("Current poinstLoc infoWorld score: " + infoWorld.score);
-                    //Debug.Log("Current poinstLoc infoWorld budget: " + infoWorld.budget);
-                    //Debug.Log("Current pointsLoc ok_to_build_dyke: " + infoWorld.ok_build_dyke_with_unity);
+                   
                 }
                 break;
         }
@@ -342,7 +352,7 @@ public class GAMAGeometryLoader: ConnectionWithGama
             else if(type.Equals("json_state")) {
 
                 Boolean inGame = (Boolean)jsonObj["in_game"];
-                if (inGame != null && inGame)
+                if (inGame)
                 {
                     Dictionary<string, string> args = new Dictionary<string, string> {
                          {"id", "geomloader" }
