@@ -347,21 +347,22 @@ public class SimulationManager : MonoBehaviour
             Debug.Log("Remaining time span: " + Math.Max(0, (int)LastTime));
             //timerText.text = timeSpan.ToString(@"mm\:ss");
             
-            TimeSpan timeSpan = TimeSpan.FromSeconds(RemainingSeconds);
-            timerText.text = timeSpan.ToString(@"mm\:ss");
+            //TimeSpan timeSpan = TimeSpan.FromSeconds(RemainingSeconds);
+            //timerText.text = timeSpan.ToString(@"mm\:ss");
         }
     }
     
     private IEnumerator CountdownCoroutine()
     {
-        while (RemainingSeconds > 0)
+        do
         {
-            //TimeSpan timeSpan = TimeSpan.FromSeconds(RemainingSeconds);
-            //timerText.text = timeSpan.ToString(@"mm\:ss");
+            TimeSpan timeSpan = TimeSpan.FromSeconds(RemainingSeconds);
+            timerText.text = timeSpan.ToString(@"mm\:ss");
             yield return new WaitForSecondsRealtime(1f); // Wait for 1 second, unaffected by time scale
             RemainingSeconds--; // Decrease time
-        }
+        } while (RemainingSeconds >= 0);
 
+        RemainingSeconds = 0;
         yield return null;
     }
 
