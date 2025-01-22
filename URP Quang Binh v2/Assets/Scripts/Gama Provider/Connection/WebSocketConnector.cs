@@ -6,7 +6,8 @@ using WebSocketSharp;
 public abstract class WebSocketConnector : MonoBehaviour
 {
 
-    protected string DefaultIP = "localhost";
+    //protected string DefaultIP = "localhost";
+    protected string DefaultIP = "192.168.1.120";
     protected string DefaultPort = "8080";
 
 
