@@ -14,16 +14,17 @@ public class InputData : MonoBehaviour
         if (!_rightController.isValid || !_leftController.isValid || !_HMD.isValid)
             InitializeInputDevices();
     }
+
     private void InitializeInputDevices()
     {
-        
-        if(!_rightController.isValid)
-            InitializeInputDevice(InputDeviceCharacteristics.Controller | InputDeviceCharacteristics.Right, ref _rightController);
-        if (!_leftController.isValid) 
-            InitializeInputDevice(InputDeviceCharacteristics.Controller | InputDeviceCharacteristics.Left, ref _leftController);
-        if (!_HMD.isValid) 
+        if (!_rightController.isValid)
+            InitializeInputDevice(InputDeviceCharacteristics.Controller | InputDeviceCharacteristics.Right,
+                ref _rightController);
+        if (!_leftController.isValid)
+            InitializeInputDevice(InputDeviceCharacteristics.Controller | InputDeviceCharacteristics.Left,
+                ref _leftController);
+        if (!_HMD.isValid)
             InitializeInputDevice(InputDeviceCharacteristics.HeadMounted, ref _HMD);
-
     }
 
     private void InitializeInputDevice(InputDeviceCharacteristics inputCharacteristics, ref InputDevice inputDevice)
@@ -39,5 +40,4 @@ public class InputData : MonoBehaviour
             inputDevice = devices[0];
         }
     }
-
 }

@@ -12,8 +12,8 @@ public class ConnectionParameter
     public List<string> hotspots;
     public int minPlayerUpdateDuration;
 
-    public static ConnectionParameter CreateFromJSON(string jsonString) {
+    public static ConnectionParameter CreateFromJSON(string jsonString)
+    {
         return JsonUtility.FromJson<ConnectionParameter>(jsonString);
     }
-
 }

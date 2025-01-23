@@ -24,7 +24,7 @@ namespace Gama_Provider.Simulation
                 _indicatorTimer -= Time.deltaTime;
 
                 var currentRatio = _indicatorTimer / _maxIndicatorTimer;
-                
+
                 Debug.Log("Indicator time: " + _indicatorTimer);
                 Debug.Log("Max indicator time: " + _maxIndicatorTimer);
 
@@ -33,22 +33,21 @@ namespace Gama_Provider.Simulation
                     case > 0.75f:
                         _radialProgressBar.color = new Color(6 / 255f, 156 / 255f, 86 / 255f);
                         break;
-                    
+
                     case >= 0.25f and <= 0.75f:
-                        _radialProgressBar.color = new Color(255 / 255f, 152 / 255f, 14/255f);
+                        _radialProgressBar.color = new Color(255 / 255f, 152 / 255f, 14 / 255f);
                         break;
-                    
-                    case <0.25f:
+
+                    case < 0.25f:
                         _radialProgressBar.color = new Color(211 / 255f, 33 / 255f, 44 / 255f);
                         break;
                 }
-                
+
                 _radialProgressBar.fillAmount = _indicatorTimer / _maxIndicatorTimer;
                 Debug.Log("_radialProgressBar.fillAmount: " + _radialProgressBar.fillAmount);
 
                 if (_indicatorTimer / _maxIndicatorTimer <= 0.5f)
                 {
-                    
                 }
 
                 if (_indicatorTimer <= 0)

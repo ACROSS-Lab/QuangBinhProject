@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-
 [System.Serializable]
 public class TeleoportAreaInfo
 {
@@ -18,5 +17,4 @@ public class TeleoportAreaInfo
     {
         return JsonUtility.FromJson<TeleoportAreaInfo>(jsonString);
     }
-
 }

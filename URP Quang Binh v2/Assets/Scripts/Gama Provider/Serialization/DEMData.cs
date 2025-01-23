@@ -5,7 +5,6 @@ using UnityEngine;
 [System.Serializable]
 public class DEMData
 {
-
     public List<Row> rows;
     public string id;
     public int valMax;
@@ -16,7 +15,6 @@ public class DEMData
     {
         return JsonUtility.FromJson<DEMData>(jsonString);
     }
-
 }
 
 
@@ -25,7 +23,3 @@ public class Row
 {
     public List<int> h;
 }
-
-
-
-

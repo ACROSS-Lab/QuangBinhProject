@@ -1,17 +1,13 @@
-
 using UnityEngine;
 using WebSocketSharp;
 using System;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
-
-
 using Newtonsoft.Json;
 using System.Linq;
 
-public class GAMAGeometryLoader: ConnectionWithGama
+public class GAMAGeometryLoader : ConnectionWithGama
 {
-   
     // optional: define a scale between GAMA and Unity for the location given
     public float offsetYBackgroundGeom = 0.0f;
     protected WorldJSONInfo infoWorld;
@@ -37,7 +33,7 @@ public class GAMAGeometryLoader: ConnectionWithGama
 
     public void GenerateGeometries(string ip_, string port_, float x, float y, float ox, float oy, float YOffset)
     {
-       ip = ip_;
+        ip = ip_;
         port = port_;
         GamaCRSCoefX = x;
         GamaCRSCoefY = y;
@@ -52,29 +48,29 @@ public class GAMAGeometryLoader: ConnectionWithGama
         socket.OnMessage += HandleReceivedMessage;
         socket.OnOpen += HandleConnectionOpen;
         socket.OnClose += HandleConnectionClosed;
-        
+
         // Enable the Per-message Compression extension.
         // Saved some bandwidth
-        socket.Compression = CompressionMethod.None;//Deflate;
-        
+        socket.Compression = CompressionMethod.None; //Deflate;
+
         socket.Connect();
 
         DateTime dt = DateTime.Now;
         dt = dt.AddSeconds(60);
-        while (continueProcess) {
+        while (continueProcess)
+        {
             if (infoWorld != null)
             {
                 generateGeom();
                 continueProcess = false;
             }
+
             if (DateTime.Now.CompareTo(dt) >= 0)
             {
                 Debug.Log("end");
                 break;
             }
         }
-         
-
     }
 
     void HandleConnectionClosed(object sender, CloseEventArgs e)
@@ -84,18 +80,20 @@ public class GAMAGeometryLoader: ConnectionWithGama
 
     void HandleConnectionOpen(object sender, System.EventArgs e)
     {
-            var jsonId = new Dictionary<string, string> {
-                {"type", "connection"},
-                { "id", "geomloader" },
-                { "heartbeat", "5000" }
-            };
-            string jsonStringId = JsonConvert.SerializeObject(jsonId);
-            SendMessageToServer(jsonStringId, new Action<bool>((success) => {
-                if (success) { }
-            }));
-            Debug.Log("ConnectionManager: Connection opened");
-        
-
+        var jsonId = new Dictionary<string, string>
+        {
+            { "type", "connection" },
+            { "id", "geomloader" },
+            { "heartbeat", "5000" }
+        };
+        string jsonStringId = JsonConvert.SerializeObject(jsonId);
+        SendMessageToServer(jsonStringId, new Action<bool>((success) =>
+        {
+            if (success)
+            {
+            }
+        }));
+        Debug.Log("ConnectionManager: Connection opened");
     }
 
 
@@ -105,6 +103,7 @@ public class GAMAGeometryLoader: ConnectionWithGama
         {
             prop.loadPrefab(parameters.precision);
         }
+
         GameObject obj = Instantiate(prop.prefabObj);
         float scale = ((float)prop.size) / parameters.precision;
         obj.transform.localScale = new Vector3(scale, scale, scale);
@@ -122,7 +121,6 @@ public class GAMAGeometryLoader: ConnectionWithGama
                     // b.name = obj.name;
                     //bc.isTrigger = prop.isTrigger;
                 }
-
             }
             else
             {
@@ -130,8 +128,10 @@ public class GAMAGeometryLoader: ConnectionWithGama
                 // bc.isTrigger = prop.isTrigger;
             }
         }
+
         List<object> pL = new List<object>();
-        pL.Add(obj); pL.Add(prop);
+        pL.Add(obj);
+        pL.Add(prop);
         instantiateGO(obj, name, prop);
         return obj;
     }
@@ -140,7 +140,7 @@ public class GAMAGeometryLoader: ConnectionWithGama
     private void instantiateGO(GameObject obj, String name, PropertiesGAMA prop)
     {
         obj.name = name;
-       
+
         if (prop.tag != null && !string.IsNullOrEmpty(prop.tag))
             obj.tag = prop.tag;
 
@@ -166,16 +166,12 @@ public class GAMAGeometryLoader: ConnectionWithGama
                     if (prop.constraints[5])
                         rb.constraints = rb.constraints | RigidbodyConstraints.FreezeRotationZ;
                 }
-
-
             }
-            else 
+            else
             {
-
                 interaction = obj.AddComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRSimpleInteractable>();
+            }
 
-
-            } 
             if (interaction.colliders.Count == 0)
             {
                 Collider[] cs = obj.GetComponentsInChildren<Collider>();
@@ -187,21 +183,15 @@ public class GAMAGeometryLoader: ConnectionWithGama
                     }
                 }
             }
-           
-
         }
     }
-
-
-
-
 
 
     void GenerateGeometries()
     {
         Debug.Log("GenerateGeometries");
         Dictionary<PropertiesGAMA, List<GameObject>> mapObjects = new Dictionary<PropertiesGAMA, List<GameObject>>();
-       int cptPrefab = 0;
+        int cptPrefab = 0;
         int cptGeom = 0;
         for (int i = 0; i < infoWorld.names.Count; i++)
         {
@@ -213,9 +203,9 @@ public class GAMAGeometryLoader: ConnectionWithGama
 
             if (prop.hasPrefab)
             {
-                obj = instantiatePrefab(name, prop); 
-                
-                
+                obj = instantiatePrefab(name, prop);
+
+
                 List<int> pt = infoWorld.pointsLoc[cptPrefab].c;
                 Vector3 pos = converter.fromGAMACRS(pt[0], pt[1], pt[2]);
                 pos.y += pos.y + prop.yOffsetF;
@@ -223,7 +213,6 @@ public class GAMAGeometryLoader: ConnectionWithGama
                 obj.transform.SetPositionAndRotation(pos, Quaternion.AngleAxis(rot, Vector3.up));
                 //obj.SetActive(true);
                 cptPrefab++;
-
             }
             else
             {
@@ -232,19 +221,21 @@ public class GAMAGeometryLoader: ConnectionWithGama
                     polyGen = PolygonGenerator.GetInstance();
                     polyGen.Init(converter);
                 }
+
                 List<int> pt = infoWorld.pointsGeom[cptGeom].c;
                 float YoffSet = (0.0f + infoWorld.offsetYGeom[cptGeom]) / (0.0f + parameters.precision);
-                
+
                 obj = polyGen.GeneratePolygons(true, name, pt, prop, parameters.precision);
-                obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + YoffSet, obj.transform.position.z);
+                obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + YoffSet,
+                    obj.transform.position.z);
                 if (prop.hasCollider)
                 {
-
                     MeshCollider mc = obj.AddComponent<MeshCollider>();
                     if (prop.isGrabable)
                     {
                         mc.convex = true;
                     }
+
                     mc.sharedMesh = polyGen.surroundMesh;
                     // mc.isTrigger = prop.isTrigger;
                 }
@@ -252,22 +243,22 @@ public class GAMAGeometryLoader: ConnectionWithGama
                 instantiateGO(obj, name, prop);
                 // polyGen.surroundMesh = null;
 
-               
+
                 List<object> pL = new List<object>();
-                pL.Add(obj); pL.Add(prop);
+                pL.Add(obj);
+                pL.Add(prop);
                 //obj.SetActive(true);
                 cptGeom++;
-
             }
+
             if (obj != null)
             {
                 if (!mapObjects.ContainsKey(prop))
                     mapObjects[prop] = new List<GameObject>();
                 mapObjects[prop].Add(obj);
             }
-
-
         }
+
         GameObject n = new GameObject("GENERATED");
         foreach (PropertiesGAMA p in mapObjects.Keys)
         {
@@ -276,40 +267,35 @@ public class GAMAGeometryLoader: ConnectionWithGama
             foreach (GameObject o in mapObjects[p])
             {
                 o.transform.parent = g.transform;
-
             }
         }
+
         infoWorld = null;
     }
 
 
-
     private void generateGeom()
     {
-
-
-       if (parameters != null && converter != null )
+        if (parameters != null && converter != null)
         {
-
             GenerateGeometries();
             continueProcess = false;
-
         }
     }
 
     void HandleServerMessageReceived(string firstKey, String content)
     {
-
         if (content == null || content.Equals("{}")) return;
-     
+
         switch (firstKey)
         {
             // handle general informations about the simulation
             case "precision":
 
                 parameters = ConnectionParameter.CreateFromJSON(content);
-                converter = new CoordinateConverter(parameters.precision, GamaCRSCoefX, GamaCRSCoefY, GamaCRSCoefY, GamaCRSOffsetX, GamaCRSOffsetY, 1.0f);
-    
+                converter = new CoordinateConverter(parameters.precision, GamaCRSCoefX, GamaCRSCoefY, GamaCRSCoefY,
+                    GamaCRSOffsetX, GamaCRSOffsetY, 1.0f);
+
                 break;
 
             case "properties":
@@ -319,6 +305,7 @@ public class GAMAGeometryLoader: ConnectionWithGama
                 {
                     propertyMap.Add(p.id, p);
                 }
+
                 break;
 
             // handle agents while simulation is running
@@ -326,43 +313,38 @@ public class GAMAGeometryLoader: ConnectionWithGama
                 if (infoWorld == null)
                 {
                     infoWorld = WorldJSONInfo.CreateFromJSON(content);
-                   
                 }
+
                 break;
         }
+    }
 
-    
-
-}
-   void HandleReceivedMessage(object sender, MessageEventArgs e)
+    void HandleReceivedMessage(object sender, MessageEventArgs e)
     {
-
         if (e.IsText)
         {
             JObject jsonObj = JObject.Parse(e.Data);
             string type = (string)jsonObj["type"];
-         
+
             if (type.Equals("json_output"))
             {
                 JObject content = (JObject)jsonObj["contents"];
                 String firstKey = content.Properties().Select(pp => pp.Name).FirstOrDefault();
                 HandleServerMessageReceived(firstKey, content.ToString());
-
             }
-            else if(type.Equals("json_state")) {
-
+            else if (type.Equals("json_state"))
+            {
                 Boolean inGame = (Boolean)jsonObj["in_game"];
                 if (inGame)
                 {
-                    Dictionary<string, string> args = new Dictionary<string, string> {
-                         {"id", "geomloader" }
+                    Dictionary<string, string> args = new Dictionary<string, string>
+                    {
+                        { "id", "geomloader" }
                     };
-                   
-                    SendExecutableAsk("send_init_data", args);
 
+                    SendExecutableAsk("send_init_data", args);
                 }
             }
-        } 
+        }
     }
-
 }

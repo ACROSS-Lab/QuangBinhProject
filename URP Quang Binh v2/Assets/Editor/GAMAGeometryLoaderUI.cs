@@ -67,10 +67,9 @@ public class GAMAGeometryLoaderUI : EditorWindow
                
 
             }*/
-             
 
             loader = new GAMAGeometryLoader(); 
-             loader.GenerateGeometries(ip, port, GamaCRSCoefX, GamaCRSCoefY, GamaCRSOffsetX, GamaCRSOffsetY, offsetYBackgroundGeom);
+            loader.GenerateGeometries(ip, port, GamaCRSCoefX, GamaCRSCoefY, GamaCRSOffsetX, GamaCRSOffsetY, offsetYBackgroundGeom);
 
 
             Close();

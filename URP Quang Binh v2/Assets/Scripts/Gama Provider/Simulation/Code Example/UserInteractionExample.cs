@@ -1,15 +1,11 @@
-
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 
 public class UserInteractionExample : SimulationManager
 {
-  
-
     protected override void HoverEnterInteraction(HoverEnterEventArgs ev)
     {
-
         GameObject obj = ev.interactableObject.transform.gameObject;
         if (obj.tag.Equals("selectable"))
             ChangeColor(obj, Color.blue);
@@ -28,16 +24,16 @@ public class UserInteractionExample : SimulationManager
 
     protected override void SelectInteraction(SelectEnterEventArgs ev)
     {
-
         if (remainingTime <= 0.0)
         {
             GameObject grabbedObject = ev.interactableObject.transform.gameObject;
 
             if (("selectable").Equals(grabbedObject.tag))
             {
-                Dictionary<string, string> args = new Dictionary<string, string> {
-                         {"id", grabbedObject.name }
-                    };
+                Dictionary<string, string> args = new Dictionary<string, string>
+                {
+                    { "id", grabbedObject.name }
+                };
                 ConnectionManager.Instance.SendExecutableAsk("select_object", args);
                 bool newSelection = !SelectedObjects.Contains(grabbedObject);
                 if (newSelection)
@@ -48,8 +44,6 @@ public class UserInteractionExample : SimulationManager
 
                 remainingTime = timeWithoutInteraction;
             }
-           
         }
-
     }
 }

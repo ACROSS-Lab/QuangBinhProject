@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-
 [System.Serializable]
 public class WallInfo
 {
@@ -18,5 +17,4 @@ public class WallInfo
     {
         return JsonUtility.FromJson<WallInfo>(jsonString);
     }
-
 }

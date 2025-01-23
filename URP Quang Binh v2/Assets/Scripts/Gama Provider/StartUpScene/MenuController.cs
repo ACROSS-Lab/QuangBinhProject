@@ -1,4 +1,3 @@
-
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
@@ -15,30 +14,27 @@ public class MenuController : MonoBehaviour
 
     public void Start()
     {
-
         textMP = GameObject.FindGameObjectWithTag("textIP").GetComponent<TextMeshProUGUI>();
         m_Toggle = GameObject.FindGameObjectWithTag("useMiddleWare").GetComponent<Toggle>();
         GameObject ob = GameObject.FindGameObjectWithTag("textPN");
         TextMeshProUGUI textPN = ob.GetComponent<TextMeshProUGUI>();
         textPN.text = "Player id: " + StaticInformation.getId();
-       
+
         if (!PlayerPrefs.HasKey("MIDDLEWARE") || PlayerPrefs.GetString("MIDDLEWARE").Length == 0)
             PlayerPrefs.SetString("MIDDLEWARE", "N");
         useMiddleWare = PlayerPrefs.GetString("MIDDLEWARE").Equals("Y");
         m_Toggle.SetIsOnWithoutNotify(useMiddleWare);
 
         string port = useMiddleWare ? portWithMiddleware : portWithoutMiddleware;
-       
+
         string ip = PlayerPrefs.GetString("IP");
         if (ip.Length == 0)
         {
             ip = host;
             PlayerPrefs.SetString("IP", ip);
         }
+
         textMP.text = "Current IP: " + ip + "/" + port;
-
-        
-
     }
 
     public void OnValueMiddleWare()
@@ -46,11 +42,11 @@ public class MenuController : MonoBehaviour
         useMiddleWare = m_Toggle.isOn;
         string port = useMiddleWare ? portWithMiddleware : portWithoutMiddleware;
         textMP.text = "Current IP: " + PlayerPrefs.GetString("IP") + ":" + port;
-
     }
+
     public void StartBtn()
     {
-        PlayerPrefs.SetString("MIDDLEWARE", useMiddleWare ? "Y" : "N") ;
+        PlayerPrefs.SetString("MIDDLEWARE", useMiddleWare ? "Y" : "N");
         string port = useMiddleWare ? portWithMiddleware : portWithoutMiddleware;
         PlayerPrefs.SetString("PORT", port);
         SceneManager.LoadScene("Main Scene - Flood");

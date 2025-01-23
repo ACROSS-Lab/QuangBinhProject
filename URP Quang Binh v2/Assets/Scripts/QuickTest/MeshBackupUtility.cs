@@ -76,6 +76,7 @@ namespace QuickTest
                 {
                     mesh.RecalculateNormals();
                 }
+
                 mesh.RecalculateBounds();
 
                 // Mark dynamic if needed
@@ -96,12 +97,13 @@ namespace QuickTest
     [System.Serializable]
     public class MeshData
     {
-        public Vector3[] vertices;    // Vertex positions
-        public int[] triangles;       // Triangle indices
-        public Vector3[] normals;     // Normals for lighting
-        public Vector2[] uv;          // UV coordinates for texturing
-        public Vector4[] tangents;    // Tangents for normal mapping
-        public Color[] colors;        // Vertex colors, if used
+        public Vector3[] vertices; // Vertex positions
+        public int[] triangles; // Triangle indices
+        public Vector3[] normals; // Normals for lighting
+        public Vector2[] uv; // UV coordinates for texturing
+        public Vector4[] tangents; // Tangents for normal mapping
+
+        public Color[] colors; // Vertex colors, if used
         //public int[][] submeshes;     // Submesh triangle arrays
     }
 }

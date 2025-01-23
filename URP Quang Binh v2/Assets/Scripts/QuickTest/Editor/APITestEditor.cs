@@ -16,7 +16,7 @@ namespace QuickTest.Editor
             {
                 apiTest.TestSetStartPressed();
             }
-            
+
             if (GUILayout.Button("Set in tutorial"))
             {
                 apiTest.TestSetInTutorial();

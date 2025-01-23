@@ -2,10 +2,9 @@
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR;
 
-public class MoveVertical  : InputData
+public class MoveVertical : InputData
 {
-    
-    public float Speed = 10000.0f; 
+    public float Speed = 10000.0f;
     public bool RightHand = false;
 
     public float minY = 0.0f;
@@ -13,7 +12,7 @@ public class MoveVertical  : InputData
 
     public InputHelpers.Axis2D stick = InputHelpers.Axis2D.PrimaryAxis2D;
 
-   
+
     private void FixedUpdate()
     {
         if (SimulationManager.Instance.IsGameState(GameState.GAME))
@@ -22,7 +21,8 @@ public class MoveVertical  : InputData
         }
     }
 
-    private void MoveVertially() {
+    private void MoveVertially()
+    {
         InputDevice hand = RightHand ? _rightController : _leftController;
         Vector2 val;
         hand.TryReadAxis2DValue(stick, out val);
@@ -30,12 +30,12 @@ public class MoveVertical  : InputData
         if (transform.position.y < minY)
         {
             Vector3 v = new Vector3(transform.position.x, minY, transform.position.z);
-            transform.position = v ;
+            transform.position = v;
         }
         else if (transform.position.y > maxY)
         {
             Vector3 v = new Vector3(transform.position.x, maxY, transform.position.z);
-            transform.position = v ;
+            transform.position = v;
         }
     }
-}   
+}

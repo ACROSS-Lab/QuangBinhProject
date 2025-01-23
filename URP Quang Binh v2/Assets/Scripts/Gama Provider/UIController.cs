@@ -1,9 +1,9 @@
 ﻿using UnityEngine;
 using QuickTest;
 using UnityEngine.UI;
+
 public class UIController : MonoBehaviour
 {
-
     public static UIController Instance = null;
     public GameObject UI_ChoiceOfLanguage;
     public GameObject UI_DykingPhase_eng;
@@ -12,10 +12,10 @@ public class UIController : MonoBehaviour
     public GameObject UI_DykingPhase_viet;
     public GameObject UI_FloodingPhase_viet;
     public GameObject UI_EndingPhase_viet;
-    public Text TextEndEng; 
+    public Text TextEndEng;
     public Text TextEndViet;
 
-   
+
     protected float TimeForDisplayingFloodUI = 2.0f; // in second
     protected float TimerForDisplayingFloodUI = 0.0f;
 
@@ -29,11 +29,13 @@ public class UIController : MonoBehaviour
     public bool DikingStart = false;
 
     public GameObject globalVolume;
+
     // Use this for initialization
     void Start()
     {
         Instance = this;
     }
+
     public void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space) && DikingStart)
@@ -46,14 +48,17 @@ public class UIController : MonoBehaviour
             globalVolume.SetActive(false);
             SetInVietnamese(false);
         }
+
         if (Input.GetKeyDown(KeyCode.Space) && UI_DykingPhase_eng.active)
         {
             StartDikingPhase();
         }
+
         if (Input.GetKeyDown(KeyCode.Space) && UI_EndingPhase_eng.active)
         {
             RestartGame();
         }
+
         if (FloodingPhase)
         {
             globalVolume.SetActive(true);
@@ -72,16 +77,18 @@ public class UIController : MonoBehaviour
                 {
                     UI_FloodingPhase_eng.SetActive(false);
                 }
-               
-                if(FloodingInitPhase) {
+
+                if (FloodingInitPhase)
+                {
                     FloodingInitPhase = false;
                     APITest.Instance.TestSetStartPressed();
-                } else
+                }
+                else
                 {
                     APITest.Instance.TestSetInFlood();
                     FloodingInitPhase = true;
-                } 
-                    
+                }
+
                 FloodingPhase = false;
             }
         }
@@ -89,8 +96,8 @@ public class UIController : MonoBehaviour
         {
             globalVolume.SetActive(false);
         }
-       
     }
+
     public void SetInVietnamese(bool value)
     {
         InVietnamese = value;
@@ -100,13 +107,13 @@ public class UIController : MonoBehaviour
         if (InVietnamese)
         {
             UI_FloodingPhase_viet.SetActive(true);
-        } else
+        }
+        else
         {
             UI_FloodingPhase_eng.SetActive(true);
         }
+
         FloodingPhase = true;
-
-
     }
 
     public void StartMenuDikingPhase()
@@ -115,6 +122,7 @@ public class UIController : MonoBehaviour
             UI_DykingPhase_viet.SetActive(true);
         else UI_DykingPhase_eng.SetActive(true);
     }
+
     public void StartDikingPhase()
     {
         DikingStart = true;
@@ -123,8 +131,6 @@ public class UIController : MonoBehaviour
             UI_DykingPhase_viet.SetActive(false);
         else UI_DykingPhase_eng.SetActive(false);
         APITest.Instance.TestSetInGame();
-
-
     }
 
     public void StartFloodingPhase()
@@ -138,7 +144,6 @@ public class UIController : MonoBehaviour
             GameObject.DestroyImmediate(SimulationManager.Instance.FutureDike);
 
             SimulationManager.Instance.FutureDike = null;
-
         }
 
         TimerForDisplayingFloodUI = TimeForDisplayingFloodUI;
@@ -151,13 +156,10 @@ public class UIController : MonoBehaviour
         {
             UI_FloodingPhase_eng.SetActive(true);
         }
-
-
     }
 
     public void EndGame(int score)
     {
-
         if (InVietnamese)
         {
             TextEndViet.text = ("" + score + "%");
@@ -175,8 +177,6 @@ public class UIController : MonoBehaviour
         if (InVietnamese)
             UI_EndingPhase_viet.SetActive(false);
         else UI_EndingPhase_eng.SetActive(false);
-            UI_ChoiceOfLanguage.SetActive(true);
+        UI_ChoiceOfLanguage.SetActive(true);
     }
-
 }
- 

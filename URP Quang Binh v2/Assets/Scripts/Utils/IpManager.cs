@@ -25,11 +25,11 @@ public class IpManager : MonoBehaviour
         ready = true;
         aTimer.Stop();
         aTimer = null;
-
     }
 
     // Start is called before the first frame update
-    void Start() {
+    void Start()
+    {
         string ip = PlayerPrefs.GetString("IP");
         if (NotValid(ip))
             ip = "127.0.0.1";
@@ -43,46 +43,45 @@ public class IpManager : MonoBehaviour
 
         aTimer.AutoReset = false;
         aTimer.Enabled = true;
-       PlayerPrefs.SetString("IP", ip);
-       PlayerPrefs.Save();
+        PlayerPrefs.SetString("IP", ip);
+        PlayerPrefs.Save();
     }
 
 
-    public void OnTriggerEnterBtn(Text text) {
+    public void OnTriggerEnterBtn(Text text)
+    {
         string t = text.text;
 
         if (ready)
         {
             playerTextOutput.text += t;
-                
         }
     }
 
-    public void OnTriggerEnterValidate() {
-
-        if (ready) {
+    public void OnTriggerEnterValidate()
+    {
+        if (ready)
+        {
             PlayerPrefs.SetString("IP", playerTextOutput.text);
             PlayerPrefs.Save();
             SceneManager.LoadScene("Startup Menu");
         }
     }
 
-    public void OnTriggerEnterCancel() {
-
+    public void OnTriggerEnterCancel()
+    {
         if (ready)
         {
             SceneManager.LoadScene("Startup Menu");
         }
     }
-    
 
-    public void OnTriggerEnterDelete() {
 
+    public void OnTriggerEnterDelete()
+    {
         if (ready && playerTextOutput.text.Length > 0)
         {
             playerTextOutput.text = playerTextOutput.text.Substring(0, playerTextOutput.text.Length - 1);
-            
         }
     }
-
 }

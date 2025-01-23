@@ -6,9 +6,8 @@ namespace Gama_Provider.Simulation
     public class StatusEffectManager : MonoBehaviour
     {
         public GameObject energizedEffect;
-        
-        [SerializeField]
-        private float duration;
+
+        [SerializeField] private float duration;
 
         private void Start()
         {

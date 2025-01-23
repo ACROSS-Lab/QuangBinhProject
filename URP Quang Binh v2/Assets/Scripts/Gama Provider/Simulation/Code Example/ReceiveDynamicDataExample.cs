@@ -8,8 +8,6 @@ using UnityEngine.InputSystem;
 
 public class ReceiveDynamicDataExample : SimulationManager
 {
-
-
     protected override void ManageAttributes(List<Attributes> attributes)
     {
         for (int i = 0; i < infoWorld.names.Count; i++)
@@ -31,6 +29,5 @@ public class ReceiveDynamicDataExample : SimulationManager
                 ChangeColor(obj, Color.red);
             }
         }
-        
     }
 }

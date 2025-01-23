@@ -3,8 +3,6 @@ using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR;
 
 
-
-
 public class MoveHorizontal : InputData
 {
     public bool RightHand = true;
@@ -38,7 +36,7 @@ public class MoveHorizontal : InputData
         vectF = Vector3.Normalize(vectF);
 
         Vector3 tempPosition = transform.position + (vectF * speed * Time.fixedDeltaTime * val.y);
-        
+
         if (tempPosition.x >= minX && tempPosition.x <= maxX && tempPosition.z >= minZ && tempPosition.z <= maxZ)
             transform.position += (vectF * speed * Time.fixedDeltaTime * val.y);
 
@@ -52,7 +50,6 @@ public class MoveHorizontal : InputData
         }
         else
         {
-
             transform.Rotate(new Vector3(0, 1, 0), Time.fixedDeltaTime * speedRotation * val.x);
         }
     }

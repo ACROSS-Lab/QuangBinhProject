@@ -5,9 +5,8 @@ using UnityEngine;
 [System.Serializable]
 public class AnimationInfo
 {
-
     public List<string> names;
-   
+
 
     public List<string> triggers;
     public List<ParameterVal> parameters;
@@ -15,8 +14,7 @@ public class AnimationInfo
     public static AnimationInfo CreateFromJSON(string jsonString)
     {
         return JsonUtility.FromJson<AnimationInfo>(jsonString);
-    } 
-
+    }
 }
 
 
@@ -37,7 +35,4 @@ public class ParameterVal
             return intVal;
         return boolVal;
     }
-        
 }
-
-

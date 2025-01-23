@@ -5,7 +5,6 @@ using UnityEngine;
 [System.Serializable]
 public class WorldJSONInfo
 {
-
     public List<int> position;
     public List<string> names;
     public List<string> keepNames;
@@ -36,8 +35,7 @@ public class WorldJSONInfo
     {
         return attributes[names.IndexOf(name)];
     }
-
-} 
+}
 
 
 [System.Serializable]
@@ -45,5 +43,3 @@ public class GAMAPoint
 {
     public List<int> c;
 }
-
-
