@@ -92,12 +92,10 @@ public class SimulationManager : MonoBehaviour
 
     protected bool readyToSendPosition = false;
 
-    protected float TimeSendPosition = 1.0f;
+    protected float TimeSendPosition = 0.05f;
     protected float TimeSendPositionAfterMoving = 1.0f;
     protected float TimerSendPosition = 0.0f;
-
-    protected int _dykePointCnt = 0;
-
+    
     protected Vector3 _startPoint;
     protected Vector3 _endPoint;
 
@@ -110,8 +108,7 @@ public class SimulationManager : MonoBehaviour
     //[SerializeField] protected Button startButton;
     [SerializeField] protected Text movementText;
     [SerializeField] protected Text timeText;
-    [SerializeField] protected int maximumTimeToBuild;
-    protected bool mustNotBuildDyke = false;
+
     //protected float StartTime;
     protected Vector3 originalStartPosition;
     protected bool firstPositionStored;
@@ -172,9 +169,7 @@ public class SimulationManager : MonoBehaviour
             endPoint.SetActive(false);
         if (startPoint != null)
             startPoint.SetActive(false);
-
-        maximumTimeToBuild += (int)Time.time;
-
+        
         propFutureDike = new PropertiesGAMA();
         propFutureDike.red = 0;
         propFutureDike.blue = 0;
@@ -695,6 +690,8 @@ public class SimulationManager : MonoBehaviour
        
         ConnectionManager.Instance.SendExecutableAsk("move_player_external", args);
 
+        TimerSendPosition = TimeSendPosition;
+        
         if (Math.Abs(originalStartPosition.x - v.x) >= 0.1 ||
             Math.Abs(originalStartPosition.z - v.z) >= 0.1)
         {
@@ -928,7 +925,7 @@ public class SimulationManager : MonoBehaviour
 
                 parameters = ConnectionParameter.CreateFromJSON(content);
                 converter = new CoordinateConverter(parameters.precision, GamaCRSCoefX, GamaCRSCoefY, GamaCRSCoefY, GamaCRSOffsetX, GamaCRSOffsetY, GamaCRSOffsetZ);
-
+                TimeSendPosition = (0.0f + parameters.minPlayerUpdateDuration) / (parameters.precision + 0.0f);
                 Debug.Log("SimulationManager: Received simulation parameters");
                 // Init ground and player
                 // await Task.Run(() => InitGroundParameters());
