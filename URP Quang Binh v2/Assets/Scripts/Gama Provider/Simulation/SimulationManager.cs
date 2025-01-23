@@ -29,10 +29,9 @@ public class SimulationManager : MonoBehaviour
     // optional: define a scale between GAMA and Unity for the location given
     [Header("Coordinate conversion parameters")] [SerializeField]
     protected float GamaCRSCoefX = 1.0f;
-
-    [SerializeField] protected float GamaCRSCoefY = 1.0f;
-    [SerializeField] protected float GamaCRSOffsetX = 0.0f;
-    [SerializeField] protected float GamaCRSOffsetY = 0.0f;
+    protected float GamaCRSCoefY = 1.0f;
+    protected float GamaCRSOffsetX = 0.0f;
+    protected float GamaCRSOffsetY = 0.0f;
 
     protected Boolean StartMenuDone = false;
     private string currentStage = "s_start";
@@ -53,16 +52,15 @@ public class SimulationManager : MonoBehaviour
 
     // called when the game is restarted
     public static event Action OnGameRestarted;
-
-    protected List<GameObject> SelectedObjects;
+    
 
     // called when the world data is received
-    //    public static event Action<WorldJSONInfo> OnWorldDataReceived;
+    // public static event Action<WorldJSONInfo> OnWorldDataReceived;
     // ########################################################################
 
     protected Dictionary<string, List<object>> geometryMap;
     protected Dictionary<string, PropertiesGAMA> propertyMap = null;
-
+    protected List<GameObject> SelectedObjects;
 
     protected bool handleGeometriesRequested;
     protected bool handleGroundParametersRequested;
@@ -89,6 +87,7 @@ public class SimulationManager : MonoBehaviour
     protected List<GameObject> toDelete;
 
     protected bool readyToSendPosition = false;
+    protected bool readyToSendPositionInit = true;
 
     protected float TimeSendPosition = 0.05f;
     protected float TimeSendPositionAfterMoving = 1.0f;
@@ -105,8 +104,6 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] protected Text modalText;
 
     //[SerializeField] protected Button startButton;
-    [SerializeField] protected Text movementText;
-    [SerializeField] protected Text timeText;
 
     //protected float StartTime;
     protected Vector3 originalStartPosition;
@@ -354,12 +351,16 @@ public class SimulationManager : MonoBehaviour
                 //timerText.text = timeSpan.ToString(@"mm\:ss");
                 if (activeCoroutine != null)
                     StopCoroutine(activeCoroutine);
+                timerText.gameObject.SetActive(true);
                 activeCoroutine = StartCoroutine(CountdownCoroutine());
             }
 
             if (infoWorld.state == "s_init" || UIController.Instance.UI_EndingPhase_eng.activeSelf ||
                 UIController.Instance.UI_EndingPhase_viet.activeSelf)
+            {
                 timer.gameObject.SetActive(false);
+                timerText.gameObject.SetActive(false);
+            }
 
             LastTime = infoWorld.remaining_time;
 
@@ -679,12 +680,6 @@ public class SimulationManager : MonoBehaviour
         ConnectionManager.Instance.SendExecutableAsk("move_player_external", args);
 
         TimerSendPosition = TimeSendPosition;
-
-        if (Math.Abs(originalStartPosition.x - v.x) >= 0.1 ||
-            Math.Abs(originalStartPosition.z - v.z) >= 0.1)
-        {
-            movementText.gameObject.SetActive(false);
-        }
     }
 
 
@@ -938,9 +933,6 @@ public class SimulationManager : MonoBehaviour
                 if (infoWorld == null)
                 {
                     infoWorld = WorldJSONInfo.CreateFromJSON(content);
-                    //Debug.Log("Current info world score: "  + infoWorld.score);
-                    //Debug.Log("Current info world budget: " + infoWorld.budget);
-                    //Debug.Log("Current info world ok_to_build_dyke: " + infoWorld.ok_build_dyke_with_unity);
                 }
 
                 break;
@@ -962,22 +954,12 @@ public class SimulationManager : MonoBehaviour
                 {
                     _startPoint = raycastHit.point;
                     startPoint.transform.position = _startPoint;
-                    // startPoint.SetActive(true);
-                    //endPoint.SetActive(false);
                     DisplayFutureDike = true;
                     Debug.Log("Display future dike is true when selecting a point");
                 }
             }
-            //_apiTest.TestDrawDykeWithParams(_startPoint, _endPoint);
-            //_dykePointCnt = 0;
         }
-
-        // if (DisplayFutureDike)
-        // {
-        //     Debug.Log("Display future dike is true at ProcessRightHandTrigger");
-        //     GenerateFutureDike();
-        // }
-
+        
         if (rightHandTriggerButton != null && !rightHandTriggerButton.action.inProgress)
         {
             if (_inTriggerPress)
@@ -997,11 +979,8 @@ public class SimulationManager : MonoBehaviour
 
                         FutureDike = null;
                     }
-
-
                     APITest.Instance.TestDrawDykeWithParams(_startPoint, _endPoint);
 
-                    //  Debug.Log("Number of dykes: " + dykeObjects.Length);
                 }
             }
         }

@@ -15,7 +15,7 @@ public class GAMAGeometryLoader : ConnectionWithGama
 
     private PolygonGenerator polyGen;
 
-//    private GAMAGeometry geoms;
+    // private GAMAGeometry geoms;
 
     private bool continueProcess = true;
     public float GamaCRSCoefX = 1.0f;
