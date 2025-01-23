@@ -5,7 +5,6 @@ using Gama_Provider.Simulation;
 using QuickTest;
 using TMPro;
 using UnityEngine;
-//using UnityEngine.SceneManagement;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;

@@ -176,7 +176,8 @@ public class UIController : MonoBehaviour
     {
         if (InVietnamese)
             UI_EndingPhase_viet.SetActive(false);
-        else UI_EndingPhase_eng.SetActive(false);
+        else 
+            UI_EndingPhase_eng.SetActive(false);
         UI_ChoiceOfLanguage.SetActive(true);
     }
 }
