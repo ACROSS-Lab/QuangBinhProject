@@ -17,7 +17,6 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] protected XRRayInteractor leftXRRayInteractor;
     [SerializeField] protected XRRayInteractor rightXRRayInteractor;
 
-    [SerializeField] protected InputActionReference TryReconnectButton = null;
     [SerializeField] protected InputActionReference rightHandTriggerButton = null;
 
     [Header("Base GameObjects")] [SerializeField]
@@ -412,13 +411,7 @@ public class SimulationManager : MonoBehaviour
         {
             TriggerMainButton();
         }
-
-        if (TryReconnectButton != null && TryReconnectButton.action.triggered)
-        {
-            Debug.Log("TryReconnectButton activated");
-            TryReconnect();
-        }
-
+        
         // Debug.Log("currentStage: " + currentStage + " IsGameState(GameState.GAME) :" +IsGameState(GameState.GAME));
         if (IsGameState(GameState.GAME) && UIController.Instance.DikingStart)
             ProcessRightHandTrigger();
