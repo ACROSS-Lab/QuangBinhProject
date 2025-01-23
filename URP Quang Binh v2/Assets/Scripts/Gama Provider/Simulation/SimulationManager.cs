@@ -166,15 +166,17 @@ public class SimulationManager : MonoBehaviour
         if (startPoint != null)
             startPoint.SetActive(false);
 
-        propFutureDike = new PropertiesGAMA();
-        propFutureDike.red = 0;
-        propFutureDike.blue = 0;
-        propFutureDike.green = 255;
-        propFutureDike.hasCollider = false;
-        propFutureDike.hasPrefab = false;
-        propFutureDike.height = 40 * 10000;
-        propFutureDike.is3D = true;
-        propFutureDike.visible = true;
+        propFutureDike = new PropertiesGAMA
+        {
+            red = 0,
+            blue = 0,
+            green = 255,
+            hasCollider = false,
+            hasPrefab = false,
+            height = 40 * 10000,
+            is3D = true,
+            visible = true
+        };
         //startButton.onClick.AddListener(StartGame);
 
 
