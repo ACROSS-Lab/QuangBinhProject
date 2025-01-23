@@ -92,6 +92,7 @@ public class SimulationManager : MonoBehaviour
     protected bool readyToSendPosition = false;
 
     protected float TimeSendPosition = 1.0f;
+    protected float TimeSendPositionAfterMoving = 1.0f;
     protected float TimerSendPosition = 0.0f;
 
     protected int _dykePointCnt = 0;
@@ -151,6 +152,9 @@ public class SimulationManager : MonoBehaviour
     protected float RemainingSeconds;
     
     private Coroutine activeCoroutine = null;
+    
+    protected float TimeSendInit = 0.5f;
+    protected float TimerSendInit ;
    
     // ############################################ UNITY FUNCTIONS ############################################
     void Awake() {
@@ -159,7 +163,7 @@ public class SimulationManager : MonoBehaviour
         
         SelectedObjects = new List<GameObject>();
 
-
+    
         startPoint = GameObject.FindGameObjectWithTag("startPoint");
         endPoint = GameObject.FindGameObjectWithTag("endPoint");
 
@@ -194,18 +198,23 @@ public class SimulationManager : MonoBehaviour
     }
 
 
-    void OnEnable() {
-        if (ConnectionManager.Instance != null) {
+    void OnEnable() 
+    {
+        if (ConnectionManager.Instance != null) 
+        {
             ConnectionManager.Instance.OnServerMessageReceived += HandleServerMessageReceived;
             ConnectionManager.Instance.OnConnectionAttempted += HandleConnectionAttempted;
             ConnectionManager.Instance.OnConnectionStateChanged += HandleConnectionStateChanged;
             Debug.Log("SimulationManager: OnEnable");
-        } else {
+        } 
+        else 
+        {
             Debug.Log("No connection manager");
         }
     }
 
-    void OnDisable() {
+    void OnDisable() 
+    {
         Debug.Log("SimulationManager: OnDisable");
         ConnectionManager.Instance.OnServerMessageReceived -= HandleServerMessageReceived;
         ConnectionManager.Instance.OnConnectionAttempted -= HandleConnectionAttempted;
@@ -222,7 +231,7 @@ public class SimulationManager : MonoBehaviour
         // handlePlayerParametersRequested = false;
         handleGroundParametersRequested = false;
         infoWorld = null;
-        interactionManager = player.GetComponentInChildren<XRInteractionManager>();
+        //interactionManager = player.GetComponentInChildren<XRInteractionManager>();
         OnEnable();
     }
 
@@ -233,8 +242,10 @@ public class SimulationManager : MonoBehaviour
         
         if (sendMessageToReactivatePositionSent)
         {
-            Dictionary<string, string> args = new Dictionary<string, string> {
-            {"id",ConnectionManager.Instance.getUseMiddleware() ? ConnectionManager.Instance.GetConnectionId()  : ("\"" + ConnectionManager.Instance.GetConnectionId() +  "\"") }};
+            Dictionary<string, string> args = new Dictionary<string, string> 
+            {
+                {"id",ConnectionManager.Instance.getUseMiddleware() ? ConnectionManager.Instance.GetConnectionId()  : ("\"" + ConnectionManager.Instance.GetConnectionId() +  "\"") }
+            };
 
             ConnectionManager.Instance.SendExecutableAsk("player_position_updated", args);
             sendMessageToReactivatePositionSent = false;
@@ -247,7 +258,7 @@ public class SimulationManager : MonoBehaviour
 
         }
       
-        if (handleGeometriesRequested && infoWorld != null && propertyMap != null)
+        if (handleGeometriesRequested && infoWorld != null && infoWorld.isInit)
         {
 
 
@@ -257,7 +268,26 @@ public class SimulationManager : MonoBehaviour
             UpdateGameState(GameState.GAME);
 
         }
-
+        
+        if (infoWorld != null && !infoWorld.isInit && IsGameState(GameState.LOADING_DATA))
+        {
+            infoWorld = null;
+        }
+        
+        if(IsGameState(GameState.LOADING_DATA) && ConnectionManager.Instance.getUseMiddleware())
+        {
+            if (TimerSendInit > 0)
+                TimerSendInit -= Time.deltaTime;
+            if (TimerSendInit <= 0)
+            {
+                TimerSendInit = TimeSendInit;
+                Dictionary<string, string> args = new Dictionary<string, string> {
+                    {"id", ConnectionManager.Instance.GetConnectionId() }
+                };
+                ConnectionManager.Instance.SendExecutableAsk("send_init_data", args);
+            }
+        }
+        
         if (IsGameState(GameState.GAME))
         {
             if (readyToSendPosition && TimerSendPosition <= 0.0f)
@@ -360,7 +390,8 @@ public class SimulationManager : MonoBehaviour
             timerText.text = timeSpan.ToString(@"mm\:ss");
             yield return new WaitForSecondsRealtime(1f); // Wait for 1 second, unaffected by time scale
             RemainingSeconds--; // Decrease time
-        } while (RemainingSeconds >= 0);
+        } 
+        while (RemainingSeconds >= 0);
 
         RemainingSeconds = 0;
         yield return null;
@@ -396,20 +427,17 @@ public class SimulationManager : MonoBehaviour
         }
 
        // Debug.Log("currentStage: " + currentStage + " IsGameState(GameState.GAME) :" +IsGameState(GameState.GAME));
-        if ( IsGameState(GameState.GAME) && UIController.Instance.DikingStart)
+        if (IsGameState(GameState.GAME) && UIController.Instance.DikingStart)
             ProcessRightHandTrigger();
 
         //UpdateTimeLeftToBuildDykes();
         OtherUpdate();
         UpdateGame();
-        if (scoreM != null){
+        if (scoreM != null)
+        {
             UIController.Instance.EndGame(scoreM.score);
             scoreM = null;
         }
-
-         
-
-
     }
 
 
@@ -420,16 +448,16 @@ public class SimulationManager : MonoBehaviour
 
     void GenerateGeometries(bool initGame, List<string> toRemove)
     {
-         if (infoWorld.position != null && infoWorld.position.Count > 1 && (initGame || !sendMessageToReactivatePositionSent))
-        {
+        if (infoWorld.position != null && infoWorld.position.Count > 1 && (initGame || !sendMessageToReactivatePositionSent)) 
+        { 
             Vector3 pos = converter.fromGAMACRS(infoWorld.position[0], infoWorld.position[1], infoWorld.position[2]);
-           XROrigin.localPosition = pos;
+            XROrigin.localPosition = pos;
             //Camera.main.transform.position = pos;
 
             // Debug.Log("player.transform.position: " + pos[0] + "," + pos[1] + "," + pos[2]);
             sendMessageToReactivatePositionSent = true;
             readyToSendPosition = true;
-            TimerSendPosition = TimeSendPosition;
+            TimerSendPosition = TimeSendPositionAfterMoving;
 
         }
         foreach (string n in infoWorld.keepNames) 
@@ -453,23 +481,23 @@ public class SimulationManager : MonoBehaviour
                 else
                 {
                     List<object> o = geometryMap[name];
-                   
+                    GameObject obj2 = (GameObject)o[0];
                     PropertiesGAMA p = (PropertiesGAMA)o[1];
                     if (p == prop)
                     {
-                        obj = (GameObject)o[0];
-
-
+                        obj = obj2;
                     }
                     else
                     {
-                       
-                        obj.transform.position = new Vector3(0, -100, 0);
-                        if (toFollow.Contains(obj))
-                            toFollow.Remove(obj);
 
-                        GameObject.Destroy(obj);
+                        obj2.transform.position = new Vector3(0, -100, 0);
+                        geometryMap.Remove(name);
+                        if (toFollow != null && toFollow.Contains(obj2))
+                            toFollow.Remove(obj2);
+
+                        GameObject.Destroy(obj2);
                         obj = instantiatePrefab(name, prop, initGame);
+
                     }
 
                 }
@@ -491,8 +519,10 @@ public class SimulationManager : MonoBehaviour
                     polyGen.Init(converter);
                 }
                 List<int> pt = infoWorld.pointsGeom[cptGeom].c;
-
+                float yOffset = (0.0f + infoWorld.offsetYGeom[cptGeom]) / (0.0f + parameters.precision);
+                
                 obj = polyGen.GeneratePolygons(false, name , pt, prop, parameters.precision);
+                obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + yOffset, obj.transform.position.z);
 
                 if (prop.hasCollider)
                 {
@@ -509,8 +539,8 @@ public class SimulationManager : MonoBehaviour
                 instantiateGO(obj, name, prop);
                 // polyGen.surroundMesh = null;
                 
-               if (geometryMap.ContainsKey(name)) {
-
+               if (geometryMap.ContainsKey(name))
+               {
                     GameObject objOld = (GameObject)geometryMap[name][0];
                    // objOld.transform.position = new Vector3(0, -100, 0);
                     geometryMap.Remove(name);
@@ -544,7 +574,8 @@ public class SimulationManager : MonoBehaviour
    
 
     // ############################################ GAMESTATE UPDATER ############################################
-    public void UpdateGameState(GameState newState) {    
+    public void UpdateGameState(GameState newState) 
+    {    
         
         switch(newState) {
             case GameState.MENU:
@@ -559,11 +590,13 @@ public class SimulationManager : MonoBehaviour
                 Debug.Log("SimulationManager: UpdateGameState -> LOADING_DATA");
                 if (ConnectionManager.Instance.getUseMiddleware())
                 {
-                    Dictionary<string, string> args = new Dictionary<string, string> {
+                    Dictionary<string, string> args = new Dictionary<string, string> 
+                    {
                          {"id", ConnectionManager.Instance.GetConnectionId() }
                     };
                     ConnectionManager.Instance.SendExecutableAsk("send_init_data", args);
                 }
+                TimerSendInit = TimeSendInit;
                 break;
 
             case GameState.GAME:
@@ -592,9 +625,11 @@ public class SimulationManager : MonoBehaviour
     // ############################# INITIALIZERS ####################################
    
 
-    private void InitGroundParameters() {
+    private void InitGroundParameters() 
+    {
         Debug.Log("GroundParameters : Beginnig ground initialization");
-        if (Ground == null) {
+        if (Ground == null) 
+        {
             Debug.LogError("SimulationManager: Ground not set");
             return;
         }
@@ -620,7 +655,8 @@ public class SimulationManager : MonoBehaviour
 
 
     // ############################################ UPDATERS ############################################
-    private void UpdatePlayerPosition() {
+    private void UpdatePlayerPosition() 
+    {
         Vector2 vF = new Vector2(Camera.main.transform.forward.x, Camera.main.transform.forward.z);
         Vector2 vR = new Vector2(transform.forward.x, transform.forward.z);
         vF.Normalize();
@@ -640,7 +676,8 @@ public class SimulationManager : MonoBehaviour
         }
         
         List<int> p = converter.toGAMACRS3D(v);
-        Dictionary<string, string> args = new Dictionary<string, string> {
+        Dictionary<string, string> args = new Dictionary<string, string> 
+        {
             {"id",ConnectionManager.Instance.getUseMiddleware() ? ConnectionManager.Instance.GetConnectionId()  : ("\"" + ConnectionManager.Instance.GetConnectionId() +  "\"") },
             {"x", "" +p[0]},
             {"y", "" +p[1]},
@@ -668,8 +705,12 @@ public class SimulationManager : MonoBehaviour
         if (prop.tag != null && !string.IsNullOrEmpty(prop.tag))
             obj.tag = prop.tag;
          
-        if (prop.isInteractable){
-        UnityEngine.XR.Interaction.Toolkit.Interactables.XRBaseInteractable interaction = null;
+        if (prop.isInteractable)
+        {
+            if (interactionManager == null)
+                interactionManager = GameObject.FindFirstObjectByType<XRInteractionManager>();
+            
+            UnityEngine.XR.Interaction.Toolkit.Interactables.XRBaseInteractable interaction = null;
             if (prop.isGrabable)
             {
                 interaction = obj.AddComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable>();
@@ -688,32 +729,31 @@ public class SimulationManager : MonoBehaviour
                             rb.constraints = rb.constraints | RigidbodyConstraints.FreezeRotationY;
                         if (prop.constraints[5])
                             rb.constraints = rb.constraints | RigidbodyConstraints.FreezeRotationZ;
-                    }
-
-                
-                 }
-                else {
-
-                     interaction = obj.AddComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRSimpleInteractable>();
                 }
-               if(interaction.colliders.Count == 0)
+            }
+            else 
+            {
+                interaction = obj.AddComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRSimpleInteractable>();
+            }
+            
+            if(interaction.colliders.Count == 0)
+            {
+                Collider[] cs = obj.GetComponentsInChildren<Collider>();
+                if (cs != null)
                 {
-                   Collider[] cs = obj.GetComponentsInChildren<Collider>();
-                   if (cs != null)
-                   {
                        foreach (Collider c in cs)
                        {
                                 interaction.colliders.Add(c);
                        }
-                   }
                 }
-                interaction.interactionManager = interactionManager;
-                interaction.selectEntered.AddListener(SelectInteraction);
-                interaction.firstHoverEntered.AddListener(HoverEnterInteraction);
-                interaction.hoverExited.AddListener(HoverExitInteraction);
-          
-         }
-     }
+            }
+            
+            interaction.interactionManager = interactionManager;
+            interaction.selectEntered.AddListener(SelectInteraction);
+            interaction.firstHoverEntered.AddListener(HoverEnterInteraction);
+            interaction.hoverExited.AddListener(HoverExitInteraction);
+        }
+    }
 
    
 
@@ -732,16 +772,16 @@ public class SimulationManager : MonoBehaviour
         {
             if (obj.TryGetComponent<LODGroup>(out var lod))
             {
-                 foreach (LOD l in lod.GetLODs())
-                {
-                    GameObject b = l.renderers[0].gameObject;
+                foreach (LOD l in lod.GetLODs()) 
+                { 
+                    GameObject b = l.renderers[0].gameObject; 
                     BoxCollider bc = b.AddComponent<BoxCollider>();
                    // b.tag = obj.tag;
                    // b.name = obj.name;
                     //bc.isTrigger = prop.isTrigger;
                 }
-                    
-            } else
+            } 
+            else
             {
                 BoxCollider bc = obj.AddComponent<BoxCollider>();
                // bc.isTrigger = prop.isTrigger;
@@ -756,9 +796,8 @@ public class SimulationManager : MonoBehaviour
 
    
 
-    private void UpdateAgentsList() {
-
-
+    private void UpdateAgentsList() 
+    {
         ManageOtherInformation();
         List<string> toRemove = new List<string>(geometryMap.Keys);
       
@@ -779,7 +818,7 @@ public class SimulationManager : MonoBehaviour
             GameObject.Destroy(obj);
         }
         
-        infoWorld = null;
+        //infoWorld = null;
     }
     
     protected virtual void ManageAttributes(List<Attributes> attributes)
@@ -794,10 +833,12 @@ public class SimulationManager : MonoBehaviour
     }
 
     // ############################################# HANDLERS ########################################
-    private void HandleConnectionStateChanged(ConnectionState state) {
+    private void HandleConnectionStateChanged(ConnectionState state) 
+    {
         Debug.Log("HandleConnectionStateChanged: " + state);
         // player has been added to the simulation by the middleware
-        if (state == ConnectionState.AUTHENTICATED) {
+        if (state == ConnectionState.AUTHENTICATED) 
+        {
             Debug.Log("SimulationManager: Player added to simulation, waiting for initial parameters");
             UpdateGameState(GameState.LOADING_DATA);
         }
@@ -850,7 +891,7 @@ public class SimulationManager : MonoBehaviour
         if (content == null || content.Equals("{}")) return;
         if (firstKey == null)
         {
-            if (content.Contains("pong"))
+            if (content.Contains("pong")) 
             {
                 currentTimePing = 0;
                 return;
@@ -872,7 +913,8 @@ public class SimulationManager : MonoBehaviour
         }
 
        
-        switch (firstKey) {
+        switch (firstKey) 
+        {
             // handle general informations about the simulation
             case "precision":
 
@@ -890,15 +932,13 @@ public class SimulationManager : MonoBehaviour
 
             break;
             case "score":
-
-               scoreM = ScoreMessage.CreateFromJSON(content);
-              
+                scoreM = ScoreMessage.CreateFromJSON(content);
                 break;
 
             case "properties":
                 propertiesGAMA = AllProperties.CreateFromJSON(content);
                 propertyMap = new Dictionary<string, PropertiesGAMA>();
-               foreach (PropertiesGAMA p in propertiesGAMA.properties)
+                foreach (PropertiesGAMA p in propertiesGAMA.properties)
                 {
                     propertyMap.Add(p.id, p);
                 }
@@ -906,7 +946,8 @@ public class SimulationManager : MonoBehaviour
 
             // handle agents while simulation is running
             case "pointsLoc":
-                if (infoWorld == null) {                    
+                if (infoWorld == null) 
+                {                    
                     infoWorld = WorldJSONInfo.CreateFromJSON(content);
                     //Debug.Log("Current info world score: "  + infoWorld.score);
                     //Debug.Log("Current info world budget: " + infoWorld.budget);
@@ -979,14 +1020,19 @@ public class SimulationManager : MonoBehaviour
 
     }
 
-    private void HandleConnectionAttempted(bool success) {
+    private void HandleConnectionAttempted(bool success) 
+    {
         Debug.Log("SimulationManager: Connection attempt " + (success ? "successful" : "failed"));
-        if (success) {
-            if(IsGameState(GameState.MENU)) {
+        if (success) 
+        {
+            if(IsGameState(GameState.MENU)) 
+            {
                 Debug.Log("SimulationManager: Successfully connected to middleware");
                 UpdateGameState(GameState.WAITING);
             }
-        } else {
+        } 
+        else 
+        {
             // stay in MENU state
             Debug.Log("Unable to connect to middleware");
         }
@@ -994,8 +1040,10 @@ public class SimulationManager : MonoBehaviour
 
     private void TryReconnect()
     {
-        Dictionary<string, string> args = new Dictionary<string, string> {
-            {"id",ConnectionManager.Instance.getUseMiddleware() ? ConnectionManager.Instance.GetConnectionId()  : ("\"" + ConnectionManager.Instance.GetConnectionId() +  "\"") }};
+        Dictionary<string, string> args = new Dictionary<string, string> 
+        {
+            {"id",ConnectionManager.Instance.getUseMiddleware() ? ConnectionManager.Instance.GetConnectionId()  : ("\"" + ConnectionManager.Instance.GetConnectionId() +  "\"") }
+        };
 
         ConnectionManager.Instance.SendExecutableAsk("ping_GAMA", args);
 
@@ -1007,19 +1055,22 @@ public class SimulationManager : MonoBehaviour
     // ############################################# UTILITY FUNCTIONS ########################################
 
 
-    public bool IsGameState(GameState state) {
+    public bool IsGameState(GameState state) 
+    {
         return currentState == state;
     }
 
 
-    public GameState GetCurrentState() {
+    public GameState GetCurrentState() 
+    {
         return currentState;
     }
 }
 
 
 // ############################################################
-public enum GameState {
+public enum GameState 
+{
     // not connected to middleware
     MENU,
     // connected to middleware, waiting for authentication
