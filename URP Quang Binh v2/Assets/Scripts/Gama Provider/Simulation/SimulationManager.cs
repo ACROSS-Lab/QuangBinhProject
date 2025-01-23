@@ -16,9 +16,10 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
 public class SimulationManager : MonoBehaviour
 {
+    [SerializeField] protected InputActionReference primaryRightHandButton = null;
     [SerializeField] protected XRRayInteractor leftXRRayInteractor;
     [SerializeField] protected XRRayInteractor rightXRRayInteractor;
-    [SerializeField] protected InputActionReference primaryRightHandButton = null;
+    
     [SerializeField] protected InputActionReference TryReconnectButton = null;
     [SerializeField] protected InputActionReference rightHandTriggerButton = null;
 
@@ -601,6 +602,13 @@ public class SimulationManager : MonoBehaviour
 
             case GameState.GAME:
                 Debug.Log("SimulationManager: UpdateGameState -> GAME");
+                if (ConnectionManager.Instance.getUseMiddleware())
+                {
+                    Dictionary<string, string> args = new Dictionary<string, string> {
+                        {"id", ConnectionManager.Instance.GetConnectionId() }
+                    };
+                    ConnectionManager.Instance.SendExecutableAsk("player_ready_to_receive_geometries", args);
+                }
                 break;
 
             case GameState.END:
