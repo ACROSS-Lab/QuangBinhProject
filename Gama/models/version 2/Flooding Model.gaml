@@ -82,7 +82,7 @@ global control: fsm {
 	
 	geometry main_river_part;
 	
-	float cycle_duration <- 0.1;
+	float cycle_duration <- 0.01;
 	
 	list<geometry> water_limit_drain;
 	list<geometry> water_limit_well;
@@ -573,7 +573,7 @@ global control: fsm {
 		if (current_step <= num_step_add) {
 			list<cell> to_adds <- bed_cells where ((each.obstacle_height = 0) and (each.location overlaps main_river_part));
 			float coeff_to_add <- total_water_to_add / (to_adds sum_of each.water_to_add);
-			ask to_adds{
+			ask to_adds parallel: true{
 				water_height <- water_height + water_to_add * max_water_input  * coeff_to_add ;
 			}
 		}
@@ -583,13 +583,13 @@ global control: fsm {
 	 * Action to flow the water according to the altitute and the obstacle
 	 */
 	action flow_water {
-		ask cell {
+		ask cell parallel: true{
 			water_height_tmp <- water_height;
 		}
-		ask cell{
+		ask cell parallel: true{
 			do flow;
 		}
-		ask cell {
+		ask cell parallel: true{
 			water_height <- water_height_tmp;
 		}
 		do compute_river_shape;

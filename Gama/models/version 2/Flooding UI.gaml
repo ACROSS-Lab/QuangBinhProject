@@ -165,7 +165,7 @@ experiment Run  type:gui autorun: true{
 	 
 	output { 
 		
-		layout #none controls: false toolbars: true editors: false parameters: false consoles: false tabs: false;
+		layout #none controls: false toolbars: false editors: false parameters: false consoles: false tabs: false;
 		display map type: 3d axes: false background: background_color antialias: false{
 			camera 'default' location: {1441.2246,3297.5234,8595.6544} target: {1441.2246,3297.3733,0.0};
 			//	grid cell border: #black;
@@ -352,7 +352,7 @@ experiment Run  type:gui autorun: true{
 						stage <-  "Flood without dykes/dams";
 						
 						//\n\n" + "Casualties: " + casualties + '/' + nb_of_people;
-						timer <- "End in " +(num_step - current_step) + " minutes";
+						timer <- "End in " +max(0,(num_step - current_step)) + " minutes";
 						indicators <- "Casualties: " + casualties + '/' + nb_of_people + "\n\nScore: " + round(score);
 						if (score <= 900 and score > 700) or (casualties > 0 and casualties< 10){
 							color_indicators <- #yellow;
@@ -375,7 +375,7 @@ experiment Run  type:gui autorun: true{
 					
 						//text <- "Build dykes/dams with the mouse.\n\n\tMeters of dyke built: "+ round(dyke_length) + "m" + "\n\n\tMeters of dam built: "+ round(dam_length) + "m";
 						float left <- current_timeout - gama.machine_time;
-						timer <- button_selected ? "Start flooding now.": "Flooding in " + int(left / 1000) + " seconds.";
+						timer <- button_selected ? "Start flooding now.": "Flooding in " + max(0,int(left / 1000)) + " seconds.";
 						hint <- "Press 'r' to remove a dyke/dam\nPress 'f' for skipping.";
 						
 						//\nPress 'f' to start immediately.";
@@ -388,7 +388,7 @@ experiment Run  type:gui autorun: true{
 						//text <- "Casualties: " + casualties + '/' + nb_of_people;
 						float left <- current_timeout - gama.machine_time;
 						//hint <- "Press 'r' for restarting.";
-						timer <- "End in " +(num_step - current_step) + " minutes";
+						timer <- "End in " +max(0,(num_step - current_step)) + " minutes";
 						
 						if (score <= 900 and score > 700) or (casualties > 0 and casualties< 10){
 							color_indicators <- #yellow;
