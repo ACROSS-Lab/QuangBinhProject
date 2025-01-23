@@ -2,16 +2,16 @@
 * Name: FloodingUI
 * A simple UI experiment to demonstrate the flooding in Quang Binh province 
 * Author: Alexis Drogoul
-* Tags: 
+* Tags:   
 */
 
 
 model FloodingUI 
+  
+import "Flooding Model.gaml" 
 
-import "Flooding Model.gaml"
-
-global { 
-	 
+global {  
+	  
 
 	/************************************************************* 
 	 * Functions that control the transitions between the states
@@ -19,20 +19,27 @@ global {
 
 	action enter_init {
 	//	write "enter_init";
-		
 		do enter_init_base;
-		 
+		   
 		ask buildings {
-			color <- one_of(building_colors);
-		}
+			color <- one_of(building_colors); 
+		} 
 		button_frame <- nil;
-		check_frame <- nil;
+		check_frame <- nil; 
 		button_image_unselected <- nil;
-		button_image_selected <- nil;
+		button_image_selected <- nil; 
 		check_image_unselected <- nil;
-		check_image_selected <- nil;
-		playback_finished <- recording ? true : false;
-	} 
+		check_image_selected <- nil;  
+		
+		/*write sample(cell sum_of each.water_height);
+		write sample(cell sum_of each.height);
+		write sample(cell sum_of each.obstacle_height);
+		
+		write sample(cell sum_of each.water_to_add);
+		write sample(total_water_to_add);
+		write sample(current_step);*/
+		
+	}  
 	
 	action enter_start {
 		button_frame <- nil;
@@ -49,7 +56,6 @@ global {
 		button_image_selected <- image("../../includes/icons/flood-fill.png") * rgb(232, 215, 164);
 		check_image_unselected <- nil;
 		check_image_selected <- nil;
-		diking_over <- recording;
 	}
 	
 	action enter_flooding {
@@ -59,9 +65,14 @@ global {
 		button_image_selected <- image("../../includes/icons/restart-fill.png");
 		check_image_unselected <- image("../../includes/icons/checkbox-blank-line.png");
 		check_image_selected <- image("../../includes/icons/checkbox-line.png");
-		current_step <- 0;
-		casualties <- 0;
-		evacuated <- 0;
+		
+		
+		/*write sample(cell sum_of each.water_height);
+		write sample(cell sum_of each.height);
+		write sample(cell sum_of each.obstacle_height);
+		write sample(cell sum_of each.water_to_add);
+		write sample(total_water_to_add);
+		write sample(current_step);*/
 	}
 	
 	action exit_flooding {
@@ -79,11 +90,11 @@ global {
 			
 		}
 		
-	}
+	} 
 	
  
 	bool init_over  { 
-		return playback_finished;
+		return (current_step > num_step) or restart_requested ;
 	} 
 	 
 	bool diking_over { 
@@ -102,15 +113,12 @@ global {
 	bool start_over {
 		return true;
 	}
-	
+	action body_init  {	
 		
-	action body_init  {
-		if (!recording) {do playback();}
 	}
 	
 	action body_flooding {
-		if (recording) {do record();}
-		current_step <- current_step +1;
+		
 		
 	}
 	 
@@ -123,7 +131,7 @@ global {
 	
 	// Is the flooding state requested by the user ? 
 	bool diking_over;
-	
+	 
 	
 	
 	/*************************************************************
@@ -133,7 +141,7 @@ global {
 	reflex update_cell_colors when: river_in_3D {
 		float max_water_height <- max(cell collect each.water_height);
 		ask cell {
-			if (water_height <= 0.01) {
+			if (water_height <= 0.01) { 
 				color <- #transparent;
 			} else {
 				float val_water <-  255 * (1 - (water_height / max_water_height));
@@ -142,7 +150,9 @@ global {
 			grid_value <- water_height;
 		}
 	}
-}
+	
+	
+} 
  
 
 
@@ -153,14 +163,15 @@ experiment Run  type:gui autorun: true{
 	point end_point;  
 	geometry line; 
 	 
-	output {
+	output { 
 		
 		layout #none controls: false toolbars: true editors: false parameters: false consoles: false tabs: false;
 		display map type: 3d axes: false background: background_color antialias: false{
-
-			species river visible: !river_in_3D {
+			camera 'default' location: {1441.2246,3297.5234,8595.6544} target: {1441.2246,3297.3733,0.0};
+			//	grid cell border: #black;
+		 	species river visible:!river_in_3D{
 				draw shape border: brighter(brighter(river_color)) width: 5 color: river_color;
-			}			 
+			}	 
 
 			species road {
 				draw drowned ? shape : shape + 10 color: drowned ? darker(river_color) : road_color ;
@@ -168,35 +179,67 @@ experiment Run  type:gui autorun: true{
 		 	species buildings {
 		 		draw shape color: drowned ? river_color : color border: drowned ? darker(river_color):color;	
 		 	}
+		 	graphics "end_of_world" {
+				draw water_limit_danger + 20 color: #red;
+				loop d over: water_limit_well {
+					draw d + 20 color: #orange;
+				}
+				loop d over: water_limit_drain {
+					draw d + 20 color: #green;
+				}
+			}  
 		 	species dyke {
-		 		draw shape + 5 color: drowned ? river_color : dyke_color border: drowned ? darker(river_color):dyke_color;	
-			} 
+		 		if (!is_dam) {
+		 			draw shape + 5 color: drowned ? river_color : dyke_color border: drowned ? darker(river_color):#black;	
+		 		} else {
+		 			draw shape + 5 color: drowned ? river_color : dam_color border: drowned ? darker(river_color):#black;	
+		 		}
+		 		
+			}  
 			species people {
-				draw circle(20)  color: people_color;
+				draw circle(20)  color: (state = "s_drowned" ? people_drowned_color : (state = "s_evacuated" ?  people_evacuated_color : people_color)); 
+			 	
 			}
 			species evacuation_point {
-				draw circle(60) at: location + {0,0,40} color: evacuation_color;
+				draw circle(60) at: location + {0,0,40} color: evacuation_color border: #black;
 			}
 
-			mesh cell above: 0 triangulation: true smooth: false color: cell collect each.color visible: river_in_3D transparency: 0.5;
+			//mesh cell above: 0 triangulation: true smooth: false color: cell collect each.color visible: river_in_3D transparency: 0.5;
+			//species water_particule; 
 			
 			event "r" {
 				if (state != "s_diking") { return;}
 				if (start_point != nil) {
 					start_point <- nil;
 					line <- nil;
-				} else {
+				} else { 
 					ask world {
 						geometry g <- circle(10) at_location #user_location;
 				 		list<dyke> dykes <- dyke overlapping g;
 				 		if (not empty(dykes)) {
+				 			bool recompute_river <- false;
 				 			ask dykes closest_to #user_location {
-				 				dyke_length <- dyke_length - length; 
+				 				if (is_dam) {
+				 					dam_length <- dam_length - length; 
+				 				} else {
+				 					dyke_length <- dyke_length - length; 
+				 				}
+				 				loop c over: cells_under {
+				 					c.obstacles >> self;
+				 					if (c in bed_cells) {
+				 						recompute_river <- true;
+				 						c.water_height <- initial_water_height;
+				 					}
+				 				}
 				 				do die;
 				 			}
+				 			if (recompute_river) {
+				 				do compute_river_shape;
+				 			}
+				 			
 				 		}
 					}
-					
+					 
 				}
 				
 			} 
@@ -213,110 +256,202 @@ experiment Run  type:gui autorun: true{
 		 			start_point <- #user_location; 
 					line <- line([start_point, #user_location]);
 				} else {
-					end_point <- #user_location;
-					float dist <- (start_point distance_to end_point);
-					if ((dyke_length + dist) <= dyke_length_max) {
-						geometry l <- line([start_point, end_point]);
-						dyke_length <- dyke_length + dist; 
-						ask simulation { 
-							create dyke with:(shape:l + dyke_width, length: dist);
-						}
+					ask simulation {
+						do create_dyke(myself.start_point, #user_location);
 					}
-					
 					start_point <- nil;
-					end_point <- nil;
+				 	end_point <- nil;
 				}
 
 			}
 			
+			graphics "Arrow" {
+				draw image_file("../../includes/icons/arrow-23645_1280.png") size: 400 rotate: -90 at: {location.x/1.75, location.y *2 - 200};
+
+			}
+			
+			
+			graphics "General information" {
+				int offset <- 0;
+				draw rectangle(3500,1000) color: #gray border: #black at: {5000, 700+offset, -1.0};
+				draw "General information" font: font ("Helvetica", 22, #bold) at: {3400, 300+offset} anchor: #top_left color: text_color;	
+				
+				
+				draw "Round: " + current_round+"/" + num_rounds font: font ("Helvetica", 18, #bold) at: {3400, 600+offset} anchor: #top_left color: text_color;
+				
+				if  current_round > 1 {
+					draw "best score: " +  round(best_score) font: font ("Helvetica", 18, #bold) at: {3400, 900+offset} anchor: #top_left color: text_color;
+				
+				}	
+				
+			}
+			graphics "Hints" {
+				if current_round = num_rounds {
+					int offset <- 1500;
+					draw rectangle(3500,1200) + 50 color: #lightgreen border: #black at: {5000, 800+offset, -2.0};
+					draw rectangle(3500,1200) color: #gray border: #black at: {5000, 800+offset, -1.0};
+					
+					draw "Hint" font: font ("Helvetica", 22, #bold) at: {3400, 300+offset} anchor: #top_left color: #lightgreen;	
+					string hint <- "One strategy to combat flooding is the developmentof flood\n\nexpansion zones. This involves designating an area where\n\nfloodwaters from a watercourse can spread quickly with minimal\n\nrisk to people and property";
+					
+					
+					draw hint font: font ("Helvetica", 14, #bold) at: {3400, 600+offset} anchor: #top_left color: text_color;
+					
+				}				
+			}
+			
+			
+			
+			
+			graphics "Legend" {
+				int offset <- 500;
+				draw rectangle(3500,2500) color: #gray border: #black at: {-1870, 2650+offset, -1.0};
+				draw "Legend" font: font ("Helvetica", 22, #bold) at: {-3500, 1500+offset} anchor: #top_left color: text_color;	
+				
+				draw  image_file("../../includes/icons/arrow-23645_1280.png") size: 180 rotate: -90  border: #black at: {-3450, 1850+offset};
+				draw "Direction of river flow" font: font ("Helvetica", 14, #bold) at: {-3300, 1800+offset} anchor: #top_left color: text_color;	
+				
+				draw line([{-3500, 2100+offset},{-3400, 2100+offset}]) + 20 color: #green ;
+				draw "Drain-type border (water run-off)" font: font ("Helvetica", 14, #bold) at: {-3300, 2060+offset} anchor: #top_left color: text_color;	
+				draw line([{-3500, 2300+offset},{-3400, 2300+offset}]) + 20 color: #orange ;
+				
+				draw "Well-type border (prevents water run-off)" font: font ("Helvetica", 14, #bold) at: {-3300, 2260+offset} anchor: #top_left color: text_color;	
+				
+				draw line([{-3500, 2500+offset},{-3400, 2500+offset}]) + 20 color: #red ;
+				draw "Stake-type border (prevents water run-off and leads to point loss)" font: font ("Helvetica", 14, #bold) at: {-3300, 2460+offset} anchor: #top_left color: text_color;	
+				
+				
+				draw line([{-3500, 2800+offset},{-3400, 2800+offset}]) + 20 color: dyke_color border: #black;
+				draw "Dyke - price : 1 point / meter" font: font ("Helvetica", 14, #bold) at: {-3300, 2760+offset} anchor: #top_left color: text_color;	
+				draw line([{-3500, 3000+offset},{-3400, 3000+offset}]) + 20 color: dam_color border: #black;
+				draw "Dam - price : 10 points / meter" font: font ("Helvetica", 14, #bold) at: {-3300, 2960+offset} anchor: #top_left color: text_color;	
+				
+				draw circle(30)  color: people_color at:  {-3450, 3300+offset} ; 
+				draw "People evacuating" font: font ("Helvetica", 14, #bold) at: {-3300, 3260+offset} anchor: #top_left color: text_color;	
+				draw circle(30)  color: people_drowned_color at:  {-3450, 3500+offset} ; 
+				draw "People injured" font: font ("Helvetica", 14, #bold) at: {-3300, 3460+offset} anchor: #top_left color: text_color;	
+				
+				draw circle(60)  color: evacuation_color at:  {-3450, 3700+offset} ; 
+				draw "Shelter (evacuation point)" font: font ("Helvetica", 14, #bold) at: {-3300, 3660+offset} anchor: #top_left color: text_color;	
+				
+			
+			}
+			
 			graphics "Text and icon"   {
-				string text <- nil;
+					
+				
+				string stage <- nil;
 				string timer <- nil;
 				string hint <- nil;
-				string keep <- nil;
-
-								
+				string indicators <- nil;
+				
+				rgb color_indicators <- text_color;
+								 
 				switch (state) {
 					match "s_init" {
-						text <-  "Previous Flood !\n" + "Casualties: " + casualties + '/' + nb_of_people;
-						float left <- current_timeout - gama.machine_time;
+						stage <-  "Flood without dykes/dams";
+						
+						//\n\n" + "Casualties: " + casualties + '/' + nb_of_people;
+						timer <- "End in " +(num_step - current_step) + " minutes";
+						indicators <- "Casualties: " + casualties + '/' + nb_of_people + "\n\nScore: " + round(score);
+						if (score <= 900 and score > 700) or (casualties > 0 and casualties< 10){
+							color_indicators <- #yellow;
+						} else if (score <= 700 and score > 500) or (casualties >= 10 and casualties< 100) {
+							color_indicators <- #orange;
+						} else if (score <= 500) or (casualties > 100)   {
+							color_indicators <- #red;
+						} else {
+							color_indicators <- #lightgreen;
+						}
+						
+						//float left <- current_timeout - gama.machine_time;
 						//timer <- button_selected ? "Restart now.": "Restarting in " + int(left / 1000) + " seconds.";
 						//\nPress 'r' to restart immediately.";
 						//keep <- "Keep the dykes."; 
 					}
 					match "s_diking" {
-						text <- "Build dykes with the mouse. Meters of dyke built: "+ round(dyke_length) + "/" + round(dyke_length_max);
+						stage <-  "Build dykes/dams";
+						indicators <- "Meters of dyke built: "+ round(dyke_length) + "m" + "\n\nMeters of dam built: "+ round(dam_length) + "m";
+					
+						//text <- "Build dykes/dams with the mouse.\n\n\tMeters of dyke built: "+ round(dyke_length) + "m" + "\n\n\tMeters of dam built: "+ round(dam_length) + "m";
 						float left <- current_timeout - gama.machine_time;
 						timer <- button_selected ? "Start flooding now.": "Flooding in " + int(left / 1000) + " seconds.";
-						hint <- "Press 'r' to remove a dyke\nPress 'f' for skipping.";
+						hint <- "Press 'r' to remove a dyke/dam\nPress 'f' for skipping.";
 						
 						//\nPress 'f' to start immediately.";
 					}	
-					match "s_flooding" {text <- "Casualties: " + casualties + '/' + nb_of_people;
+					match "s_flooding" {
+						 
+						stage <-  "Flood";
+						indicators <- "Casualties: " + casualties + '/' + nb_of_people + "\n\nScore: " + round(score);
+						
+						//text <- "Casualties: " + casualties + '/' + nb_of_people;
 						float left <- current_timeout - gama.machine_time;
 						//hint <- "Press 'r' for restarting.";
 						timer <- "End in " +(num_step - current_step) + " minutes";
+						
+						if (score <= 900 and score > 700) or (casualties > 0 and casualties< 10){
+							color_indicators <- #yellow;
+						} else if (score <= 700 and score > 500) or (casualties >= 10 and casualties< 100) {
+							color_indicators <- #orange;
+						} else if (score <= 500) or (casualties > 100)   {
+							color_indicators <- #red;
+						}else {
+							color_indicators <- #lightgreen;
+						}
 						//\nPress 'r' to restart immediately.";
 						//keep <- "Keep the dykes."; 
 					}
 				}
+ 
+				draw rectangle(3500,1600) color: #gray border: #black at: {-1870, 1000,-1.0};
+				draw "Current stage: " + stage font: font ("Helvetica", 22, #bold) at: {-3500, 300} anchor: #top_left color: text_color;	
+			
+				
 				//draw background color: darker(frame_color) width: 5 border: brighter(frame_color) at: background_position + {background.width / 2, background.height/2, -10} lighted: false ;
-				if (text != nil) {
-					draw text font: font ("Helvetica", 18, #bold) at: text_position anchor: #top_left color: text_color;	
-				}
+				point timer_position <- {-3300, 600};
+				point indicators_position <- {-3300, 1000};
+	
 				if (timer != nil) { 
-					draw timer font: font ("Helvetica", 14, #plain) at: timer_position anchor: #top_left color: text_color;	
+					draw timer font: font ("Helvetica", 18, #bold) at: timer_position anchor: #top_left color: text_color;	
 				}
-				if (keep != nil) {
-					draw keep font: font ("Helvetica", 14, #plain) at: check_text_position anchor: #top_left color: text_color;	
+				if (indicators != nil) { 
+					draw indicators font: font ("Helvetica", 18, #bold) at: indicators_position anchor: #top_left color: color_indicators;	
+				}
+				/*if (keep != nil) {
+					draw keep font: font ("Helvetica", 16, #plain) at: check_text_position anchor: #top_left color: text_color;	
 				}
 				if (hint != nil) {
-					draw hint font: font ("Helvetica", 10, #bold) at: text_position + {0, 130} anchor: #top_left color: text_color;	
-				}		
+					draw hint font: font ("Helvetica", 14, #bold) at: text_position + {0, 630} anchor: #top_left color: text_color;	
+				}	*/	
 				
 				
-			/*	if (button_image_unselected != nil) { 
-					button_frame <- square(300) at_location icon_position;
-					draw button_selected ? button_image_selected : button_image_unselected size: 300 at: icon_position;
-				}
-				if (check_image_unselected != nil) {
-					check_frame <- square(300) at_location check_position;
-					draw check_selected or keep_dykes ? check_image_selected : check_image_unselected size: 300 at: check_position;
-				} */
+		
 			}
 			
-			/*event "z" {
-				dyke to_kill <- last(dyke);
-				if (to_kill != nil) { ask to_kill {do die;}}
-			}*/
+		
 			
 			event "f" {
 				if (state != "s_diking") {return;}
 				diking_over <- true;
 			}
-			
-			/*event "r" {
-				if (state != "s_flooding") {return;}
-				restart_requested <- true;
-			}*/
+		
 			
 			event #mouse_move { 
-			//	button_selected <- button_frame != nil and button_frame overlaps #user_location;
-		//		check_selected <- check_frame != nil and check_frame overlaps #user_location;
 				if (state != "s_diking") {line <- nil; return;}
 				if (start_point != nil) {
 					line <- line([start_point, #user_location]);
-					is_ok_dyke_construction <- ((dyke_length + line.perimeter) <= dyke_length_max);
+					is_ok_dyke_construction <- true;
 				} else {
 					line <- nil;
 				}
 			}
 			
-			
+			 
 			
 			graphics ll {
 				if (line != nil) {
-					draw line + dyke_width + 5 color: is_ok_dyke_construction ? dyke_color : #red ;
+					draw line + dyke_width + 5 color: is_ok_dyke_construction ? dyke_color : #red border: #black;
 				}
 			}
 		}

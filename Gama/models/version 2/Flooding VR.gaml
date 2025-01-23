@@ -1,7 +1,7 @@
 model Flood_VR
 
 import "Flooding Model.gaml"
-
+ 
 global { 
 	
 
@@ -23,7 +23,7 @@ global {
 
 	//bool winning -> casualties < max_number_of_casualties;
 	
-	
+	 
 	/*************************************************************
 	 * Attributes dedicated to the UI in GAMA (images, colors, etc.)
 	 *************************************************************/
@@ -134,7 +134,7 @@ global {
 		
 		if (recording) {do record();} 
 		current_step <- current_step +1;
-	}
+	} 
 	
 	action body_diking {
 		if !(unity_player all_match each.in_dyke_building) {
@@ -276,10 +276,10 @@ species unity_linker parent: abstract_unity_linker {
 		list<float> unity_end_point_float <- convert_string_to_array_of_float(unity_end_point);
 		point converted_start_point <- {unity_start_point_float[0], unity_start_point_float[1], unity_start_point_float[2]};
 		point converted_end_point <- {unity_end_point_float[0], unity_end_point_float[1], unity_end_point_float[2]};
-		create dyke with: (shape: line([converted_start_point, converted_end_point]));
+		create dyke with: (shape: line([converted_start_point, converted_end_point])) ;
 		do send_message players: unity_player as list mes: ["ok_build_dyke_with_unity " + converted_start_point + "   " + converted_end_point :: true];
 		ask experiment {
-			do update_outputs(true); 
+			do update_outputs(true);  
 		}
 	}
  
@@ -397,7 +397,7 @@ experiment Launch  autorun: true type: unity {
  	
 		 	species river visible: !river_in_3D {
 				draw shape border: brighter(brighter(river_color)) width: 5 color: river_color;
-			}			 
+			}			  
 
 			species road {
 				draw drowned ? shape : shape + 10 color: drowned ? darker(river_color) : road_color ;
@@ -463,7 +463,7 @@ experiment Launch  autorun: true type: unity {
 						//keep <- "Keep the dykes."; 
 					}
 					match "s_diking" {
-						text <- "Build dykes with the mouse. Meters of dyke built: "+ round(dyke_length) + "/" + round(dyke_length_max);
+						text <- "Build dykes with the mouse. Meters of dyke built: "+ round(dyke_length) + "m";
 						float left <- current_timeout - gama.machine_time;
 						timer <- button_selected ? "Start flooding now.": "Flooding in " + int(left / 1000) + " seconds.";
 						hint <- "Press 'r' to remove a dyke\nPress 'f' for skipping.";

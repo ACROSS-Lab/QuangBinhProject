@@ -14,29 +14,34 @@
 model Flooding
 
 global control: fsm {
-	
-	
-	bool recording <- false;
+		
+ 	bool save_results <- false;
  	
- 	bool save_results <- true;
+ 	int num_step <- 300;
+ 	int num_step_add <- num_step;
  	
- 	int num_step <- 120;
- 	
- 	float diking_duration <- 60.0 * 3;
+ 	float diking_duration <- 120.0;
 	
-	int num_rounds <- 2;
+	int num_rounds <- 3;
 	
 	int current_round <- 1;
 	
 	bool use_tell <- true;
 	
-	float cycle_duration <- 0.1;
- 	
- 	int number_of_milliseconds_to_wait_in_playback <- 10;//100;
 	
-	 float waiting_time_in_s <- 1.5;
+	float waiting_time_in_s <- 1.5;
 	
-		
+	geometry init_river;
+	
+	float score min: 0.0;
+	
+	float init_score <- 1000.0;	
+	float casualties_impact <- 5.0;
+	float border_impact <- 0.1;
+	float price_meter_dyke <- 0.01;
+	float price_meter_dam <- 0.1;
+	
+	float best_score <- 0.0;
 	
 	/*************************************************************
 	 * Attributes dedicated to the UI (images, colors, frames, etc.)
@@ -46,20 +51,23 @@ global control: fsm {
 	rgb frame_color <- rgb(1, 95, 115);
 	rgb river_color <- rgb(74, 169, 163);
 	rgb people_color <-rgb(232, 215, 164);
-	rgb evacuation_color <- rgb(176, 32, 19);
+	rgb people_drowned_color <- rgb(255, 0, 0);
+	rgb people_evacuated_color <- rgb(0, 255, 0);
+	rgb evacuation_color <- rgb(100, 200, 100);
+	
 	rgb road_color <- rgb(64, 64, 64);
 	rgb line_color <- rgb(156, 34, 39);
-	rgb dyke_color <- rgb(34, 156, 39);
+	rgb dyke_color <- rgb(200, 200, 200);
+	rgb dam_color <- rgb(140, 0, 255);
 	rgb text_color <- rgb(232, 215, 164);
 	list<rgb> building_colors <- [rgb(214, 168, 0),rgb(237, 155, 0),rgb(202, 103, 2),rgb(120, 167, 121)];
 	
 	geometry background <- rectangle(1700, 1400);
-	point text_position <- {-1500, 500};
+	point text_position <- {-3000, 600};
 	point background_position <- text_position - {200, 200};
-	point timer_position <- {-1100, 1000};
-	point icon_position <- {-1350, 1000};
-	point check_position <- {-1350, 1300};
-	point check_text_position <- {-1100, 1300};
+	point icon_position <- {-2850, 1600};
+	point check_position <- {-2850, 1700};
+	point check_text_position <- {-2600, 1900};
 	
 	bool river_in_3D <- false; 
 	geometry button_frame;  
@@ -70,6 +78,129 @@ global control: fsm {
 	image check_image_selected; 
 	bool button_selected;
 	bool check_selected;
+	
+	
+	geometry main_river_part;
+	
+	float cycle_duration <- 0.1;
+	
+	list<geometry> water_limit_drain;
+	list<geometry> water_limit_well;
+	geometry water_limit_danger;
+	
+	
+	/*************************************************************
+	 * Built-in parameters to control the simulations
+	 *************************************************************/
+	
+	//Step of the simulation
+	float step <- 30#mn;
+	
+	// Current date is fixed to #now
+	date current_date <- #now;
+	
+	/*************************************************************
+	 * Flags to control some functions in the simulations
+	 *************************************************************/
+
+	// Do we need to recompute the road graph ? 
+	bool need_to_recompute_graph <- false;
+	
+	// Do we keep the previous dykes from one simulation to the other ? 
+	bool keep_dykes;
+
+	/*************************************************************
+	 * Global monitoring variables
+	 *************************************************************/
+	 
+	// Number of casualties (drowned people)
+	int casualties <- 0;
+	
+	// Number of evacuated people
+	int evacuated <- 0;
+
+	/*************************************************************
+	 * Initial parameters for people, water and obstacles
+	 *************************************************************/
+
+	// Initial number of people
+	int nb_of_people <- 1000;
+	
+	// The average speed of people
+	float speed_of_people <- 20 #m / #h;
+	
+	// The maximum water input
+	float max_water_input <- 0.6 const: true;
+
+	
+	// The height of water in the river at the beginning
+	float initial_water_height <- 2.0 const: true;
+	
+	//Diffusion rate
+	float diffusion_rate <- 0.4 const: true;
+	
+	//Height of the dykes 
+	float dyke_height <- 60.0 const: true;
+	
+	//Width of the dyke (15 m by default)
+	float dyke_width <- 15.0 const: true;
+	
+	float dyke_length <- 0.0;
+	float dam_length <- 0.0;
+	
+	
+	float limit_drown <- 0.1 const: true;
+	
+	list<cell> cells_at_stake;
+	/*************************************************************
+	 * Road network
+	 *************************************************************/
+	
+	// Road network w/o the drowned roads
+	graph<geometry, geometry> road_network;
+	
+	// Weights associated with the road network
+	map<road, float> road_weights;
+	
+	bool is_ok_dyke_construction <- false;
+	
+	/*************************************************************
+	 * GIS input data
+	 *************************************************************/
+
+	//Shapefile for the river
+	file river_shapefile <- file("../../includes/gis/river_clean.shp");
+	
+	//if defined, used to create people agents
+	shape_file people_shape_file <- shape_file("../../includes/gis/people.shp");
+
+	//Shapefile for the buildings
+	file buildings_shapefile <- file("../../includes/gis/buildings.shp");
+	
+	//Shapefile for the evacuation points
+	file shape_file_evacuation <- file("../../includes/gis/evacuation_point.shp");
+	
+	//Shapefile for the roads
+	file shape_file_roads <- file("../../includes/gis/road.shp");
+	
+	//Data elevation file : small, medium and large definition files are availables
+	//file dem_file <- file("../../includes/dem/dem_small.tif");
+	file dem_file <- file("../../includes/dem/dem_small.tif");
+	
+	
+	shape_file drain_shape_file <- shape_file("../../includes/gis/drain.shp");
+
+	//Shape of the environment using the bounding box of Quang Binh
+	geometry shape <- envelope(file("../../includes/gis/QBBB.shp"));
+	
+
+	/*************************************************************
+	 * Lists of the water cells used to schedule them 
+	 *************************************************************/
+	//List of the initial river cells ("bed" of the river)
+	list<cell> bed_cells;
+	 
+	float total_water_to_add;
 	
 	/*************************************************************
 	 * Global states
@@ -86,15 +217,20 @@ global control: fsm {
 	state s_init {
 		enter {
 			do enter_init();
-			
+			score <- init_score;	
 		}
+		
+		do add_water();
+		do flow_water();
+		do check_obstactles_drowning();
+		do recompute_road_graph();
 		do body_init();
+		do update_score;
+		current_step <- current_step +1;
 		exit {
-			ask people {
-				do die;
-			}
-			do init_people;
+			
 			do exit_init();
+			do restart;
 		}
 		transition to: s_diking when: init_over();
 	}
@@ -108,8 +244,11 @@ global control: fsm {
 	state s_diking {
 		enter {
 			do enter_diking();
+			
+			do compute_river_shape;
 		}
 		do body_diking();
+		
 		exit {
 			do exit_diking();
 		}
@@ -127,24 +266,34 @@ global control: fsm {
 	state s_flooding {
 		enter {
 			do enter_flooding();
+			score <- init_score;	
 		}		
 		do add_water();
 		do flow_water();
 		do check_obstactles_drowning();
 		do recompute_road_graph();
-		do drain_water();
+		//do drain_water();
 		do body_flooding();
+		do update_score;
+		current_step <- current_step +1;
 		exit {
+			best_score <- max(best_score, score);
 			do exit_flooding();
 		}
 		transition to: s_start when: (current_round >= num_rounds) and  flooding_over() {
 			do restart();
 		}
-		 transition to: s_diking when: (current_round < num_rounds) and flooding_over() {
+		transition to: s_diking when: (current_round < num_rounds) and flooding_over() {
 			do restart();
 		}
 		 
 	}
+	action update_score {
+		float dyke_price <- dyke sum_of (each.length * (each.is_dam ? price_meter_dam : price_meter_dyke));	
+		float impact_border <- (cells_at_stake where (each.water_height > limit_drown)) sum_of (each.water_height *border_impact); 
+		write sample(impact_border);
+		score <- init_score - casualties_impact * casualties - dyke_price - impact_border;
+	} 
 
 	/*************************************************************
 	 * Functions that control the transitions between the states. 
@@ -185,254 +334,94 @@ global control: fsm {
  
 	
  	string id_sim <- "Game_" + (#now).year +"_" + (#now).month+"_"+(#now).day+ "_"+(#now).hour+ "_"+(#now).minute;
-	
-	list<list<point>> people_positions;
-	list<list<int>> people_evacuated_casualties;
-	list<geometry> river_geometries;
-	
+		
 	int current_step;
-	bool playback_finished;
 	
 		// The next timeout to occur for the different stages
 	float current_timeout;
 	
-	
+	action create_dyke(point source, point target) {
+		if (source distance_to target > 1.0)  {
+			geometry l <- line([source, target]);
+			l <- l inter world;
+			if (l != nil) {
+				if (l overlaps init_river) {
+					geometry gI <- l inter init_river;
+					geometry gD <- l - init_river;
+					if gI != nil {
+						loop ggI over: gI.geometries {
+							create dyke with:(is_dam: true, shape:ggI);
+						}
+						if (gD != nil) {
+							loop ggD over: gD.geometries {
+								create dyke with:(shape:ggD);
+							}
+						}
+					}
+				} else {
+					create dyke with:(shape:l);
+				}	
+			}
+		}
+	}
 		
 	
 	// The maximum amount of time, in seconds, for building dikes 
 		 
 	 
 	 action reset_game {
-	 	if (save_results and not recording) {
+	 	if (save_results) {
 	 		id_sim <- "Game_" + (#now).year +"_" + (#now).month+"_"+(#now).day+ "_"+(#now).hour+ "_"+(#now).minute;
-	 		save "round,dyke_length,evacuated,casualties" to:id_sim+"/evacuated_casualties.csv" rewrite: true format:"text";
+	 		save "round,dyke_length,dam_length,evacuated,casualties" to:id_sim+"/evacuated_casualties.csv" rewrite: true format:"text";
 		}
 	 	current_round <- 1;
 	 	if (use_tell) {
 	 		do tell("Restart the new game",false);
 	 	}
 	 }
-	 action playback {
-	 	playback_finished <- current_step = length(people_positions);
-		if playback_finished {
-			return;
-		}
-		int first <- first(people).index;
-		ask people {
-			point prev_loc <- copy(location);
-			location <- people_positions[current_step][self.index - first];
-			if (evacuation_time = -1 and current_step > 0 and location != prev_loc) {
-				evacuation_time <- current_step;
-			}
-		}
-		if current_step = 0 {
-	 		ask people {
-				init_loc <- location;
-			}
-	 	}
-		ask river {
-			shape <- river_geometries[current_step];
-		}
-		float t2 <- gama.machine_time + number_of_milliseconds_to_wait_in_playback;
-		loop while: gama.machine_time < t2 {}
-		evacuated <- people_evacuated_casualties[current_step][0];
-		casualties <- people_evacuated_casualties[current_step][1];
-		current_step <- current_step + 1;
-		
-
-	}
-	
-	action record {
-		list<point> to_save <- [];
-		ask people {
-			to_save << self.location;
-		}
-		
-		people_positions << to_save;
-		ask river {
-			river_geometries << copy(shape);
-		}
-		people_evacuated_casualties<< [evacuated,casualties];
-	}
 	
 	action enter_flooding_base {
-		if save_results and not recording{
+		if save_results {
 			save dyke to:id_sim+"/dykes_" + current_round + ".shp"  format:"shp";
 		}
-		
-		
 	}
 	action exit_flooding_base {
-		if (recording) {
-			string total <- "";
-			loop i from: 0 to: current_step - 1 {
-				list<point> pp <- i >= length(people_positions) ? last(people_positions) : people_positions[i];
-				loop p over: pp {
-					total <- total + float(i) + "," + p.x + "," + p.y + "\n";
-				}
-			}
-			save total to: "people_positions.csv" format:"txt";
-			save river_geometries to: "river_geometries.shp" format: "shp";
-			
-			string states_ <- "";
-			loop i from: 0 to: current_step - 1 {
-				list<int> pp <- i >= length(people_evacuated_casualties) ? last(people_evacuated_casualties) : people_evacuated_casualties[i]; 
-				states_ <- states_ + pp[0] + "," + pp[1]+ "\n";
-				
-			}
-			save states_ to: "people_states.csv" format:"txt";
+		if (save_results) {
+			save ""+current_round+","+ dyke_length+ ","+ dam_length +","+evacuated+"," +casualties to:id_sim+"/evacuated_casualties.csv" rewrite: false format:"text";
+		}
+		current_round <- current_round +1;
+		if (current_round > num_rounds) {
+			do reset_game;
 		} else {
-			if (save_results and not recording) {
-				save ""+current_round+","+ dyke_length+","+evacuated+"," +casualties to:id_sim+"/evacuated_casualties.csv" rewrite: false format:"text";
-			}
-			current_round <- current_round +1;
-			if (current_round > num_rounds) {
-				do reset_game;
-			} else {
-				if (use_tell) {
-	 				do tell("Start of Round " + current_round,false);
-	 			}
-			}
+			if (use_tell) {
+	 			do tell("Start of Round " + current_round,false);
+	 		}
 		}
 		ask experiment {do compact_memory;}
 	}
 	
 	action  enter_init_base {
-		if (!recording and empty(people_positions)) {
-			matrix<float> mf <- matrix(csv_file("people_positions.csv", ",",float));
-			people_positions <- [];
-			loop times: mf.rows / nb_of_people {
-				people_positions << [];
-			}
-			loop line over: rows_list(mf) {
-				people_positions[int(line[0])] << point(line[1],line[2]);
- 			}
- 			
- 			matrix<int> ms <- matrix(csv_file("people_states.csv", ",",int));
-			people_evacuated_casualties <- [];
-			loop i from: 0 to: ms.rows -1{
-				people_evacuated_casualties << ms row_at i;
-			}
-			
-			river_geometries <- shape_file("river_geometries.shp").contents;
-			//write "steps " + length(people_positions);
-			//write "size of pop " + length(people_positions[0]);
-		}
-
+	
 		current_step <- 0;
 	}
-	/*************************************************************
-	 * Built-in parameters to control the simulations
-	 *************************************************************/
 	
-	//Step of the simulation
-	float step <- 30#mn;
-	
-	// Current date is fixed to #now
-	date current_date <- #now;
-	
-	/*************************************************************
-	 * Flags to control some functions in the simulations
-	 *************************************************************/
-
-	// Do we need to recompute the road graph ? 
-	bool need_to_recompute_graph <- false;
-	
-	// Do we keep the previous dykes from one simulation to the other ? 
-	bool keep_dykes;
-
-	/*************************************************************
-	 * Global monitoring variables
-	 *************************************************************/
-	 
-	// Number of casualties (drowned people)
-	int casualties <- 0;
-	
-	// Number of evacuated people
-	int evacuated <- 0;
-
-	/*************************************************************
-	 * Initial parameters for people, water and obstacles
-	 *************************************************************/
-
-	// Initial number of people
-	int nb_of_people <- 500;
-	
-	// The average speed of people
-	float speed_of_people <- 20 #m / #h;
-	
-	// The maximum water input
-	float max_water_input <- 0.5;
-
-	
-	// The height of water in the river at the beginning
-	float initial_water_height <- 3.0;
-	
-	//Diffusion rate
-	float diffusion_rate <- 0.5;
-	
-	//Height of the dykes (30 m by default)
-	float dyke_height <- 30.0;
-	
-	//Width of the dyke (15 m by default)
-	float dyke_width <- 15.0;
-	
-	float dyke_length_max <- 10000.0;
-	
-	float dyke_length <- 0.0;
-	/*************************************************************
-	 * Road network
-	 *************************************************************/
-	
-	// Road network w/o the drowned roads
-	graph<geometry, geometry> road_network;
-	
-	// Weights associated with the road network
-	map<road, float> road_weights;
-	
-	bool is_ok_dyke_construction <- false;
-	
-	/*************************************************************
-	 * GIS input data
-	 *************************************************************/
-
-	//Shapefile for the river
-	file river_shapefile <- file("../../includes/gis/river.shp");
-	
-	//Shapefile for the buildings
-	file buildings_shapefile <- file("../../includes/gis/buildings.shp");
-	
-	//Shapefile for the evacuation points
-	file shape_file_evacuation <- file("../../includes/gis/evacuation_point.shp");
-	
-	//Shapefile for the roads
-	file shape_file_roads <- file("../../includes/gis/road.shp");
-	
-	//Data elevation file : small, medium and large definition files are availables
-	file dem_file <- file("../../includes/dem/terrain_small.tif");
-	
-	//Shape of the environment using the bounding box of Quang Binh
-	geometry shape <- envelope(file("../../includes/gis/QBBB.shp"));
-	
-	/*************************************************************
-	 * Lists of the water cells used to schedule them 
-	 *************************************************************/
-
-	//List of the drain cells ("end" of the river)
-	list<cell> drain_cells;
-	
-	//List of the initial river cells ("bed" of the river)
-	list<cell> bed_cells;
-	 
 	/*************************************************************
 	 * Initialization and reinitialization behaviors
 	 *************************************************************/
 
 	init {
+		init_river  <- first(river_shapefile.contents); 
 		if (use_tell) {
 	 		do tell("Start the game: Round 1"  ,false);
 	 	}
 		do initialize_agents;
+		//save people format: "shp" to: "../../includes/gis/people.shp" attributes:["evacuation_time"];
+		/*
+		ask cell_simple {
+			list<cell> cs <- cell overlapping self;
+			grid_value <- cs mean_of (each.grid_value);
+		}
+		save cell_simple to: "dem_low_resolution.tif" format:"geotiff"; */
 	}
 	
 	action restart {
@@ -442,6 +431,12 @@ global control: fsm {
 			do die;
 		}
 		dyke_length <- 0.0;
+		dam_length <- 0.0;
+		
+		
+		current_step <- 0; 
+		ask river {do die;}
+			
 		ask cell {
 			do initialize();
 		}
@@ -453,12 +448,15 @@ global control: fsm {
 			do die;
 		}
 		do initialize_agents;
+		//do compute_river_shape;
+		main_river_part <- init_river;
+		
 		
 	}
 	
 	action initialize_agents {
 		//Initialization of the river and the corresponding cells
-		do init_river;
+		do init_river_computation;
 		//Initialization of the obstacles (buildings, roads, etc.)
 		do init_buildings;
 		do init_roads;
@@ -468,14 +466,21 @@ global control: fsm {
 	}
 	
 	action init_people {
-		create people number: nb_of_people {
-			location <- init_loc != nil ?init_loc : any_location_in(one_of(buildings));
+
+		if (people_shape_file != nil) {
+			create people from: people_shape_file with:(evacuation_time:int(get("evacuation")));
+		} else {
+			create people number: nb_of_people {
+				location <- init_loc != nil ?init_loc : any_location_in(one_of(buildings));
+			}
 		}
+		
+	
 	}
 
 	action init_roads {
 		if (empty(road)) {create road from: clean_network(shape_file_roads.contents, 0.0, false, true);}
-		road_network <- as_edge_graph(road);
+		road_network <- as_edge_graph(road) with_shortest_path_algorithm "NBAStar";
 		road_weights <- road as_map (each::each.shape.perimeter);
 	}
 	
@@ -486,18 +491,68 @@ global control: fsm {
 	/*
 	 * Initializes the water cells according to the river shape file and the drain
 	 */
-	action init_river {
+	action init_river_computation {
+		int max_y <- (cell max_of each.grid_y);
+		geometry border <- shape.contour;
+		water_limit_well <- [];	
+		water_limit_danger <- copy(border);
+		water_limit_drain <- [];
+		loop g over: drain_shape_file {
+			water_limit_danger  <- water_limit_danger - g;
+			int is_drain_ <- int(g.attributes["drain"]);
+			if is_drain_ = 0 {
+				water_limit_well <- water_limit_well  + (g inter border);
+			} else {
+				water_limit_drain <- water_limit_drain + (g inter border);
+				ask cell overlapping g {
+					is_drain <- length(neighbors) < 4;
+				}
+			}
+		}
+		ask (cell overlapping water_limit_danger) where (each.num_neigbors < 4) {
+			is_stake <- true;
+			cells_at_stake << self;
+		}
+		
 		if (empty(river)){ 
+			bed_cells <- [];
 			create river from:(river_shapefile);
 			ask cell overlapping river[0] {
 				bed_cells << self;
-				if (grid_y = 0) {drain_cells << self;}
 			}
 		}
-		ask bed_cells {water_height <- initial_water_height;}
-		ask river {do compute_shape;}
+		ask bed_cells {
+			if (grid_y > (max_y - 200)) {
+				water_to_add <-  max(0.1,(grid_y / max_y)^3);
+			}
+			
+		}
+		total_water_to_add <- bed_cells sum_of each.water_to_add;
+		
+		ask bed_cells where (each.obstacle_height = 0){water_height <- initial_water_height;}
+		do compute_river_shape;
+		
 	}
 	
+	action compute_river_shape {
+		list<river> old_river <- copy(river as list);
+		//geometry g <- (init_river union (union((cell where (each.water_height > limit_drown)) collect each.shape_union))) ;
+		list<list<cell>> clusters <- list<list<cell>>(simple_clustering_by_distance(cell where (each.water_height > limit_drown), 1));
+       	geometry g <- nil;
+       	loop c over: clusters {
+       		if (length(c) > 10) {
+       			create river with: (shape: (union(c collect each.shape_union)) simplification 50.0);
+       		}
+       		
+       	}
+       	
+       	ask old_river {do die;}
+		
+       	
+		//g <- (length(g.geometries) > 1 ? g.geometries with_max_of each.area : g) simplification 50.0;
+		main_river_part <- river closest_to {world.location.x, world.shape.height};
+		
+	}
 	/*
 	 * Initializes the buildings */
 	action init_buildings {
@@ -515,19 +570,29 @@ global control: fsm {
 	 * Action to add water to the river cells
 	 */
 	action add_water {
-		ask bed_cells {
-			water_height <- water_height + max_water_input * rnd(100) / 100;
+		if (current_step <= num_step_add) {
+			list<cell> to_adds <- bed_cells where ((each.obstacle_height = 0) and (each.location overlaps main_river_part));
+			float coeff_to_add <- total_water_to_add / (to_adds sum_of each.water_to_add);
+			ask to_adds{
+				water_height <- water_height + water_to_add * max_water_input  * coeff_to_add ;
+			}
 		}
+		
 	}
-
 	/**
 	 * Action to flow the water according to the altitute and the obstacle
 	 */
 	action flow_water {
-		ask cell sort_by ((each.altitude + each.water_height + each.obstacle_height)) {
-			already <- false;
+		ask cell {
+			water_height_tmp <- water_height;
+		}
+		ask cell{
 			do flow;
 		}
+		ask cell {
+			water_height <- water_height_tmp;
+		}
+		do compute_river_shape;
 	}
 
 	/**
@@ -549,13 +614,7 @@ global control: fsm {
 	/**
 	 * Action for the drain cells to drain water
 	 */
-	action drain_water {
-		ask drain_cells {
-			water_height <- 0.0;
-		}
-
-	}
-
+	
 }
 /*************************************************************
 * Obstacles represent the attributes and behaviors common to 
@@ -601,7 +660,7 @@ species obstacle {
 
 	
 	action check_drowning {
-		drowned <- (cells_under first_with (each.water_height > height)) != nil;
+		drowned <- (cells_under first_with (each.water_height > limit_drown)) != nil;
 		if (drowned) {
 			do break();
 		}
@@ -619,7 +678,7 @@ species obstacle {
 species buildings parent: obstacle schedules: []{
 	//The height of the building is randomly chosed between 5 and 15 meters
 	action compute_height {
-		height <- 5.0 + rnd(10.0) ;
+		height <- 10.0 ;
 	}
 }
 
@@ -628,13 +687,36 @@ species buildings parent: obstacle schedules: []{
 *************************************************************/	
 species dyke parent: obstacle schedules: []{
 	float length;
+	bool is_dam <- false;
 	init {
+		length <- shape.perimeter;
+		if (is_dam) {
+			dam_length <- dam_length + length;
+		} else {
+			dyke_length <- dyke_length + length;
+		}
 		shape <- shape + 20;
+	}
+	action check_drowning {
+		loop c over: (cells_under where (each.water_height > limit_drown)) {
+			cells_under >> c;
+			if (shape != nil) {shape <- shape - (c  + 20.0);}
+			c.obstacles >> self;
+		}
+		if (shape = nil or empty(cells_under)) {
+			loop c over: cells_under {
+				c.obstacles >> self;	
+			}
+			do die;
+		}
+		/*if (drowned) {
+			do break();
+		}*/
 	}
 	
 	//The height of the dyke is dyke_height minus the average height of the cells it overlaps
 	action compute_height {
-		height <- dyke_height - mean(cells_under collect (each.altitude));
+		height <- dyke_height;// - mean(cells_under collect (each.altitude));
 	}
 	
 	//Allows a user to destroy the dyke by ctrl-clicking on it
@@ -665,9 +747,6 @@ species road parent: obstacle schedules: [] {
 }
 
 
-
-
-
 /*************************************************************
 * Cells are the support of water flowing. To save memory (and 
 * speed) they are not scheduled but managed by the world directly
@@ -677,9 +756,10 @@ grid cell 	file: dem_file
 			frequency: 0 
 			use_regular_agents: false 
 			use_individual_shapes: false 
-			use_neighbors_cache: true 
+			use_neighbors_cache: true  
 			schedules: [] {
 	
+	float water_to_add;
 	geometry shape_union <- shape + 0.1;
 	//Altitude of the cell as read from the DEM
 	float altitude <- grid_value const: true;
@@ -691,15 +771,21 @@ grid cell 	file: dem_file
 	list<obstacle> obstacles;
 	//Height of the obstacles
 	float obstacle_height;
-	//Has the cell been already processed during the current step ? 
-	bool already;
-
+		
+	bool is_drain <- false;
+	bool is_stake <- false;
+	
+	int num_neigbors <- length(neighbors);
+	float water_height_tmp;
 	action initialize {
 		water_height <- 0.0;
+		water_height_tmp <- 0.0;
 		height <- 0.0;
-		already <- false;
 		obstacle_height <- 0.0;
 		obstacles <- [];
+		is_drain <- false;
+		is_stake <- false;
+		water_to_add <- 0.0;
 	}
 	
 	/**
@@ -707,34 +793,46 @@ grid cell 	file: dem_file
 	 */ 
 	action flow {
 	//if the height of the water is higher than 0 then, it can flow among the neighbour cells
-		if (water_height > 0) {
+		if ((num_neigbors = 4 or !is_drain) and water_height > 0 ) {
 		//We get all the cells already done
-			list<cell> neighbour_cells_al <- neighbors where (each.already);
+			list<cell> neighbour_cells_al <- neighbors ;
+			
 			//If there are cells already done then we continue
 			if (!empty(neighbour_cells_al)) {
 			//We compute the height of the neighbours cells according to their altitude, water_height and obstacle_height
 				ask neighbour_cells_al {
 					height <- altitude + water_height + obstacle_height;
 				}
+				
 				//The height of the cell is equal to its altitude and water height
 				height <- altitude + water_height;
 				//The water of the cells will flow to the neighbour cells which have a height less than the height of the actual cell
 				list<cell> flow_cells <- (neighbour_cells_al where (height > each.height));
 				//If there are cells, we compute the water flowing
 				if (!empty(flow_cells)) {
-					loop flow_cell over: shuffle(flow_cells) sort_by (each.height) {
+					list<float> v <- flow_cells collect (height - each.height);
+					float sum_v <- sum(v);
+					float water_flowing <- water_height * diffusion_rate;
+					water_height_tmp <- water_height_tmp - water_flowing;
+					
+					/*loop flow_cell over: shuffle(flow_cells) sort_by (each.height) {
 						float water_flowing <- max([0.0, min([(height - flow_cell.height), water_height * diffusion_rate])]);
 						water_height <- water_height - water_flowing;
 						flow_cell.water_height <- flow_cell.water_height + water_flowing;
-						height <- altitude + water_height;
+						//height <- altitude + water_height;
+					}*/
+					loop i from: 0 to: length(flow_cells) -1 {
+						cell flow_cell <- flow_cells[i];
+						flow_cell.water_height_tmp <- flow_cell.water_height_tmp + water_flowing * v[i]/sum_v;
 					}
 
 				}
 
 			}
 
+		} else {
+			water_height_tmp <- water_height_tmp  - (water_height *  diffusion_rate);
 		}
-		already <- true;
 	}
 
 	
@@ -754,6 +852,11 @@ grid cell 	file: dem_file
 		water_height <- 0.0;
 		if (the_obstacle.height > obstacle_height) {obstacle_height <- the_obstacle.height;}
 	}
+	
+	/*reflex color_up {
+		float cv <- 255 * (1 - water_height/20.0);
+		color <- rgb(cv,cv,255);
+	}*/
 }
 
 /*************************************************************
@@ -762,14 +865,9 @@ grid cell 	file: dem_file
 *************************************************************/	
 
 species river {
+	rgb color <-rnd_color(255);
 
-	reflex {
-		if (state != "s_init") {do compute_shape();}
-	}
-
-	action compute_shape {
-		shape <- /*without_holes*/(union((cell where (each.water_height > 0)) collect each.shape_union) simplification 30) ;
-	}
+	
 }
 
 /*************************************************************
@@ -784,9 +882,15 @@ species people skills: [moving] control: fsm {
 	
 	point init_loc <- nil;
 	int evacuation_time <- -1;
+	
+	init {
+		if (evacuation_time = -1) {
+			evacuation_time <- rnd(50);
+		}
+	}
 
 	state s_idle initial: true {
-		transition to: s_fleeing when: world.state = "s_flooding" and ((evacuation_time > -1) ? evacuation_time = current_step :flip(0.2));
+		transition to: s_fleeing when: world.state in ["s_flooding", "s_init"] and (evacuation_time = current_step);
 		transition to: s_drowned when: self.is_drowning();
 	}
 	
@@ -818,7 +922,7 @@ species people skills: [moving] control: fsm {
 
 	bool is_drowning {
 		cell a_cell <- cell(location);
-		return (a_cell != nil and a_cell.water_height > 0.2 and flip(0.5));
+		return (a_cell != nil and a_cell.water_height > limit_drown);
 	}
 }
 	
