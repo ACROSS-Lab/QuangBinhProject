@@ -42,7 +42,7 @@ global {
 	}  
 	
 	action enter_start {
-		button_frame <- nil;
+		button_frame <- nil; 
 		button_image_unselected <- nil;
 		button_image_selected <- nil;
 	}

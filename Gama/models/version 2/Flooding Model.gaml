@@ -291,7 +291,6 @@ global control: fsm {
 	action update_score {
 		float dyke_price <- dyke sum_of (each.length * (each.is_dam ? price_meter_dam : price_meter_dyke));	
 		float impact_border <- (cells_at_stake where (each.water_height > limit_drown)) sum_of (each.water_height *border_impact); 
-		write sample(impact_border);
 		score <- init_score - casualties_impact * casualties - dyke_price - impact_border;
 	} 
 
