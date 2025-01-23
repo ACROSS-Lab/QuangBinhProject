@@ -1,5 +1,5 @@
 using System.Net;
-using System;
+
 public static class StaticInformation
 {
     public static string endOfGame { get; set; }
@@ -7,15 +7,15 @@ public static class StaticInformation
 
     public static string getId() {
 
-        if (connectionId == null || connectionId.Length == 0)
+        if (string.IsNullOrEmpty(connectionId))
         {
-            string hostName = Dns.GetHostName(); // Retrive the Name of HOST
+            string hostName = Dns.GetHostName(); // Retrieve the Name of HOST
             try
             {
 
-                IPAddress[] adresses = Dns.GetHostEntry(hostName).AddressList;
+                IPAddress[] addresses = Dns.GetHostEntry(hostName).AddressList;
                 string myIP = "127.0.0.1";
-                foreach (IPAddress a in adresses)
+                foreach (IPAddress a in addresses)
                 {
                     if (a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                     {

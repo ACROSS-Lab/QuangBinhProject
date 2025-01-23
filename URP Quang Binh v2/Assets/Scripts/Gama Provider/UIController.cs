@@ -1,9 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
 using QuickTest;
-using UnityEngine.SceneManagement;
-using Gama_Provider.Simulation;
-
 using UnityEngine.UI;
 public class UIController : MonoBehaviour
 {

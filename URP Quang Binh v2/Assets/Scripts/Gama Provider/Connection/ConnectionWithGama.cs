@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using WebSocketSharp;
 using System;
-using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
