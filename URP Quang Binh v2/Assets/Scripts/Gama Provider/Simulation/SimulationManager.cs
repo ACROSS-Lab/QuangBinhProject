@@ -7,7 +7,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
 
@@ -18,36 +17,38 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] protected XRRayInteractor leftXRRayInteractor;
     [SerializeField] protected XRRayInteractor rightXRRayInteractor;
 
-    
-    [Header("Base GameObjects")] 
-    [SerializeField] protected GameObject player;
+
+    [Header("Base GameObjects")] [SerializeField]
+    protected GameObject player;
+
     [SerializeField] protected GameObject Ground;
 
 
     // optional: define a scale between GAMA and Unity for the location given
     [Header("Coordinate conversion parameters")]
     protected float GamaCRSCoefX = 1.0f;
+
     protected float GamaCRSCoefY = 1.0f;
     protected float GamaCRSOffsetX = 0.0f;
     protected float GamaCRSOffsetY = 0.0f;
 
-    
+
     protected Transform XROrigin;
-    
+
     // Z offset and scale
     protected float GamaCRSOffsetZ = 0.0f;
-    
+
     protected List<GameObject> toFollow;
-    
+
     XRInteractionManager interactionManager;
-    
+
     // ################################ EVENTS ################################
     // called when the current game state changes
     public static event Action<GameState> OnGameStateChanged;
 
     // called when the game is restarted
     public static event Action OnGameRestarted;
-    
+
 
     // called when the world data is received
     // public static event Action<WorldJSONInfo> OnWorldDataReceived;
@@ -72,7 +73,7 @@ public class SimulationManager : MonoBehaviour
 
     // allows to define the minimal time bewteen two interactions
     protected float timeWithoutInteraction = 1.0f; //in second
-    
+
     protected float remainingTime = 0.0f;
 
 
@@ -84,17 +85,17 @@ public class SimulationManager : MonoBehaviour
     protected List<GameObject> toDelete;
 
     protected bool readyToSendPosition = false;
-    
+
     protected bool readyToSendPositionInit = true;
 
     protected float TimeSendPosition = 0.05f;
     protected float TimeSendPositionAfterMoving = 1.0f;
     protected float TimerSendPosition = 0.0f;
-    
+
     protected List<GameObject> locomotion;
     protected MoveHorizontal mh = null;
     protected MoveVertical mv = null;
-    
+
     protected DEMData data;
     protected DEMDataLoc dataLoc;
     protected TeleportAreaInfo dataTeleport;
@@ -103,7 +104,7 @@ public class SimulationManager : MonoBehaviour
 
     protected float TimeSendInit = 0.5f;
     protected float TimerSendInit;
-    
+
     protected Coroutine activeCoroutine = null;
 
     protected Vector3 StartPoint;
@@ -113,7 +114,7 @@ public class SimulationManager : MonoBehaviour
     protected GameObject endPoint;
 
     protected ScoreMessage scoreM;
-    
+
     protected Vector3 originalStartPosition;
     protected bool firstPositionStored;
 
@@ -130,12 +131,12 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] protected GameObject FinalScene;
     [SerializeField] protected GameObject WinAnimtion;
     [SerializeField] protected GameObject LooseAnimtion;
-    
+
     [SerializeField] protected InputActionReference mainButton = null;
     [SerializeField] protected InputActionReference secondButton = null;
 
     //[SerializeField] protected GameObject tutorial;
-    
+
     [SerializeField] protected StatusEffectManager timer;
     [SerializeField] protected StatusEffectManager safeRateCount;
     [SerializeField] private TextMeshProUGUI timerText;
@@ -145,14 +146,13 @@ public class SimulationManager : MonoBehaviour
     protected float RemainingSeconds;
 
 
-
     // ############################################ UNITY FUNCTIONS ############################################
     void Awake()
     {
         Instance = this;
         SelectedObjects = new List<GameObject>();
         // toDelete = new List<GameObject>();
-        
+
         startPoint = GameObject.FindGameObjectWithTag("startPoint");
         endPoint = GameObject.FindGameObjectWithTag("endPoint");
 
@@ -260,6 +260,38 @@ public class SimulationManager : MonoBehaviour
         if (infoWorld != null && !infoWorld.isInit && IsGameState(GameState.LOADING_DATA))
         {
             infoWorld = null;
+        }
+
+        if (converter != null && data != null)
+        {
+            //manageUpdateTerrain();
+        }
+
+        if (converter != null && dataLoc != null)
+        {
+            //manageSetValueTerrain();
+        }
+
+        if (converter != null && dataTeleport != null)
+        {
+            //manageTeleportationArea();
+        }
+
+        if (converter != null && dataWall != null)
+        {
+            //manageWalls();
+        }
+
+        if (enableMove != null)
+        {
+            //playerMovement(enableMove.enableMove);
+            //enableMove = null;
+        }
+
+        if (infoAnimation != null)
+        {
+            //updateAnimation();
+            //infoAnimation = null;
         }
 
         if (IsGameState(GameState.LOADING_DATA) && ConnectionManager.Instance.getUseMiddleware())
@@ -407,7 +439,7 @@ public class SimulationManager : MonoBehaviour
         {
             TriggerMainButton();
         }
-        
+
         // Debug.Log("currentStage: " + currentStage + " IsGameState(GameState.GAME) :" +IsGameState(GameState.GAME));
         if (IsGameState(GameState.GAME) && UIController.Instance.DikingStart)
             ProcessRightHandTrigger();
@@ -900,8 +932,7 @@ public class SimulationManager : MonoBehaviour
                 // handlePlayerParametersRequested = true;   
                 handleGroundParametersRequested = true;
                 handleGeometriesRequested = true;
-
-
+                
                 break;
             case "score":
                 scoreM = ScoreMessage.CreateFromJSON(content);
@@ -926,6 +957,35 @@ public class SimulationManager : MonoBehaviour
 
                 break;
 
+            case "endOfGame":
+                // Currently, the project does not use the same end-of-game logic as the template
+                // Implement end-of-game logic
+                break;
+
+            case "rows":
+                data = DEMData.CreateFromJSON(content);
+                break;
+            case "wallId":
+                dataWall = WallInfo.CreateFromJSON(content);
+                break;
+            case "teleportId":
+                // The Quang Binh Project currently does not use the teleport feature
+                // Uncomment the line below in case the project needs the teleport feature in the future
+                // dataTeleport = TeleportAreaInfo.CreateFromJSON(content);
+                break;
+            case "indexX":
+                dataLoc = DEMDataLoc.CreateFromJSON(content);
+                break;
+            case "enableMove":
+                // Move is enable by default
+                // Uncomment the line below in case the project does not enable movement by default in the future
+                // enableMove = EnableMoveInfo.CreateFromJSON(content);
+                break;
+            case "triggers":
+                infoAnimation = AnimationInfo.CreateFromJSON(content);
+                break;
+
+
             default:
                 ManageOtherMessages(content);
                 break;
@@ -948,7 +1008,7 @@ public class SimulationManager : MonoBehaviour
                 }
             }
         }
-        
+
         if (rightHandTriggerButton != null && !rightHandTriggerButton.action.inProgress)
         {
             if (_inTriggerPress)
@@ -968,8 +1028,8 @@ public class SimulationManager : MonoBehaviour
 
                         FutureDike = null;
                     }
-                    APITest.Instance.TestDrawDykeWithParams(StartPoint, EndPoint);
 
+                    APITest.Instance.TestDrawDykeWithParams(StartPoint, EndPoint);
                 }
             }
         }
@@ -1046,7 +1106,7 @@ public enum GameState
 }
 
 
-[System.Serializable]
+[Serializable]
 public class ScoreMessage
 {
     public int score;
