@@ -23,14 +23,14 @@ public class SimulationManagerSolo : SimulationManager
 
             Vector2[] pts = new Vector2[5];
             Vector3 _endPoint = raycastHit.point;
-            Vector2 direction = new Vector2(_endPoint.x - _startPoint.x, _endPoint.z - _startPoint.z).normalized;
+            Vector2 direction = new Vector2(_endPoint.x - StartPoint.x, _endPoint.z - StartPoint.z).normalized;
             Vector2 Per = Vector2.Perpendicular(direction);
             Per = new Vector2(Per.x * 10.0f, Per.y * 10.0f);
 
-            pts[0] = new Vector2(_startPoint.x + Per.x, _startPoint.z + Per.y);
+            pts[0] = new Vector2(StartPoint.x + Per.x, StartPoint.z + Per.y);
             pts[1] = new Vector2(_endPoint.x + Per.x, _endPoint.z + Per.y);
             pts[2] = new Vector2(_endPoint.x - Per.x, _endPoint.z - Per.y);
-            pts[3] = new Vector2(_startPoint.x - Per.x, _startPoint.z - Per.y);
+            pts[3] = new Vector2(StartPoint.x - Per.x, StartPoint.z - Per.y);
             pts[4] = pts[0];
 
 

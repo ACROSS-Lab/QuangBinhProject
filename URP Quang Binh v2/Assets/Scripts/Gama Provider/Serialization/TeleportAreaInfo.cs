@@ -3,7 +3,7 @@ using UnityEngine;
 
 
 [System.Serializable]
-public class TeleoportAreaInfo
+public class TeleportAreaInfo
 {
     public List<int> offsetYGeom;
 
@@ -13,8 +13,8 @@ public class TeleoportAreaInfo
 
     public string teleportId;
 
-    public static TeleoportAreaInfo CreateFromJSON(string jsonString)
+    public static TeleportAreaInfo CreateFromJSON(string jsonString)
     {
-        return JsonUtility.FromJson<TeleoportAreaInfo>(jsonString);
+        return JsonUtility.FromJson<TeleportAreaInfo>(jsonString);
     }
 }

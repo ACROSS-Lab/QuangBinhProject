@@ -14,37 +14,33 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 public class SimulationManager : MonoBehaviour
 {
     [SerializeField] protected InputActionReference primaryRightHandButton = null;
+    [SerializeField] protected InputActionReference rightHandTriggerButton = null;
     [SerializeField] protected XRRayInteractor leftXRRayInteractor;
     [SerializeField] protected XRRayInteractor rightXRRayInteractor;
 
-    [SerializeField] protected InputActionReference rightHandTriggerButton = null;
-
-    [Header("Base GameObjects")] [SerializeField]
-    protected GameObject player;
-
+    
+    [Header("Base GameObjects")] 
+    [SerializeField] protected GameObject player;
     [SerializeField] protected GameObject Ground;
 
 
     // optional: define a scale between GAMA and Unity for the location given
-    [Header("Coordinate conversion parameters")] [SerializeField]
+    [Header("Coordinate conversion parameters")]
     protected float GamaCRSCoefX = 1.0f;
     protected float GamaCRSCoefY = 1.0f;
     protected float GamaCRSOffsetX = 0.0f;
     protected float GamaCRSOffsetY = 0.0f;
 
-    protected Boolean StartMenuDone = false;
-    private string currentStage = "s_start";
-
-
+    
     protected Transform XROrigin;
-
+    
     // Z offset and scale
-    [SerializeField] protected float GamaCRSOffsetZ = 0.0f;
-
+    protected float GamaCRSOffsetZ = 0.0f;
+    
     protected List<GameObject> toFollow;
-
+    
     XRInteractionManager interactionManager;
-
+    
     // ################################ EVENTS ################################
     // called when the current game state changes
     public static event Action<GameState> OnGameStateChanged;
@@ -69,12 +65,14 @@ public class SimulationManager : MonoBehaviour
     protected ConnectionParameter parameters = null;
     protected AllProperties propertiesGAMA = null;
     protected WorldJSONInfo infoWorld = null;
-
+    protected AnimationInfo infoAnimation = null;
     protected GameState currentState;
 
     public static SimulationManager Instance = null;
 
+    // allows to define the minimal time bewteen two interactions
     protected float timeWithoutInteraction = 1.0f; //in second
+    
     protected float remainingTime = 0.0f;
 
 
@@ -86,28 +84,41 @@ public class SimulationManager : MonoBehaviour
     protected List<GameObject> toDelete;
 
     protected bool readyToSendPosition = false;
+    
     protected bool readyToSendPositionInit = true;
 
     protected float TimeSendPosition = 0.05f;
     protected float TimeSendPositionAfterMoving = 1.0f;
     protected float TimerSendPosition = 0.0f;
+    
+    protected List<GameObject> locomotion;
+    protected MoveHorizontal mh = null;
+    protected MoveVertical mv = null;
+    
+    protected DEMData data;
+    protected DEMDataLoc dataLoc;
+    protected TeleportAreaInfo dataTeleport;
+    protected WallInfo dataWall;
+    protected EnableMoveInfo enableMove;
 
-    protected Vector3 _startPoint;
-    protected Vector3 _endPoint;
+    protected float TimeSendInit = 0.5f;
+    protected float TimerSendInit;
+    
+    protected Coroutine activeCoroutine = null;
+
+    protected Vector3 StartPoint;
+    protected Vector3 EndPoint;
 
     protected GameObject startPoint;
     protected GameObject endPoint;
 
     protected ScoreMessage scoreM;
-
-    [SerializeField] protected Text modalText;
-
-    //[SerializeField] protected Button startButton;
-
-    //protected float StartTime;
+    
     protected Vector3 originalStartPosition;
     protected bool firstPositionStored;
 
+    protected Boolean StartMenuDone = false;
+    private string _currentStage = "s_start";
 
     private bool _inTriggerPress = false;
 
@@ -116,26 +127,15 @@ public class SimulationManager : MonoBehaviour
     public bool DisplayFutureDike = false;
     protected bool StartFloodingDone = false;
 
-    protected Vector3 FinalPositionPlayer = new Vector3(872, 1205.2f, -3427);
     [SerializeField] protected GameObject FinalScene;
     [SerializeField] protected GameObject WinAnimtion;
     [SerializeField] protected GameObject LooseAnimtion;
-
-    protected bool endOfGame = false;
-    protected float TimeEndOfGame = 17.0f;
-    protected float TimerEndOfGame = 0.0f;
-
-    protected bool _initializedFloodingTime = false;
-
+    
     [SerializeField] protected InputActionReference mainButton = null;
     [SerializeField] protected InputActionReference secondButton = null;
 
     //[SerializeField] protected GameObject tutorial;
-    [SerializeField] protected GameObject globalVolume;
-
-
-    //public bool startDykingPressed;
-
+    
     [SerializeField] protected StatusEffectManager timer;
     [SerializeField] protected StatusEffectManager safeRateCount;
     [SerializeField] private TextMeshProUGUI timerText;
@@ -144,20 +144,15 @@ public class SimulationManager : MonoBehaviour
 
     protected float RemainingSeconds;
 
-    private Coroutine activeCoroutine = null;
 
-    protected float TimeSendInit = 0.5f;
-    protected float TimerSendInit;
 
     // ############################################ UNITY FUNCTIONS ############################################
     void Awake()
     {
         Instance = this;
-        // toDelete = new List<GameObject>();
-
         SelectedObjects = new List<GameObject>();
-
-
+        // toDelete = new List<GameObject>();
+        
         startPoint = GameObject.FindGameObjectWithTag("startPoint");
         endPoint = GameObject.FindGameObjectWithTag("endPoint");
 
@@ -177,7 +172,6 @@ public class SimulationManager : MonoBehaviour
             is3D = true,
             visible = true
         };
-        //startButton.onClick.AddListener(StartGame);
 
 
         XROrigin = player.transform.Find("XR Origin (XR Rig)");
@@ -296,11 +290,11 @@ public class SimulationManager : MonoBehaviour
     {
         if (IsGameState(GameState.GAME) && infoWorld != null)
         {
-            if (currentStage != infoWorld.state)
+            if (_currentStage != infoWorld.state)
             {
                 Debug.Log("BEGIN OF STAGE : " + infoWorld.state);
-                currentStage = infoWorld.state;
-                if (currentStage == "s_flooding")
+                _currentStage = infoWorld.state;
+                if (_currentStage == "s_flooding")
                 {
                 }
             }
@@ -947,8 +941,8 @@ public class SimulationManager : MonoBehaviour
                 _inTriggerPress = true;
                 if (rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit))
                 {
-                    _startPoint = raycastHit.point;
-                    startPoint.transform.position = _startPoint;
+                    StartPoint = raycastHit.point;
+                    startPoint.transform.position = StartPoint;
                     DisplayFutureDike = true;
                     Debug.Log("Display future dike is true when selecting a point");
                 }
@@ -962,8 +956,8 @@ public class SimulationManager : MonoBehaviour
                 _inTriggerPress = false;
                 if (rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit))
                 {
-                    _endPoint = raycastHit.point;
-                    endPoint.transform.position = _endPoint;
+                    EndPoint = raycastHit.point;
+                    endPoint.transform.position = EndPoint;
                     // endPoint.active = true;
                     DisplayFutureDike = false;
                     Debug.Log("Display future dike is false when release the right hand");
@@ -974,7 +968,7 @@ public class SimulationManager : MonoBehaviour
 
                         FutureDike = null;
                     }
-                    APITest.Instance.TestDrawDykeWithParams(_startPoint, _endPoint);
+                    APITest.Instance.TestDrawDykeWithParams(StartPoint, EndPoint);
 
                 }
             }
