@@ -467,7 +467,7 @@ species people skills: [moving] control: fsm {
 	float speed <- speed_of_people;
 
 	state s_idle initial: true {
-		transition to: s_fleeing when: world.state = "s_flooding" and flip(0.2);
+		transition to: s_fleeing when: world.state = "FLOODING" and flip(0.2);
 		transition to: s_drowned when: self.is_drowning();
 	}
 	

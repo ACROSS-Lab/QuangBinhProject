@@ -340,16 +340,16 @@ species unity_linker parent: abstract_unity_linker {
 	 * What are the agents to send to Unity, and what are the agents that remain unchanged ? 
 	 */
 	reflex send_agents when: not empty(unity_player) {
-		if (state = "s_init" and !recording) and not playback_finished {
+		if (state = "START" and !recording) and not playback_finished {
 			do add_geometries_to_send(people, up_people);
 			do add_geometries_to_send(river, up_water);
-		} else if (state = "s_diking") {
+		} else if (state = "DIKING") {
 			// All the dykes are sent to Unity during the diking phass
 			do add_geometries_to_send(dyke, up_dyke);
 			// The river is not changed so we keep it unchanged
 			if (river_already_sent_in_diking_phase) {do add_geometries_to_keep(river);} else {do add_geometries_to_send(river, up_water); river_already_sent_in_diking_phase <- true;}
 			
-		} else	if (state = "s_flooding") {
+		} else	if (state = "FLOODING") {
 			// We only send the people who are evacuating 
 			do add_geometries_to_send(people where (each.state = "s_fleeing"),up_people);
 			// We send the river (supposed to change every step)
