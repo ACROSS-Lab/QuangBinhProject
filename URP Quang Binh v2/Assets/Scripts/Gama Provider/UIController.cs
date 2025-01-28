@@ -38,14 +38,9 @@ public class UIController : MonoBehaviour
 
     public void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space) && DikingStart)
-        {
-            APITest.Instance.TestDrawDyke();
-        }
-
+       
         if (Input.GetKeyDown(KeyCode.Space) && UI_ChoiceOfLanguage.active)
         {
-            globalVolume.SetActive(false);
             SetInVietnamese(false);
         }
 
@@ -70,7 +65,7 @@ public class UIController : MonoBehaviour
             if (TimerForDisplayingFloodUI <= 0)
             {
                 if (InVietnamese)
-                {
+                { 
                     UI_FloodingPhase_viet.SetActive(false);
                 }
                 else
@@ -81,11 +76,11 @@ public class UIController : MonoBehaviour
                 if (FloodingInitPhase)
                 {
                     FloodingInitPhase = false;
-                    APITest.Instance.TestSetStartPressed();
+                    SimulationManager.Instance.SetStartPressed();
                 }
                 else
                 {
-                    APITest.Instance.TestSetInFlood();
+                    SimulationManager.Instance.SetInFlood();
                     FloodingInitPhase = true;
                 }
 
@@ -97,6 +92,9 @@ public class UIController : MonoBehaviour
             globalVolume.SetActive(false);
         }
     }
+
+   
+
 
     public void SetInVietnamese(bool value)
     {
@@ -130,7 +128,7 @@ public class UIController : MonoBehaviour
         if (InVietnamese)
             UI_DykingPhase_viet.SetActive(false);
         else UI_DykingPhase_eng.SetActive(false);
-        APITest.Instance.TestSetInGame();
+        SimulationManager.Instance.SetInDykeBuilding();
     }
 
     public void StartFloodingPhase()
@@ -156,7 +154,7 @@ public class UIController : MonoBehaviour
         {
             UI_FloodingPhase_eng.SetActive(true);
         }
-    }
+    } 
 
     public void EndGame(int score)
     {

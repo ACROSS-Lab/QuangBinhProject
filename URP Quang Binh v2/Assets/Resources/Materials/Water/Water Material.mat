@@ -182,9 +182,9 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - Vector1_10EB46E7: 0.874
-    - Vector1_12094A6A: 0.07
-    - Vector1_276CFA84: 1.649
+    - Vector1_10EB46E7: 0.702
+    - Vector1_12094A6A: 0.36
+    - Vector1_276CFA84: 1.7
     - Vector1_34AA93A4: 1
     - Vector1_380E174C: 18.62
     - Vector1_4B804F1: 1.02
@@ -193,13 +193,13 @@ Material:
     - Vector1_8163804F: 1.32
     - Vector1_82D25EEE: 0.1
     - Vector1_86FC2385: 0.1
-    - Vector1_9A6CDA63: 1
-    - Vector1_A01E7616: 0.31
+    - Vector1_9A6CDA63: 0.536
+    - Vector1_A01E7616: 4.08
     - Vector1_A6116528: 0.37
-    - Vector1_A99CC525: 0.09
+    - Vector1_A99CC525: 0.3
     - Vector1_AA127297: -0.03
     - Vector1_C09E8EE0: 0.734
-    - Vector1_D1C0A90B: 3
+    - Vector1_D1C0A90B: 4.85
     - Vector1_E35C987E: 0
     - _AORemapMax: 1
     - _AORemapMin: 0
@@ -347,7 +347,7 @@ Material:
     - Vector2_F47C6FA1: {r: 5, g: 10, b: 0, a: 0}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _BaseColorMap_MipInfo: {r: 0, g: 0, b: 0, a: 0}
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 0}
     - _DiffusionProfileAsset: {r: 0, g: 0, b: 0, a: 0}
     - _DoubleSidedConstants: {r: 1, g: 1, b: -1, a: 0}
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}

@@ -326,8 +326,14 @@ public class SimulationManager : MonoBehaviour
             {
                 Debug.Log("BEGIN OF STAGE : " + infoWorld.state);
                 _currentStage = infoWorld.state;
-                if (_currentStage == "s_flooding")
+                if (_currentStage == "s_diking")
                 {
+                    if (!StartMenuDone )
+                    {
+                        UIController.Instance.StartMenuDikingPhase();
+                        StartMenuDone = true;
+                        StartFloodingDone = false;
+                    }
                 }
             }
 
@@ -353,12 +359,7 @@ public class SimulationManager : MonoBehaviour
 
             if (infoWorld.state == "s_init")
             {
-                if (!StartMenuDone && infoWorld.playback_finished)
-                {
-                    UIController.Instance.StartMenuDikingPhase();
-                    StartMenuDone = true;
-                    StartFloodingDone = false;
-                }
+                
             }
             else if (infoWorld.state == "s_diking")
             {
@@ -399,6 +400,41 @@ public class SimulationManager : MonoBehaviour
             //TimeSpan timeSpan = TimeSpan.FromSeconds(RemainingSeconds);
             //timerText.text = timeSpan.ToString(@"mm\:ss");
         }
+    }
+
+    public void SetInDykeBuilding()
+    {
+        Dictionary<string, string> args = new Dictionary<string, string>()
+            {
+                { "player_id", StaticInformation.getId() },
+                { "status", GAMAGameStatus.IN_DYKE_BUILDING.ToString() }
+            };
+
+        ConnectionManager.Instance.SendExecutableAsk("set_status", args);
+    }
+
+    public void SetStartPressed()
+    {
+        Debug.Log("SetStartPressed");
+        Dictionary<string, string> args = new Dictionary<string, string>()
+            {
+                { "player_id", StaticInformation.getId() },
+                { "status", GAMAGameStatus.START_PRESSED.ToString() }
+            };
+
+        ConnectionManager.Instance.SendExecutableAsk("set_status", args);
+    }
+
+    public void SetInFlood()
+    {
+        Debug.Log("SetInFlood");
+        Dictionary<string, string> args = new Dictionary<string, string>()
+            {
+                { "player_id", StaticInformation.getId() },
+                { "status", GAMAGameStatus.IN_FLOOD.ToString() }
+            };
+
+        ConnectionManager.Instance.SendExecutableAsk("set_status", args);
     }
 
     private IEnumerator CountdownCoroutine()
@@ -865,16 +901,42 @@ public class SimulationManager : MonoBehaviour
     {
     }
 
-    protected virtual void HoverEnterInteraction(HoverEnterEventArgs ev)
+    protected void HoverEnterInteraction(HoverEnterEventArgs ev)
     {
+        GameObject obj = ev.interactableObject.transform.gameObject;
+        if ((obj.tag.Equals("dyke")) || ("dam").Equals(obj.tag))
+            SimulationManagerSolo.ChangeColor(obj, Color.blue);
     }
 
-    protected virtual void HoverExitInteraction(HoverExitEventArgs ev)
+    protected void HoverExitInteraction(HoverExitEventArgs ev)
     {
+        GameObject obj = ev.interactableObject.transform.gameObject;
+        if (obj.tag.Equals("dyke"))
+        {
+            SimulationManagerSolo.ChangeColor(obj, Color.gray);
+        }
+        else if (obj.tag.Equals("dam"))
+        {
+            SimulationManagerSolo.ChangeColor(obj, Color.magenta);
+        }
     }
 
-    protected virtual void SelectInteraction(SelectEnterEventArgs ev)
+    protected void SelectInteraction(SelectEnterEventArgs ev)
     {
+        if (_currentStage == "s_diking" && remainingTime <= 0.0)
+        {
+            GameObject grabbedObject = ev.interactableObject.transform.gameObject;
+
+            if (("dyke").Equals(grabbedObject.tag) || ("dam").Equals(grabbedObject.tag))
+            {
+                Dictionary<string, string> args = new Dictionary<string, string> {
+                         {"id", grabbedObject.name }
+                    };
+                ConnectionManager.Instance.SendExecutableAsk("destroy_dyke", args);
+                
+                remainingTime = timeWithoutInteraction;
+            }
+        }
     }
 
     static public void ChangeColor(GameObject obj, Color color)

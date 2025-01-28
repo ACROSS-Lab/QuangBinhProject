@@ -13,6 +13,7 @@ TagManager:
   - locomotion
   - dyke
   - car
+  - dam
   layers:
   - Default
   - TransparentFX

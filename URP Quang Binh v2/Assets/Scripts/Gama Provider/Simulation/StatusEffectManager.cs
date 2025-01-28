@@ -21,7 +21,7 @@ namespace Gama_Provider.Simulation
             energizedEffect.GetComponentInChildren<CircularProgressBar>()
                 .ActivateCountdown(customDuration);
 
-            StartCoroutine(EndEnergizedEffect(customDuration));
+          //  StartCoroutine(EndEnergizedEffect(customDuration));
         }
 
         IEnumerator EndEnergizedEffect(float delay)

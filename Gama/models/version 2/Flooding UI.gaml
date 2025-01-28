@@ -29,50 +29,21 @@ global {
 		button_image_unselected <- nil;
 		button_image_selected <- nil; 
 		check_image_unselected <- nil;
-		check_image_selected <- nil;  
-		
-		/*write sample(cell sum_of each.water_height);
-		write sample(cell sum_of each.height);
-		write sample(cell sum_of each.obstacle_height);
-		
-		write sample(cell sum_of each.water_to_add);
-		write sample(total_water_to_add);
-		write sample(current_step);*/
-		
+		check_image_selected <- nil;  		
 	}  
 	
 	action enter_start {
-		button_frame <- nil; 
-		button_image_unselected <- nil;
-		button_image_selected <- nil;
 	}
 	 
 	action enter_diking {
 		
 		diking_over <- false;
-		check_frame <- nil;
 		current_timeout <- gama.machine_time + diking_duration * 1000;
-		button_image_unselected <- image("../../includes/icons/flood-line.png") * rgb(232, 215, 164);
-		button_image_selected <- image("../../includes/icons/flood-fill.png") * rgb(232, 215, 164);
-		check_image_unselected <- nil;
-		check_image_selected <- nil;
 	}
 	
 	action enter_flooding {
 		do enter_flooding_base;
 		restart_requested <- false;	
-		button_image_unselected <- image("../../includes/icons/restart-line.png");
-		button_image_selected <- image("../../includes/icons/restart-fill.png");
-		check_image_unselected <- image("../../includes/icons/checkbox-blank-line.png");
-		check_image_selected <- image("../../includes/icons/checkbox-line.png");
-		
-		
-		/*write sample(cell sum_of each.water_height);
-		write sample(cell sum_of each.height);
-		write sample(cell sum_of each.obstacle_height);
-		write sample(cell sum_of each.water_to_add);
-		write sample(total_water_to_add);
-		write sample(current_step);*/
 	}
 	
 	action exit_flooding {
@@ -80,7 +51,6 @@ global {
 		loop while: gama.machine_time < t {
 			
 		}
-		
 		do exit_flooding_base;
 	}
 	

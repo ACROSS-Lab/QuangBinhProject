@@ -339,7 +339,7 @@ global control: fsm {
 		// The next timeout to occur for the different stages
 	float current_timeout;
 	
-	action create_dyke(point source, point target) {
+	bool create_dyke(point source, point target) {
 		if (source distance_to target > 1.0)  {
 			geometry l <- line([source, target]);
 			l <- l inter world;
@@ -359,9 +359,13 @@ global control: fsm {
 					}
 				} else {
 					create dyke with:(shape:l);
+					return true;
 				}	
+			} else {
+				return false;
 			}
 		}
+		return false;
 	}
 		
 	

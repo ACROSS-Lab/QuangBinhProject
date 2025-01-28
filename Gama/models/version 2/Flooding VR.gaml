@@ -7,6 +7,8 @@ global {
 
 	bool use_tell <- false;
 	bool ready_to_build_dyke <- false;
+	
+	bool diking_over <- false;
 	/*************************************************************
 	 * Redefinition of initial parameters for people, water and obstacles
 	 *************************************************************/
@@ -18,27 +20,7 @@ global {
 	 * has "won" or "lost" depending on the number of lives he/she
 	 * saved with the dykes
 	 *************************************************************/
-	 
-	int max_number_of_casualties <- round(nb_of_people / 5);
-
-	//bool winning -> casualties < max_number_of_casualties;
 	
-	 
-	/*************************************************************
-	 * Attributes dedicated to the UI in GAMA (images, colors, etc.)
-	 *************************************************************/
-	 
-	rgb text_color <- rgb(232, 215, 164);
-	
-	
-	point text_position <- {-1500, 500};
-	point timer_position <- {-1100, 1000};
-	point icon_position <- {-1350, 1000};
-	
-	geometry button_frame;  
-	image button_image_unselected;
-	image button_image_selected;
-	bool button_selected;
 	
 	reflex change_building_colors {
 		ask buildings {
@@ -88,25 +70,16 @@ global {
 	
 	action enter_start {
 		//write "enter_start";
-		init_requested_from_gama <- false;
-		flooding_requested_from_gama <- false;
-		diking_requested_from_gama <- false;
-		restart_requested_from_gama <- false;	
 		ask unity_player {
 			start_pressed <- false;
 			do set_status(IN_TUTORIAL);
 		}	
-		button_frame <- nil;
-		button_image_unselected <- nil;
-		button_image_selected <- nil;
 	}
 	
 	
 	action exit_flooding {
-		//write "exit_flooding";
 		
 		ask unity_linker {do sendEndGame;}
-		do exit_flooding_base;
 	}
 	
 	action exit_init {
@@ -122,18 +95,18 @@ global {
 		ask unity_linker {
 			do send_message players: unity_player as list mes: ["end_diking"::""];
 		}
+		current_timeout <- gama.machine_time + diking_duration * 1000;
+		
 	}
 	
 	action body_init  {
-		//write "body_init";
-		if (!recording) {do playback();}
+		
 	}
 	
 	action body_flooding {
-		//write "body_flooding";
 		
-		if (recording) {do record();} 
-		current_step <- current_step +1;
+		do enter_flooding_base;
+
 	} 
 	
 	action body_diking {
@@ -144,25 +117,21 @@ global {
 	}
 	
 	action enter_diking {
+		write "enter_diking";
+		diking_over <- false;
+		
 		//write "enter_diking";
 		ask unity_linker {do send_static_geometries();}
 		flooding_requested_from_gama <- false;
 		diking_requested_from_gama <- false;
 		restart_requested_from_gama <- false;	
-		button_image_unselected <- image("../../includes/icons/flood-line.png") * rgb(232, 215, 164);
-		button_image_selected <- image("../../includes/icons/flood-fill.png") * rgb(232, 215, 164);
 	}
 	
 	action enter_flooding {
 		//write "enter_flooding";
 		
-		river_already_sent_in_diking_phase <- false;
-		flooding_requested_from_gama <- false;
-		diking_requested_from_gama <- false;
-		restart_requested_from_gama <- false;	
-		button_image_unselected <- image("../../includes/icons/restart-line.png");
-		button_image_selected <- image("../../includes/icons/restart-fill.png");
-		current_step <- 0;
+		do enter_flooding_base;
+		
 		
 	}
 	
@@ -173,7 +142,7 @@ global {
 	// Are all the players who entered ready or has GAMA sent the beginning of the game ? 
 	bool init_over  { 
 		
-		return playback_finished;
+		return (current_step > num_step) ;
 	} 
 	
 	bool start_over {
@@ -184,17 +153,14 @@ global {
 	
 	
 	bool diking_over { 
-		if (flooding_requested_from_gama) {return true;}
-		if (gama.machine_time >= current_timeout) {return true;}
-		return false;
+		//write "diking_over: " + sample(diking_over) + " " + sample(gama.machine_time >= current_timeout);
+		
+		return  diking_over or gama.machine_time >= current_timeout;
 	}
 	
 	// Are all the players in the not_ready state or has GAMA sent the end of the game ?
 	bool flooding_over  { 
-		if (restart_requested_from_gama) {return true;}
 		if (current_step > num_step) {return true;} 
-		if (empty(unity_player)) {return false;}
-		return unity_player all_match each.in_tutorial;
 	}	
 	 
 	
@@ -229,23 +195,41 @@ species unity_linker parent: abstract_unity_linker {
 	list<point> init_locations <- define_init_locations();
 	unity_property up_people;
 	unity_property up_dyke;
+	unity_property up_dam;
 	unity_property up_water;
+	unity_property up_shelter;
+	unity_property up_injuries;
 	bool do_send_world <- true;
 	
 	map<string, dyke> dykes;
 	init {
 		
-		unity_aspect car_aspect <- prefab_aspect("Prefabs/Visual Prefabs/People/WalkingMen",250,0.2,1.0,-90.0, precision);
-		unity_aspect dyke_aspect <- geometry_aspect(40.0, "Materials/Dike/Dike", rgb(204, 119, 34, 1.0), precision);
-		unity_aspect water_aspect <- geometry_aspect(20.0, rgb(90, 188, 216, 0.0), precision);
- 	
-		up_people<- geometry_properties("car", nil, car_aspect, #no_interaction, false);
+		unity_aspect people_aspect <- prefab_aspect("Prefabs/Visual Prefabs/People/WalkingMen",400,0.2,1.0,-90.0, precision);
+		unity_aspect people_aspect_injured <- prefab_aspect("Prefabs/Visual Prefabs/People/Injuries",400,0.2,1.0,-90.0, precision);
+		unity_aspect dyke_aspect <- geometry_aspect(40.0, "Materials/Dike/Dike", #gray,  precision);
+		unity_aspect dam_aspect <- geometry_aspect(40.0, "Materials/Dike/Dam", #magenta, precision);
+		unity_aspect water_aspect <- geometry_aspect(5.0, #blue,precision);
+//		unity_aspect water_aspect <- geometry_aspect(1.0, "Materials/Water/Water Material",precision);
+		
+		unity_aspect shelter_aspect <- prefab_aspect("Prefabs/Shelter",150.0,0.0,1.0,0.0, precision);
+		
+		up_people<- geometry_properties("people", nil, people_aspect, #no_interaction, false);
+		up_injuries<- geometry_properties("injury", nil, people_aspect_injured, #no_interaction, false);
 		up_dyke <- geometry_properties("dyke", "dyke", dyke_aspect, #ray_interactable, false);
+		up_dam <- geometry_properties("dam", "dam", dam_aspect, #ray_interactable, false);
 		up_water <- geometry_properties("water", nil, water_aspect, #no_interaction,false);
+		up_shelter <- geometry_properties("shelter", nil, shelter_aspect,#ray_interactable,false);
 
 		unity_properties << up_people;
 		unity_properties << up_dyke;
+		unity_properties << up_dam;
 		unity_properties << up_water;
+		unity_properties << up_shelter;
+		unity_properties << up_injuries;
+		
+		//add the static_geometry agents as static agents/geometries to send to unity with the up_geom unity properties.
+		do add_background_geometries(evacuation_point,up_shelter);
+	
 		
 	}
 
@@ -258,8 +242,8 @@ species unity_linker parent: abstract_unity_linker {
 		map_to_send["remaining_time"] <- int((current_timeout - gama.machine_time)/1000);
 		map_to_send["state"] <- world.state;
 		//map_to_send["winning"] <- winning;
-		map_to_send["playback_finished"] <- playback_finished;
-		
+	//	map_to_send["playback_finished"] <- playback_finished;
+		 
 		
 		//write sample(world.state) + " " + sample(playback_finished);
 	} 
@@ -271,13 +255,19 @@ species unity_linker parent: abstract_unity_linker {
     	return (my_string split_with ",") collect float(each);
 	}
 	
+
+	
 	action action_management_with_unity(string unity_start_point, string unity_end_point) {
 		list<float> unity_start_point_float <- convert_string_to_array_of_float(unity_start_point);
 		list<float> unity_end_point_float <- convert_string_to_array_of_float(unity_end_point);
 		point converted_start_point <- {unity_start_point_float[0], unity_start_point_float[1], unity_start_point_float[2]};
 		point converted_end_point <- {unity_end_point_float[0], unity_end_point_float[1], unity_end_point_float[2]};
-		create dyke with: (shape: line([converted_start_point, converted_end_point])) ;
-		do send_message players: unity_player as list mes: ["ok_build_dyke_with_unity " + converted_start_point + "   " + converted_end_point :: true];
+		
+		
+		
+		//create dyke with: (shape: line([converted_start_point, converted_end_point])) ;
+		bool is_ok <- world.create_dyke(converted_start_point, converted_end_point);
+		do send_message players: unity_player as list mes: ["ok_build_dyke_with_unity " + converted_start_point + "   " + converted_end_point :: is_ok];
 		ask experiment {
 			do update_outputs(true);  
 		}
@@ -286,7 +276,21 @@ species unity_linker parent: abstract_unity_linker {
 	action destroy_dyke(string id) {
 		dyke d <- dyke first_with (each.name = id);
 		if (d != nil){
-			ask d { do die;}
+			
+			ask d {
+				if (is_dam) {
+					dam_length <- dam_length - length; 
+				} else {
+					dyke_length <- dyke_length - length; 
+				}
+				loop c over: cells_under {
+					c.obstacles >> self;
+				 	if (c in bed_cells) {
+				 		c.water_height <- initial_water_height;
+				 	}
+				 }
+				 do die;
+			}
 		} 		
 	}
 	 
@@ -301,27 +305,43 @@ species unity_linker parent: abstract_unity_linker {
 	 }
 
 
-
+	action add_people {
+		list<people> fleeing_p <- people where (each.state = "s_fleeing");
+		ask fleeing_p {
+			name <- "fleeing_" + int(self);
+		}
+		list<people> injured_p <- people where (each.state = "s_drowned");
+		ask injured_p {
+			name <- "injury_" + int(self);
+		}
+		do add_geometries_to_send(fleeing_p,up_people);
+		do add_geometries_to_send(injured_p,up_injuries);
+	}
 	/**
 	 * What are the agents to send to Unity, and what are the agents that remain unchanged ? 
 	 */
 	reflex send_agents when: not empty(unity_player) {
-		if (state = "s_init" and !recording) and not playback_finished {
-			do add_geometries_to_send(people, up_people);
-			do add_geometries_to_send(river, up_water);
+		if (state = "s_init") {
+			do add_people;
+			// We send the river (supposed to change every step)
+			do add_geometries_to_send(river,up_water);
+			
 		} else if (state = "s_diking") {
 			// All the dykes are sent to Unity during the diking phass
-			do add_geometries_to_send(dyke, up_dyke);
+			do add_geometries_to_send(dyke where !each.is_dam, up_dyke);
+			do add_geometries_to_send(dyke where each.is_dam, up_dam);
 			// The river is not changed so we keep it unchanged
-			if (river_already_sent_in_diking_phase) {do add_geometries_to_keep(river);} else {do add_geometries_to_send(river, up_water); river_already_sent_in_diking_phase <- true;}
+			if (river_already_sent_in_diking_phase) {do add_geometries_to_keep(river);} 
+			else {do add_geometries_to_send(river, up_water); river_already_sent_in_diking_phase <- true;}
 			
 		} else	if (state = "s_flooding") {
 			// We only send the people who are evacuating 
-			do add_geometries_to_send(people where (each.state = "s_fleeing"),up_people);
+			do add_people;
 			// We send the river (supposed to change every step)
 			do add_geometries_to_send(river,up_water);
 			// We send only the dykes that are not underwater
-			do add_geometries_to_send(dyke select !each.drowned, up_dyke);	 
+			do add_geometries_to_send(dyke select (!each.is_dam and !each.drowned), up_dyke);	
+			do add_geometries_to_send(dyke select (each.is_dam and !each.drowned), up_dam);	 
 		}
 	}
 
@@ -351,53 +371,52 @@ species unity_player parent: abstract_unity_player{
 	}
 	
 	action set_status(string status) {
+		write sample(status);
 		in_tutorial <- status = IN_TUTORIAL;
 		start_pressed <- status = START_PRESSED;
 		in_flood <- status = IN_FLOOD;
 		in_dyke_building <- status = IN_DYKE_BUILDING;
 	}
-	
-
 } 
+
 
 experiment Launch  autorun: true type: unity {
 
 
 	string unity_linker_species <- string(unity_linker);
-	float t_ref;
 	float minimum_cycle_duration <- cycle_duration;
-	 	
+	
+	point start_point; 
+	point end_point;  
+	geometry line; 
+	 
+	 
+	 
+	//action called by the middleware when a player connects to the simulation
 	action create_player(string id) {
 		ask unity_linker {
 			do create_player(id);
-			write sample(id);
 		}
 	}
 
+	//action called by the middleware when a plyer is remove from the simulation
 	action remove_player(string id_input) {
 		if (not empty(unity_player)) {
-			ask unity_linker {
-				unity_player pl <- player_agents[id_input];
-				//write sample(pl);
-				if (pl != nil) {
-					remove key: id_input from: player_agents ;
-					ask pl {do die;}
-				}
+			ask first(unity_player where (each.name = id_input)) {
+				do die;
 			}
-			
 		}
 	}
-
-	output synchronized: true{
+	
+	output { 
 		
-		layout #none controls: false toolbars: true editors: false parameters: false consoles: true tabs: false;
-		
-		
+		layout #none controls: false toolbars: false editors: false parameters: false consoles: true tabs: false;
 		display map type: 3d axes: false background: background_color antialias: false{
- 	
-		 	species river visible: !river_in_3D {
+			camera 'default' location: {1441.2246,3297.5234,8595.6544} target: {1441.2246,3297.3733,0.0};
+			//	grid cell border: #black;
+		 	species river visible:!river_in_3D{
 				draw shape border: brighter(brighter(river_color)) width: 5 color: river_color;
-			}			  
+			}	 
 
 			species road {
 				draw drowned ? shape : shape + 10 color: drowned ? darker(river_color) : road_color ;
@@ -405,95 +424,285 @@ experiment Launch  autorun: true type: unity {
 		 	species buildings {
 		 		draw shape color: drowned ? river_color : color border: drowned ? darker(river_color):color;	
 		 	}
+		 	graphics "end_of_world" {
+				draw water_limit_danger + 20 color: #red;
+				loop d over: water_limit_well {
+					draw d + 20 color: #orange;
+				}
+				loop d over: water_limit_drain {
+					draw d + 20 color: #green;
+				}
+			}  
 		 	species dyke {
-		 		draw shape + 5 color: drowned ? river_color : dyke_color border: drowned ? darker(river_color):dyke_color;	
-			} 
+		 		if (!is_dam) {
+		 			draw shape + 5 color: drowned ? river_color : dyke_color border: drowned ? darker(river_color):#black;	
+		 		} else {
+		 			draw shape + 5 color: drowned ? river_color : dam_color border: drowned ? darker(river_color):#black;	
+		 		}
+		 		
+			}  
 			species people {
-				draw circle(20)  color: people_color;
+				draw circle(20)  color: (state = "s_drowned" ? people_drowned_color : (state = "s_evacuated" ?  people_evacuated_color : people_color)); 
+			 	
 			}
 			species evacuation_point {
-				draw circle(60) at: location + {0,0,40} color: evacuation_color;
-			}
-
-			mesh cell above: 0 triangulation: true smooth: false color: cell collect each.color visible: river_in_3D transparency: 0.5;
-			
-			
-			event #mouse_down {
-				if (button_selected) {
-					if (state = "s_diking") {flooding_requested_from_gama <- true; return;} else
-					if (state = "s_flooding") {restart_requested_from_gama <- true; return;}
-				}
+				draw circle(60) at: location + {0,0,40} color: evacuation_color border: #black;
 			}
 			
-			event #mouse_move { 
-				button_selected <- button_frame != nil and button_frame overlaps #user_location;
-			}
-
-			event "r" {
-				world.restart_requested_from_gama <- true ;
-			}
-		
-			event "d" {
-				world.diking_requested_from_gama <- true ;
-			}
-			
-			event "f" {
-				world.flooding_requested_from_gama <- true ;
-			}
-		 	
-		 	
 			species unity_player {
 				draw circle(30) at: location + {0, 0, 50} color: rgb(color, 0.5) ;
 			}
+
+			//mesh cell above: 0 triangulation: true smooth: false color: cell collect each.color visible: river_in_3D transparency: 0.5;
+			//species water_particule; 
+			
+			event "r" {
+				if (state != "s_diking") { return;}
+				if (start_point != nil) {
+					start_point <- nil;
+					line <- nil;
+				} else { 
+					ask world {
+						geometry g <- circle(10) at_location #user_location;
+				 		list<dyke> dykes <- dyke overlapping g;
+				 		if (not empty(dykes)) {
+				 			bool recompute_river <- false;
+				 			ask dykes closest_to #user_location {
+				 				if (is_dam) {
+				 					dam_length <- dam_length - length; 
+				 				} else {
+				 					dyke_length <- dyke_length - length; 
+				 				}
+				 				loop c over: cells_under {
+				 					c.obstacles >> self;
+				 					if (c in bed_cells) {
+				 						recompute_river <- true;
+				 						c.water_height <- initial_water_height;
+				 					}
+				 				}
+				 				do die;
+				 			}
+				 			if (recompute_river) {
+				 				do compute_river_shape;
+				 			}
+				 			
+				 		}
+					}
+					 
+				}
+				
+			} 
+			event #mouse_down {
+				
+				if (check_selected) {
+					keep_dykes <- !keep_dykes;
+				}
+				if (state != "s_diking") { return;}
+				if (start_point = nil) {
+		 			start_point <- #user_location; 
+					line <- line([start_point, #user_location]);
+				} else {
+					ask simulation {
+						do create_dyke(myself.start_point, #user_location);
+					}
+					start_point <- nil;
+				 	end_point <- nil;
+				}
+
+			}
+			
+			graphics "Arrow" {
+				draw image_file("../../includes/icons/arrow-23645_1280.png") size: 400 rotate: -90 at: {location.x/1.75, location.y *2 - 200};
+
+			}
+			
+			
+			graphics "General information" {
+				int offset <- 0;
+				draw rectangle(3500,1000) color: #gray border: #black at: {5000, 700+offset, -1.0};
+				draw "General information" font: font ("Helvetica", 22, #bold) at: {3400, 300+offset} anchor: #top_left color: text_color;	
+				
+				
+				draw "Round: " + current_round+"/" + num_rounds font: font ("Helvetica", 18, #bold) at: {3400, 600+offset} anchor: #top_left color: text_color;
+				
+				if  current_round > 1 {
+					draw "best score: " +  round(best_score) font: font ("Helvetica", 18, #bold) at: {3400, 900+offset} anchor: #top_left color: text_color;
+				
+				}	
+				
+			}
+			graphics "Hints" {
+				if current_round = num_rounds {
+					int offset <- 1500;
+					draw rectangle(3500,1200) + 50 color: #lightgreen border: #black at: {5000, 800+offset, -2.0};
+					draw rectangle(3500,1200) color: #gray border: #black at: {5000, 800+offset, -1.0};
+					
+					draw "Hint" font: font ("Helvetica", 22, #bold) at: {3400, 300+offset} anchor: #top_left color: #lightgreen;	
+					string hint <- "One strategy to combat flooding is the developmentof flood\n\nexpansion zones. This involves designating an area where\n\nfloodwaters from a watercourse can spread quickly with minimal\n\nrisk to people and property";
+					
+					
+					draw hint font: font ("Helvetica", 14, #bold) at: {3400, 600+offset} anchor: #top_left color: text_color;
+					
+				}				
+			}
+			
+			
+			
+			
+			graphics "Legend" {
+				int offset <- 500;
+				draw rectangle(3500,2500) color: #gray border: #black at: {-1870, 2650+offset, -1.0};
+				draw "Legend" font: font ("Helvetica", 22, #bold) at: {-3500, 1500+offset} anchor: #top_left color: text_color;	
+				
+				draw  image_file("../../includes/icons/arrow-23645_1280.png") size: 180 rotate: -90  border: #black at: {-3450, 1850+offset};
+				draw "Direction of river flow" font: font ("Helvetica", 14, #bold) at: {-3300, 1800+offset} anchor: #top_left color: text_color;	
+				
+				draw line([{-3500, 2100+offset},{-3400, 2100+offset}]) + 20 color: #green ;
+				draw "Drain-type border (water run-off)" font: font ("Helvetica", 14, #bold) at: {-3300, 2060+offset} anchor: #top_left color: text_color;	
+				draw line([{-3500, 2300+offset},{-3400, 2300+offset}]) + 20 color: #orange ;
+				
+				draw "Well-type border (prevents water run-off)" font: font ("Helvetica", 14, #bold) at: {-3300, 2260+offset} anchor: #top_left color: text_color;	
+				
+				draw line([{-3500, 2500+offset},{-3400, 2500+offset}]) + 20 color: #red ;
+				draw "Stake-type border (prevents water run-off and leads to point loss)" font: font ("Helvetica", 14, #bold) at: {-3300, 2460+offset} anchor: #top_left color: text_color;	
+				
+				
+				draw line([{-3500, 2800+offset},{-3400, 2800+offset}]) + 20 color: dyke_color border: #black;
+				draw "Dyke - price : 1 point / meter" font: font ("Helvetica", 14, #bold) at: {-3300, 2760+offset} anchor: #top_left color: text_color;	
+				draw line([{-3500, 3000+offset},{-3400, 3000+offset}]) + 20 color: dam_color border: #black;
+				draw "Dam - price : 10 points / meter" font: font ("Helvetica", 14, #bold) at: {-3300, 2960+offset} anchor: #top_left color: text_color;	
+				
+				draw circle(30)  color: people_color at:  {-3450, 3300+offset} ; 
+				draw "People evacuating" font: font ("Helvetica", 14, #bold) at: {-3300, 3260+offset} anchor: #top_left color: text_color;	
+				draw circle(30)  color: people_drowned_color at:  {-3450, 3500+offset} ; 
+				draw "People injured" font: font ("Helvetica", 14, #bold) at: {-3300, 3460+offset} anchor: #top_left color: text_color;	
+				
+				draw circle(60)  color: evacuation_color at:  {-3450, 3700+offset} ; 
+				draw "Shelter (evacuation point)" font: font ("Helvetica", 14, #bold) at: {-3300, 3660+offset} anchor: #top_left color: text_color;	
+				
+			
+			}
+			
 			graphics "Text and icon"   {
-				string text <- nil;
+					
+				
+				string stage <- nil;
 				string timer <- nil;
 				string hint <- nil;
-				string keep <- nil;
-
-								
+				string indicators <- nil;
+				
+				rgb color_indicators <- text_color;
+				stage <- "Waiting for player";	 
 				switch (state) {
-					match "s_start" {
-						text <- "Waiting for player to begin.";
-					}match "s_init" {
-						text <-  "Previous Flood !\n" + "Casualties: " + casualties + '/' + nb_of_people;
-						float left <- current_timeout - gama.machine_time;
+					match "s_init" {
+						stage <-  "Flood without dykes/dams";
+						
+						//\n\n" + "Casualties: " + casualties + '/' + nb_of_people;
+						timer <- "End in " +max(0,(num_step - current_step)) + " minutes";
+						indicators <- "Casualties: " + casualties + '/' + nb_of_people + "\n\nScore: " + round(score);
+						if (score <= 900 and score > 700) or (casualties > 0 and casualties< 10){
+							color_indicators <- #yellow;
+						} else if (score <= 700 and score > 500) or (casualties >= 10 and casualties< 100) {
+							color_indicators <- #orange;
+						} else if (score <= 500) or (casualties > 100)   {
+							color_indicators <- #red;
+						} else {
+							color_indicators <- #lightgreen;
+						}
+						
+						//float left <- current_timeout - gama.machine_time;
 						//timer <- button_selected ? "Restart now.": "Restarting in " + int(left / 1000) + " seconds.";
 						//\nPress 'r' to restart immediately.";
 						//keep <- "Keep the dykes."; 
 					}
 					match "s_diking" {
-						text <- "Build dykes with the mouse. Meters of dyke built: "+ round(dyke_length) + "m";
+						stage <-  "Build dykes/dams";
+						indicators <- "Meters of dyke built: "+ round(dyke_length) + "m" + "\n\nMeters of dam built: "+ round(dam_length) + "m";
+					
+						//text <- "Build dykes/dams with the mouse.\n\n\tMeters of dyke built: "+ round(dyke_length) + "m" + "\n\n\tMeters of dam built: "+ round(dam_length) + "m";
 						float left <- current_timeout - gama.machine_time;
-						timer <- button_selected ? "Start flooding now.": "Flooding in " + int(left / 1000) + " seconds.";
-						hint <- "Press 'r' to remove a dyke\nPress 'f' for skipping.";
+						timer <- button_selected ? "Start flooding now.": "Flooding in " + max(0,int(left / 1000)) + " seconds.";
+						hint <- "Press 'r' to remove a dyke/dam\nPress 'f' for skipping.";
 						
 						//\nPress 'f' to start immediately.";
 					}	
-					match "s_flooding" {text <- "Casualties: " + casualties + '/' + nb_of_people;
+					match "s_flooding" {
+						 
+						stage <-  "Flood";
+						indicators <- "Casualties: " + casualties + '/' + nb_of_people + "\n\nScore: " + round(score);
+						
+						//text <- "Casualties: " + casualties + '/' + nb_of_people;
 						float left <- current_timeout - gama.machine_time;
 						//hint <- "Press 'r' for restarting.";
-						timer <- "End in " +(num_step - current_step) + " minutes";
+						timer <- "End in " +max(0,(num_step - current_step)) + " minutes";
+						
+						if (score <= 900 and score > 700) or (casualties > 0 and casualties< 10){
+							color_indicators <- #yellow;
+						} else if (score <= 700 and score > 500) or (casualties >= 10 and casualties< 100) {
+							color_indicators <- #orange;
+						} else if (score <= 500) or (casualties > 100)   {
+							color_indicators <- #red;
+						}else {
+							color_indicators <- #lightgreen;
+						}
 						//\nPress 'r' to restart immediately.";
 						//keep <- "Keep the dykes."; 
 					}
+					
 				}
+ 
+				draw rectangle(3500,1600) color: #gray border: #black at: {-1870, 1000,-1.0};
+				draw "Current stage: " + stage font: font ("Helvetica", 22, #bold) at: {-3500, 300} anchor: #top_left color: text_color;	
+			
+				
 				//draw background color: darker(frame_color) width: 5 border: brighter(frame_color) at: background_position + {background.width / 2, background.height/2, -10} lighted: false ;
-				if (text != nil) {
-					draw text font: font ("Helvetica", 18, #bold) at: text_position anchor: #top_left color: text_color;	
-				}
+				point timer_position_ <- {-3300, 600};
+				point indicators_position <- {-3300, 1000};
+	
 				if (timer != nil) { 
-					draw timer font: font ("Helvetica", 14, #plain) at: timer_position anchor: #top_left color: text_color;	
+					draw timer font: font ("Helvetica", 18, #bold) at: timer_position_ anchor: #top_left color: text_color;	
 				}
-				if (keep != nil) {
-					draw keep font: font ("Helvetica", 14, #plain) at: check_text_position anchor: #top_left color: text_color;	
+				if (indicators != nil) { 
+					draw indicators font: font ("Helvetica", 18, #bold) at: indicators_position anchor: #top_left color: color_indicators;	
+				}
+				/*if (keep != nil) {
+					draw keep font: font ("Helvetica", 16, #plain) at: check_text_position anchor: #top_left color: text_color;	
 				}
 				if (hint != nil) {
-					draw hint font: font ("Helvetica", 10, #bold) at: text_position + {0, 130} anchor: #top_left color: text_color;	
-				}		
-			}	
+					draw hint font: font ("Helvetica", 14, #bold) at: text_position + {0, 630} anchor: #top_left color: text_color;	
+				}	*/	
+				
+				
+		
+			}
 			
+		
+			
+			event "f" {
+				if (state != "s_diking") {return;}
+				diking_over <- true;
+			}
+		
+			
+			event #mouse_move { 
+				if (state != "s_diking") {line <- nil; return;}
+				if (start_point != nil) {
+					line <- line([start_point, #user_location]);
+					is_ok_dyke_construction <- true;
+				} else {
+					line <- nil;
+				}
+			}
+			
+			 
+			
+			graphics ll {
+				if (line != nil) {
+					draw line + dyke_width + 5 color: is_ok_dyke_construction ? dyke_color : #red border: #black;
+				}
+			}
+		}
 
-		 }
 	}
+
 }
