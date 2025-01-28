@@ -1,0 +1,2 @@
+/Users/patricktaillandier/Documents/GitHub/QuangBinhProject/URP Quang Binh v2/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/CMakeLists.txt
+/Users/patricktaillandier/Documents/GitHub/QuangBinhProject/URP Quang Binh v2/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/cpp/GameActivity/CMakeLists.txt
