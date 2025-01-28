@@ -68,7 +68,6 @@ crashlytics-build.properties
 *.dir
 *.original
 *.prej
-*.prj
 *.user
 *.patch
 *.diff
