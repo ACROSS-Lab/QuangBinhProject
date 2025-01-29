@@ -7,7 +7,7 @@ global {
 
 	bool use_tell <- false;
 	bool ready_to_build_dyke <- false;
-	
+	 
 	bool diking_over <- false;
 	/*************************************************************
 	 * Redefinition of initial parameters for people, water and obstacles

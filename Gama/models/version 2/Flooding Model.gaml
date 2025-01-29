@@ -17,8 +17,8 @@ global control: fsm {
 		
  	bool save_results <- false;
  	
- 	int num_step <- 300;
- 	int num_step_add <- num_step;
+ 	int num_step <- 350;
+ 	int num_step_add <- num_step - 50;
  	
  	float diking_duration <- 120.0;
 	
@@ -132,7 +132,7 @@ global control: fsm {
 	float speed_of_people <- 20 #m / #h;
 	
 	// The maximum water input
-	float max_water_input <- 0.6 const: true;
+	float max_water_input <- 0.4 const: true;
 
 	
 	// The height of water in the river at the beginning
@@ -490,6 +490,7 @@ global control: fsm {
 
 		if (people_shape_file != nil) {
 			create people from: people_shape_file with:(evacuation_time:int(get("evacuation")));
+			ask people {do die; }
 		} else {
 			create people number: nb_of_people {
 				location <- init_loc != nil ?init_loc : any_location_in(one_of(buildings));
@@ -545,7 +546,7 @@ global control: fsm {
 		}
 		ask bed_cells {
 			if (grid_y > (max_y - 200)) {
-				water_to_add <-  max(0.1,(grid_y / max_y)^3);
+				water_to_add <- max(0.1,(grid_y / max_y));
 			}
 			
 		}
