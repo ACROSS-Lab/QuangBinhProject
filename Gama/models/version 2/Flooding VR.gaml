@@ -119,7 +119,7 @@ global {
 	}
 	
 	action enter_diking {
-		write "enter_diking";
+		//write "enter_diking";
 		diking_over <- false;
 		
 		//write "enter_diking";
@@ -210,8 +210,8 @@ species unity_linker parent: abstract_unity_linker {
 		unity_aspect people_aspect_injured <- prefab_aspect("Prefabs/Visual Prefabs/People/Injuries",400,0.2,1.0,-90.0, precision);
 		unity_aspect dyke_aspect <- geometry_aspect(40.0, "Materials/Dike/Dike", #gray,  precision);
 		unity_aspect dam_aspect <- geometry_aspect(40.0, "Materials/Dike/Dam", #magenta, precision);
-		unity_aspect water_aspect <- geometry_aspect(5.0, #blue,precision);
-//		unity_aspect water_aspect <- geometry_aspect(1.0, "Materials/Water/Water Material",precision);
+	//	unity_aspect water_aspect <- geometry_aspect(5.0, #blue,precision);
+		unity_aspect water_aspect <- geometry_aspect(10.0, "Materials/Water/Water Material",precision);
 		
 		unity_aspect shelter_aspect <- prefab_aspect("Prefabs/Shelter",150.0,0.0,1.0,0.0, precision);
 		
@@ -373,7 +373,6 @@ species unity_player parent: abstract_unity_player{
 	}
 	
 	action set_status(string status) {
-		write sample(status);
 		in_tutorial <- status = IN_TUTORIAL;
 		start_pressed <- status = START_PRESSED;
 		in_flood <- status = IN_FLOOD;
@@ -412,7 +411,7 @@ experiment Launch  autorun: true type: unity {
 	
 	output { 
 		
-		layout #none controls: false toolbars: false editors: false parameters: false consoles: true tabs: false;
+		layout #none controls: false toolbars: false editors: false parameters: false consoles: false tabs: false;
 		display map type: 3d axes: false background: background_color antialias: false{
 			camera 'default' location: {1441.2246,3297.5234,8595.6544} target: {1441.2246,3297.3733,0.0};
 			//	grid cell border: #black;
