@@ -26,6 +26,8 @@ global control: fsm {
 	
 	int current_round <- 1;
 	
+	float simplification_river_dist <- 30.0;
+	
 	bool use_tell <- true;
 	
 	
@@ -580,7 +582,9 @@ global control: fsm {
 		ask merging_rivers parallel: true  {
 			do update_shape;
 		}
-		
+		ask river parallel: true {
+			shape_to_export <- shape simplification simplification_river_dist;
+		}
 		
 		/*loop cr over: clusters_r {
 			if length(cr) > 1 {
@@ -909,17 +913,17 @@ grid cell 	file: dem_file
 species river {
 	list<cell> cells;
 	list<river> to_merge;
+	geometry shape_to_export;
 	action generate_shape {
 		shape <- union(cells collect each.shape_union);
 		cells <- [];
 	}
 	action update_shape {
-		shape <- union (to_merge);
+		shape <- union (to_merge) ;
 		ask to_merge - self{
 			do die;
 		}
 		to_merge <- [];
-		
 	}
 	rgb color <-rnd_color(255);	
 }
