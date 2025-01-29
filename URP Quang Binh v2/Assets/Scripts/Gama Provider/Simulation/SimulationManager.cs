@@ -470,11 +470,17 @@ public class SimulationManager : MonoBehaviour
             }
         }
 
-
-        if (primaryRightHandButton != null && primaryRightHandButton.action.triggered)
+        if (mainButton != null && secondButton != null && mainButton.action.triggered && secondButton.action.triggered && _currentStage == "s_diking")
         {
-            TriggerMainButton();
+            Dictionary<string, string> args = new Dictionary<string, string>()
+            {
+                { "player_id", StaticInformation.getId() }
+            };
+
+            ConnectionManager.Instance.SendExecutableAsk("end_diking", args);
         }
+
+        
 
         // Debug.Log("currentStage: " + currentStage + " IsGameState(GameState.GAME) :" +IsGameState(GameState.GAME));
         if (IsGameState(GameState.GAME) && UIController.Instance.DikingStart)

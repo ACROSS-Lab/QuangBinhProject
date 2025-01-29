@@ -490,7 +490,7 @@ global control: fsm {
 
 		if (people_shape_file != nil) {
 			create people from: people_shape_file with:(evacuation_time:int(get("evacuation")));
-			ask people {do die; }
+			
 		} else {
 			create people number: nb_of_people {
 				location <- init_loc != nil ?init_loc : any_location_in(one_of(buildings));
@@ -585,6 +585,7 @@ global control: fsm {
 		}
 		ask river parallel: true {
 			shape_to_export <- shape simplification simplification_river_dist;
+			shape_to_export.attributes["name"] <- name;
 		}
 		
 		/*loop cr over: clusters_r {

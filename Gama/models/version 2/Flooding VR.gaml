@@ -234,6 +234,10 @@ species unity_linker parent: abstract_unity_linker {
 	
 		
 	}
+	
+	action end_diking(string player_id) {
+		diking_over <- true;
+	}
 
 	action sendEndGame { 
 		//write "send_message score : " +  int(100*evacuated/nb_of_people);
@@ -326,7 +330,7 @@ species unity_linker parent: abstract_unity_linker {
 		if (state = "s_init") {
 			do add_people;
 			// We send the river (supposed to change every step)
-			do add_geometries_to_send(river,up_water);
+			do add_geometries_to_send(river collect each.shape_to_export,up_water);
 			
 		} else if (state = "s_diking") {
 			// All the dykes are sent to Unity during the diking phass
@@ -334,13 +338,13 @@ species unity_linker parent: abstract_unity_linker {
 			do add_geometries_to_send(dyke where each.is_dam, up_dam);
 			// The river is not changed so we keep it unchanged
 			if (river_already_sent_in_diking_phase) {do add_geometries_to_keep(river);} 
-			else {do add_geometries_to_send(river, up_water); river_already_sent_in_diking_phase <- true;}
+			else {do add_geometries_to_send(river collect each.shape_to_export, up_water); river_already_sent_in_diking_phase <- true;}
 			
 		} else	if (state = "s_flooding") {
 			// We only send the people who are evacuating 
 			do add_people;
 			// We send the river (supposed to change every step)
-			do add_geometries_to_send(river,up_water);
+			do add_geometries_to_send(river collect each.shape_to_export,up_water);
 			// We send only the dykes that are not underwater
 			do add_geometries_to_send(dyke select (!each.is_dam and !each.drowned), up_dyke);	
 			do add_geometries_to_send(dyke select (each.is_dam and !each.drowned), up_dam);	 
