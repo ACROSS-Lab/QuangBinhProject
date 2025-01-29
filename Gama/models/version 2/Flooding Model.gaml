@@ -185,7 +185,7 @@ global control: fsm {
 	
 	//Data elevation file : small, medium and large definition files are availables
 	//file dem_file <- file("../../includes/dem/dem_small.tif");
-	file dem_file <- file("../../includes/dem/dem_small.tif");
+	file dem_file <- file("../../includes/dem/terrain89x211.asc");
 	
 	
 	shape_file drain_shape_file <- shape_file("../../includes/gis/drain.shp");
@@ -218,8 +218,12 @@ global control: fsm {
 		enter {
 			do enter_init();
 			score <- init_score;	
+			ask cell {
+				already <- false;
+			}
+			
+			ask river {do die;}
 		}
-		
 		do add_water();
 		do flow_water();
 		do check_obstactles_drowning();
@@ -228,8 +232,8 @@ global control: fsm {
 		do update_score;
 		current_step <- current_step +1;
 		exit {
-			
 			do exit_init();
+			
 			do restart;
 		}
 		transition to: s_diking when: init_over();
@@ -250,7 +254,9 @@ global control: fsm {
 		do body_diking();
 		
 		exit {
+			
 			do exit_diking();
+			
 		}
 		transition to: wait_flooding when: diking_over();
 		
@@ -265,8 +271,15 @@ global control: fsm {
 	 */
 	state s_flooding {
 		enter {
+			ask cell {
+				already <- false;
+			}
+			
+			ask river {do die;}
+			
 			do enter_flooding();
 			score <- init_score;	
+			
 		}		
 		do add_water();
 		do flow_water();
@@ -526,6 +539,7 @@ global control: fsm {
 			ask cell overlapping river[0] {
 				bed_cells << self;
 			}
+			
 		}
 		ask bed_cells {
 			if (grid_y > (max_y - 200)) {
@@ -540,24 +554,41 @@ global control: fsm {
 		
 	}
 	
+
 	action compute_river_shape {
-		list<river> old_river <- copy(river as list);
-		//geometry g <- (init_river union (union((cell where (each.water_height > limit_drown)) collect each.shape_union))) ;
-		list<list<cell>> clusters <- list<list<cell>>(simple_clustering_by_distance(cell where (each.water_height > limit_drown), 1));
-       	geometry g <- nil;
-       	loop c over: clusters {
-       		if (length(c) > 10) {
-       			create river with: (shape: (union(c collect each.shape_union)) simplification 50.0);
+		list<cell> river_cells <- cell where (not each.already and (each.water_height > limit_drown)) ;
+		list<list<cell>> clusters <- list<list<cell>>(simple_clustering_by_distance(river_cells, 1));
+		loop c over: clusters {
+			ask c {already <- true;}
+       		create river with: (cells:c);
+       		ask river parallel: true {
+       			do generate_shape;
        		}
-       		
-       	}
-       	
-       	ask old_river {do die;}
+		}
 		
-       	
-		//g <- (length(g.geometries) > 1 ? g.geometries with_max_of each.area : g) simplification 50.0;
+		list<list<river>> clusters_r <- list<list<river>>(simple_clustering_by_distance(river, 0.0));
+		 
+		 
+		  
+		list<river> merging_rivers;
+		loop cr over: clusters_r {
+			if length(cr) > 1 {
+				first(cr).to_merge <- cr;
+				merging_rivers << first(cr);
+			}
+		}
+		ask merging_rivers parallel: true  {
+			do update_shape;
+		}
+		
+		
+		/*loop cr over: clusters_r {
+			if length(cr) > 1 {
+				first(cr).shape <- union(cr);
+				ask cr - first(cr) {do die;}
+			}
+		}*/
 		main_river_part <- river closest_to {world.location.x, world.shape.height};
-		
 	}
 	/*
 	 * Initializes the buildings */
@@ -599,6 +630,7 @@ global control: fsm {
 			water_height <- water_height_tmp;
 		}
 		do compute_river_shape;
+		
 	}
 
 	/**
@@ -702,6 +734,8 @@ species dyke parent: obstacle schedules: []{
 			dyke_length <- dyke_length + length;
 		}
 		shape <- shape + 20;
+		do compute_height();
+		do build();
 	}
 	action check_drowning {
 		loop c over: (cells_under where (each.water_height > limit_drown)) {
@@ -766,6 +800,7 @@ grid cell 	file: dem_file
 			schedules: [] {
 	
 	float water_to_add;
+	bool already <- false;
 	geometry shape_union <- shape + 0.1;
 	//Altitude of the cell as read from the DEM
 	float altitude <- grid_value const: true;
@@ -800,7 +835,7 @@ grid cell 	file: dem_file
 	action flow {
 	//if the height of the water is higher than 0 then, it can flow among the neighbour cells
 		if ((num_neigbors = 4 or !is_drain) and water_height > 0 ) {
-		//We get all the cells already done
+		//We get all the cells  
 			list<cell> neighbour_cells_al <- neighbors ;
 			
 			//If there are cells already done then we continue
@@ -856,6 +891,7 @@ grid cell 	file: dem_file
 	action update_after_construction(obstacle the_obstacle) {
 		obstacles << the_obstacle;
 		water_height <- 0.0;
+		already <- false;
 		if (the_obstacle.height > obstacle_height) {obstacle_height <- the_obstacle.height;}
 	}
 	
@@ -871,10 +907,23 @@ grid cell 	file: dem_file
 *************************************************************/	
 
 species river {
-	rgb color <-rnd_color(255);
-
-	
+	list<cell> cells;
+	list<river> to_merge;
+	action generate_shape {
+		shape <- union(cells collect each.shape_union);
+		cells <- [];
+	}
+	action update_shape {
+		shape <- union (to_merge);
+		ask to_merge - self{
+			do die;
+		}
+		to_merge <- [];
+		
+	}
+	rgb color <-rnd_color(255);	
 }
+
 
 /*************************************************************
 * People are moving agents that can be in different states 

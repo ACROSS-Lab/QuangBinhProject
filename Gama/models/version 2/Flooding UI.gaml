@@ -10,15 +10,15 @@ model FloodingUI
   
 import "Flooding Model.gaml" 
 
-global {  
-	  
+global {   
+	   
 
 	/************************************************************* 
 	 * Functions that control the transitions between the states
 	 *************************************************************/
 
 	action enter_init {
-	//	write "enter_init";
+	//	write "enter_init"; 
 		do enter_init_base;
 		   
 		ask buildings {
@@ -59,8 +59,7 @@ global {
 		loop while: gama.machine_time < t {
 			
 		}
-		
-	} 
+	}  
 	
  
 	bool init_over  { 
@@ -100,7 +99,7 @@ global {
 	bool restart_requested; 
 	
 	// Is the flooding state requested by the user ? 
-	bool diking_over;
+	bool diking_over; 
 	 
 	
 	
@@ -135,7 +134,7 @@ experiment Run  type:gui autorun: true{
 	 
 	output { 
 		
-		layout #none controls: false toolbars: false editors: false parameters: false consoles: false tabs: false;
+		layout #none controls: true toolbars: true editors: false parameters: false consoles: true tabs: false;
 		display map type: 3d axes: false background: background_color antialias: false{
 			camera 'default' location: {1441.2246,3297.5234,8595.6544} target: {1441.2246,3297.3733,0.0};
 			//	grid cell border: #black;
@@ -150,14 +149,14 @@ experiment Run  type:gui autorun: true{
 		 		draw shape color: drowned ? river_color : color border: drowned ? darker(river_color):color;	
 		 	}
 		 	graphics "end_of_world" {
-				draw water_limit_danger + 20 color: #red;
+				draw water_limit_danger + 20 color: #red; 
 				loop d over: water_limit_well {
 					draw d + 20 color: #orange;
 				}
 				loop d over: water_limit_drain {
 					draw d + 20 color: #green;
 				}
-			}  
+			}   
 		 	species dyke {
 		 		if (!is_dam) {
 		 			draw shape + 5 color: drowned ? river_color : dyke_color border: drowned ? darker(river_color):#black;	
@@ -339,7 +338,7 @@ experiment Run  type:gui autorun: true{
 						//\nPress 'r' to restart immediately.";
 						//keep <- "Keep the dykes."; 
 					}
-					match "s_diking" {
+					match "s_diking" { 
 						stage <-  "Build dykes/dams";
 						indicators <- "Meters of dyke built: "+ round(dyke_length) + "m" + "\n\nMeters of dam built: "+ round(dam_length) + "m";
 					

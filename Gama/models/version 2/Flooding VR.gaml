@@ -492,7 +492,7 @@ experiment Launch  autorun: true type: unity {
 					 
 				}
 				
-			} 
+			}  
 			event #mouse_down {
 				
 				if (check_selected) {
