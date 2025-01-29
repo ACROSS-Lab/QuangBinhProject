@@ -381,7 +381,10 @@ global control: fsm {
 	 	if (use_tell) {
 	 		do tell("Restart the new game",false);
 	 	}
+	 	do end_game_action;
 	 }
+	 
+	 action end_game_action;
 	
 	action enter_flooding_base {
 		if save_results {

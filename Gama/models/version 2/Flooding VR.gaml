@@ -76,10 +76,12 @@ global {
 		}	
 	}
 	
+	 action end_game_action {
+	 	ask unity_linker {do sendEndGame;}
+	 }
 	
 	action exit_flooding {
-		
-		ask unity_linker {do sendEndGame;}
+		do exit_flooding_base;
 	}
 	
 	action exit_init {

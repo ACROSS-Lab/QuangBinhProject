@@ -56,7 +56,7 @@ public class UIController : MonoBehaviour
 
         if (FloodingPhase)
         {
-            globalVolume.SetActive(true);
+          //  globalVolume.SetActive(true);
             if (TimerForDisplayingFloodUI > 0)
             {
                 TimerForDisplayingFloodUI -= Time.deltaTime;
@@ -81,7 +81,7 @@ public class UIController : MonoBehaviour
                 else
                 {
                     SimulationManager.Instance.SetInFlood();
-                    FloodingInitPhase = true;
+                   // FloodingInitPhase = true;
                 }
 
                 FloodingPhase = false;
@@ -89,7 +89,7 @@ public class UIController : MonoBehaviour
         }
         else
         {
-            globalVolume.SetActive(false);
+           // globalVolume.SetActive(false);
         }
     }
 
