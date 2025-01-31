@@ -52,7 +52,7 @@ namespace QuickTest
             Dictionary<string, string> args = new Dictionary<string, string>()
             {
                 { "player_id", StaticInformation.getId() },
-                { "status", GAMAGameStatus.PLAYBACK.ToString() }
+                { "status", GAMAGameStatus.IN_PLAYBACK.ToString() }
             };
 
             ConnectionManager.Instance.SendExecutableAsk("set_status", args);
@@ -63,7 +63,7 @@ namespace QuickTest
             Dictionary<string, string> args = new Dictionary<string, string>()
             {
                 { "player_id", StaticInformation.getId() },
-                { "status", GAMAGameStatus.DIKING.ToString() }
+                { "status", GAMAGameStatus.IN_DIKING.ToString() }
             };
 
             ConnectionManager.Instance.SendExecutableAsk("set_status", args);
@@ -75,7 +75,7 @@ namespace QuickTest
             Dictionary<string, string> args = new Dictionary<string, string>()
             {
                 { "player_id", StaticInformation.getId() },
-                { "status", GAMAGameStatus.START.ToString() }
+                { "status", GAMAGameStatus.IN_START.ToString() }
             };
 
             ConnectionManager.Instance.SendExecutableAsk("set_status", args);
@@ -87,7 +87,7 @@ namespace QuickTest
             Dictionary<string, string> args = new Dictionary<string, string>()
             {
                 { "player_id", StaticInformation.getId() },
-                { "status", GAMAGameStatus.FLOODING.ToString() }
+                { "status", GAMAGameStatus.IN_FLOODING.ToString() }
             };
 
             ConnectionManager.Instance.SendExecutableAsk("set_status", args);
