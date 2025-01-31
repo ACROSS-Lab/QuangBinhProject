@@ -1029,7 +1029,7 @@ public class SimulationManager : MonoBehaviour
                         FutureDike = null;
                     }
 
-                    APITest.Instance.TestDrawDykeWithParams(StartPoint, EndPoint);
+                    GamaActionCaller.Instance.DrawDykeWithParams(StartPoint, EndPoint);
                 }
             }
         }

@@ -40,7 +40,7 @@ public class UIController : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Space) && DikingStart)
         {
-            APITest.Instance.TestDrawDyke();
+            GamaActionCaller.Instance.DrawSampleDyke();
         }
 
         if (Input.GetKeyDown(KeyCode.Space) && UI_ChoiceOfLanguage.active)
@@ -81,11 +81,11 @@ public class UIController : MonoBehaviour
                 if (FloodingInitPhase)
                 {
                     FloodingInitPhase = false;
-                    APITest.Instance.TestSetStartPressed();
+                    GamaActionCaller.Instance.SetInStart();
                 }
                 else
                 {
-                    APITest.Instance.TestSetInFlood();
+                    GamaActionCaller.Instance.SetInFlooding();
                     FloodingInitPhase = true;
                 }
 
@@ -130,7 +130,7 @@ public class UIController : MonoBehaviour
         if (InVietnamese)
             UI_DykingPhase_viet.SetActive(false);
         else UI_DykingPhase_eng.SetActive(false);
-        APITest.Instance.TestSetInGame();
+        GamaActionCaller.Instance.SetInDiking();
     }
 
     public void StartFloodingPhase()

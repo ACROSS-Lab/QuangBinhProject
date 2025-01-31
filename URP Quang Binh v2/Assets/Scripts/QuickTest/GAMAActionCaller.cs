@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace QuickTest
 {
-    public class APITest : MonoBehaviour
+    public class GamaActionCaller : MonoBehaviour
     {
-        public static APITest Instance = null;
+        public static GamaActionCaller Instance = null;
 
 
         void Start()
@@ -14,7 +14,7 @@ namespace QuickTest
             Instance = this;
         }
 
-        public void TestDrawDyke()
+        public void DrawSampleDyke()
         {
             Dictionary<string, string> args = new Dictionary<string, string>()
             {
@@ -24,7 +24,7 @@ namespace QuickTest
             ConnectionManager.Instance.SendExecutableAsk("action_management_with_unity", args);
         }
 
-        public void TestDrawDykeWithParams(Vector3 startPoint, Vector3 endPoint)
+        public void DrawDykeWithParams(Vector3 startPoint, Vector3 endPoint)
         {
             string startPointStr = (int)startPoint.x + "," +
                                    (int)(startPoint.z >= 0 ? startPoint.z : startPoint.z * -1) + "," + "0";
@@ -38,7 +38,7 @@ namespace QuickTest
             ConnectionManager.Instance.SendExecutableAsk("action_management_with_unity", args);
         }
 
-        public void TestRemoveDyke()
+        public void RemoveSampleDyke()
         {
             Dictionary<string, string> args = new Dictionary<string, string>()
             {
@@ -47,7 +47,7 @@ namespace QuickTest
             ConnectionManager.Instance.SendExecutableAsk("remove_dyke_with_unity", args);
         }
 
-        public void TestSetInTutorial()
+        public void SetInPlayback()
         {
             Dictionary<string, string> args = new Dictionary<string, string>()
             {
@@ -58,7 +58,7 @@ namespace QuickTest
             ConnectionManager.Instance.SendExecutableAsk("set_status", args);
         }
 
-        public void TestSetInGame()
+        public void SetInDiking()
         {
             Dictionary<string, string> args = new Dictionary<string, string>()
             {
@@ -69,7 +69,7 @@ namespace QuickTest
             ConnectionManager.Instance.SendExecutableAsk("set_status", args);
         }
 
-        public void TestSetStartPressed()
+        public void SetInStart()
         {
             Debug.Log("TestSetStartPressed");
             Dictionary<string, string> args = new Dictionary<string, string>()
@@ -81,7 +81,7 @@ namespace QuickTest
             ConnectionManager.Instance.SendExecutableAsk("set_status", args);
         }
 
-        public void TestSetInFlood()
+        public void SetInFlooding()
         {
             Debug.Log("TestSetStartPressed");
             Dictionary<string, string> args = new Dictionary<string, string>()
