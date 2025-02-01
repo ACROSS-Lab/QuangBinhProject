@@ -71,7 +71,7 @@ namespace QuickTest
 
         public void SetInStart()
         {
-            Debug.Log("TestSetStartPressed");
+            Debug.Log("SetInStart");
             Dictionary<string, string> args = new Dictionary<string, string>()
             {
                 { "player_id", StaticInformation.getId() },
@@ -83,11 +83,35 @@ namespace QuickTest
 
         public void SetInFlooding()
         {
-            Debug.Log("TestSetStartPressed");
+            Debug.Log("SetInFlooding");
             Dictionary<string, string> args = new Dictionary<string, string>()
             {
                 { "player_id", StaticInformation.getId() },
                 { "status", GAMAGameStatus.IN_FLOODING.ToString() }
+            };
+
+            ConnectionManager.Instance.SendExecutableAsk("set_status", args);
+        }
+
+        public void SetWaitingForPlayback()
+        {
+            Debug.Log("SetWaitingForPlayback");
+            Dictionary<string, string> args = new Dictionary<string, string>()
+            {
+                { "player_id", StaticInformation.getId() },
+                { "status", GAMAGameStatus.WAITING_FOR_PLAYBACK.ToString() }
+            };
+
+            ConnectionManager.Instance.SendExecutableAsk("set_status", args);
+        }
+
+        public void SetWaitingForFlooding()
+        {
+            Debug.Log("SetWaitingForFlooding");
+            Dictionary<string, string> args = new Dictionary<string, string>()
+            {
+                { "player_id", StaticInformation.getId() },
+                { "status", GAMAGameStatus.WAITING_FOR_FLOODING.ToString() }
             };
 
             ConnectionManager.Instance.SendExecutableAsk("set_status", args);

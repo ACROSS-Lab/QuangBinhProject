@@ -16,12 +16,17 @@ namespace QuickTest.Editor
             {
                 gamaActionCaller.SetInStart();
             }
-
+            
+            if (GUILayout.Button("Set waiting for playback"))
+            {
+                gamaActionCaller.SetWaitingForPlayback();
+            }
+            
             if (GUILayout.Button("Set in playback"))
             {
                 gamaActionCaller.SetInPlayback();
             }
-
+            
             if (GUILayout.Button("Set in diking"))
             {
                 gamaActionCaller.SetInDiking();
@@ -35,6 +40,11 @@ namespace QuickTest.Editor
             if (GUILayout.Button("Remove sample dyke"))
             {
                 gamaActionCaller.RemoveSampleDyke();
+            }
+            
+            if (GUILayout.Button("Set waiting for flooding"))
+            {
+                gamaActionCaller.SetWaitingForFlooding();
             }
         }
     }
