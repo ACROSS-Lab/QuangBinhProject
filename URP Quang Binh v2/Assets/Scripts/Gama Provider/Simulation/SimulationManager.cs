@@ -326,12 +326,12 @@ public class SimulationManager : MonoBehaviour
             {
                 Debug.Log("BEGIN OF STAGE : " + infoWorld.state);
                 _currentStage = infoWorld.state;
-                if (_currentStage == "s_flooding")
+                if (_currentStage == "FLOODING")
                 {
                 }
             }
 
-            if (infoWorld.state == "wait_flooding")
+            if (infoWorld.state == "WAITING_FOR_FLOODING")
             {
                 if (!StartFloodingDone)
                 {
@@ -351,7 +351,7 @@ public class SimulationManager : MonoBehaviour
                 }
             }
 
-            if (infoWorld.state == "s_init")
+            if (infoWorld.state == "START")
             {
                 if (!StartMenuDone && infoWorld.playback_finished)
                 {
@@ -360,15 +360,15 @@ public class SimulationManager : MonoBehaviour
                     StartFloodingDone = false;
                 }
             }
-            else if (infoWorld.state == "s_diking")
+            else if (infoWorld.state == "DIKING")
             {
                 //timeText.text = "Remaining Time: " + Math.Max(0, infoWorld.remaining_time);
             }
-            else if (infoWorld.state == "s_flooding")
+            else if (infoWorld.state == "FLOODING")
             {
             }
 
-            if (infoWorld.state != "s_init" && infoWorld.remaining_time > LastTime)
+            if (infoWorld.state != "START" && infoWorld.remaining_time > LastTime)
             {
                 timer.gameObject.SetActive(true);
                 Debug.Log("Remaining time: " + infoWorld.remaining_time);
@@ -382,7 +382,7 @@ public class SimulationManager : MonoBehaviour
                 activeCoroutine = StartCoroutine(CountdownCoroutine());
             }
 
-            if (infoWorld.state == "s_init" || UIController.Instance.UI_EndingPhase_eng.activeSelf ||
+            if (infoWorld.state == "START" || UIController.Instance.UI_EndingPhase_eng.activeSelf ||
                 UIController.Instance.UI_EndingPhase_viet.activeSelf)
             {
                 timer.gameObject.SetActive(false);
@@ -441,7 +441,7 @@ public class SimulationManager : MonoBehaviour
         }
 
         // Debug.Log("currentStage: " + currentStage + " IsGameState(GameState.GAME) :" +IsGameState(GameState.GAME));
-        if (IsGameState(GameState.GAME) && UIController.Instance.DikingStart)
+        if (IsGameState(GameState.GAME) && _currentStage == "DIKING")
             ProcessRightHandTrigger();
 
         //UpdateTimeLeftToBuildDykes();
