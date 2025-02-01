@@ -441,7 +441,7 @@ public class SimulationManager : MonoBehaviour
         }
 
         // Debug.Log("currentStage: " + currentStage + " IsGameState(GameState.GAME) :" +IsGameState(GameState.GAME));
-        if (IsGameState(GameState.GAME) && _currentStage == "DIKING")
+        if (IsGameState(GameState.GAME) && _currentStage == "IN_DIKING")
             ProcessRightHandTrigger();
 
         //UpdateTimeLeftToBuildDykes();
@@ -638,7 +638,7 @@ public class SimulationManager : MonoBehaviour
 
     private void InitGroundParameters()
     {
-        Debug.Log("GroundParameters : Beginnig ground initialization");
+        Debug.Log("GroundParameters : Beginning ground initialization");
         if (Ground == null)
         {
             Debug.LogError("SimulationManager: Ground not set");
