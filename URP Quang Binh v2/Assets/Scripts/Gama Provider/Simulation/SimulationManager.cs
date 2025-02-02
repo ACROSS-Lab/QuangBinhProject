@@ -119,7 +119,7 @@ public class SimulationManager : MonoBehaviour
     protected bool firstPositionStored;
 
     protected Boolean StartMenuDone = false;
-    private string _currentStage = "s_start";
+    private string _currentStage = "IN_START";
 
     private bool _inTriggerPress = false;
 
@@ -351,7 +351,7 @@ public class SimulationManager : MonoBehaviour
                 }
             }
 
-            if (infoWorld.state == "START")
+            if (infoWorld.state == "IN_START")
             {
                 if (!StartMenuDone && infoWorld.playback_finished)
                 {
@@ -368,7 +368,7 @@ public class SimulationManager : MonoBehaviour
             {
             }
 
-            if (infoWorld.state != "START" && infoWorld.remaining_time > LastTime)
+            if (infoWorld.state != "IN_START" && infoWorld.remaining_time > LastTime)
             {
                 timer.gameObject.SetActive(true);
                 Debug.Log("Remaining time: " + infoWorld.remaining_time);
@@ -382,7 +382,7 @@ public class SimulationManager : MonoBehaviour
                 activeCoroutine = StartCoroutine(CountdownCoroutine());
             }
 
-            if (infoWorld.state == "START" || UIController.Instance.UI_EndingPhase_eng.activeSelf ||
+            if (infoWorld.state == "IN_START" || UIController.Instance.UI_EndingPhase_eng.activeSelf ||
                 UIController.Instance.UI_EndingPhase_viet.activeSelf)
             {
                 timer.gameObject.SetActive(false);
