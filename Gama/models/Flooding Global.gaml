@@ -122,6 +122,13 @@ global control: fsm {
 	
 	bool everyone_in(string status) {
 		if (empty(unity_player)) {return false;}
+		
+		write "status: " + status + " " + "number of unity players: " + length(unity_player);
+		
+		loop each_player over: unity_player {
+			write "current status: " + status + " " + "each player " + each_player.status;
+		}
+		
 		return unity_player all_match (each.status = status);
 	}
 	
@@ -362,7 +369,7 @@ species unity_linker parent: abstract_unity_linker {
 	// Message sent by Unity to inform about the status of a specific player
 	action set_status(string player_id, string status) {
 		unity_player player <- player_agents[player_id];
-		//write "set status: " + sample(player_id) + " " + sample(player) + " " + sample(status);
+		write "set status: " + sample(player_id) + " " + sample(player) + " " + sample(status);
 		if (player != nil) {
 			ask player {do set_status(status);}
 		}

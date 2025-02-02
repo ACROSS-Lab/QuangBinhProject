@@ -107,7 +107,7 @@ experiment Launch  autorun: true type: unity {
 
 	output synchronized: true{
 		
-		layout #none controls: false toolbars: false editors: false parameters: false consoles: false tabs: false;
+		//layout #none controls: false toolbars: false editors: false parameters: false consoles: false tabs: false;
 		
 		
 		 display map_VR type: 3d background: background_color axes: false{
