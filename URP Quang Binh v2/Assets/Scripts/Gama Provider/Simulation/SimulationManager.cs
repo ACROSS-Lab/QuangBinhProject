@@ -326,7 +326,7 @@ public class SimulationManager : MonoBehaviour
             {
                 Debug.Log("BEGIN OF STAGE : " + infoWorld.state);
                 _currentStage = infoWorld.state;
-                if (_currentStage == "FLOODING")
+                if (_currentStage == "IN_FLOODING")
                 {
                 }
             }
@@ -360,11 +360,11 @@ public class SimulationManager : MonoBehaviour
                     StartFloodingDone = false;
                 }
             }
-            else if (infoWorld.state == "DIKING")
+            else if (infoWorld.state == "IN_DIKING")
             {
                 //timeText.text = "Remaining Time: " + Math.Max(0, infoWorld.remaining_time);
             }
-            else if (infoWorld.state == "FLOODING")
+            else if (infoWorld.state == "IN_FLOODING")
             {
             }
 
