@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using QuickTest;
 using UnityEngine.UI;
+using Gama_Provider.Simulation;
 
 public class UIController : MonoBehaviour
 {
@@ -15,6 +16,13 @@ public class UIController : MonoBehaviour
     public Text TextEndEng;
     public Text TextEndViet;
 
+    public GameObject LogosUI;
+    public GameObject Timer_on;
+    public GameObject Timer_off;
+    public GameObject build_time;
+    public GameObject flood_time;
+    public GameObject people_safe_on; 
+    public GameObject people_safe_off;
 
     protected float TimeForDisplayingFloodUI = 2.0f; // in second
     protected float TimerForDisplayingFloodUI = 0.0f;
@@ -112,13 +120,24 @@ public class UIController : MonoBehaviour
         }
 
         FloodingPhase = true;
-    }
+        LogosUI.SetActive(true);
+        Timer_on.SetActive(false);
+        Timer_off.SetActive(true);
+        build_time.SetActive(false);
+        flood_time.SetActive(true);
+        people_safe_on.SetActive(true);
+        people_safe_off.SetActive(false);
 
-    public void StartMenuDikingPhase()
+} 
+
+public void StartMenuDikingPhase()
     {
+        LogosUI.SetActive(false);
         if (InVietnamese)
             UI_DykingPhase_viet.SetActive(true);
         else UI_DykingPhase_eng.SetActive(true);
+
+      
     }
 
     public void StartDikingPhase()
@@ -129,10 +148,27 @@ public class UIController : MonoBehaviour
             UI_DykingPhase_viet.SetActive(false);
         else UI_DykingPhase_eng.SetActive(false);
         SimulationManager.Instance.SetInDykeBuilding();
+
+        LogosUI.SetActive(true);
+        Timer_on.SetActive(true);
+        Timer_off.SetActive(false);
+        build_time.SetActive(true);
+        flood_time.SetActive(false);
+        people_safe_on.SetActive(false); 
+        people_safe_off.SetActive(true);
+        Timer_on.GetComponent<StatusEffectManager>().StartEnergizedEffect(SimulationManager.Instance.GetLastTime());
     }
 
     public void StartFloodingPhase()
     {
+        LogosUI.SetActive(true);
+        Timer_on.SetActive(false);
+        Timer_off.SetActive(true);
+        build_time.SetActive(false);
+        flood_time.SetActive(true);
+        people_safe_on.SetActive(true);
+        people_safe_off.SetActive(false);
+       
         DikingStart = false;
 
         SimulationManager.Instance.DisplayFutureDike = false;
@@ -158,6 +194,8 @@ public class UIController : MonoBehaviour
 
     public void EndGame(int score)
     {
+        LogosUI.SetActive(false);
+       
         if (InVietnamese)
         {
             TextEndViet.text = ("" + score + "%");

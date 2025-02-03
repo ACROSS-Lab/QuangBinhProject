@@ -105,7 +105,7 @@ public class SimulationManager : MonoBehaviour
     protected float TimeSendInit = 0.5f;
     protected float TimerSendInit;
 
-    protected Coroutine activeCoroutine = null;
+  //  protected Coroutine activeCoroutine = null;
 
     protected Vector3 StartPoint;
     protected Vector3 EndPoint;
@@ -142,8 +142,7 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI timerText;
 
     protected float LastTime;
-
-    protected float RemainingSeconds;
+    protected float RemainingSeconds;  
 
 
     // ############################################ UNITY FUNCTIONS ############################################
@@ -184,7 +183,10 @@ public class SimulationManager : MonoBehaviour
         //startButton.gameObject.SetActive(false);
     }
 
-
+    public float GetLastTime()
+    {
+        return LastTime;
+    }
     void OnEnable()
     {
         if (ConnectionManager.Instance != null)
@@ -371,16 +373,15 @@ public class SimulationManager : MonoBehaviour
 
             if (infoWorld.state != "s_init" && infoWorld.remaining_time > LastTime)
             {
-                timer.gameObject.SetActive(true);
-                Debug.Log("Remaining time: " + infoWorld.remaining_time);
-                timer.StartEnergizedEffect(infoWorld.remaining_time);
+                //Debug.Log("Remaining time: " + infoWorld.remaining_time);
+               // timer.StartEnergizedEffect(infoWorld.remaining_time);
                 RemainingSeconds = infoWorld.remaining_time;
                 //TimeSpan timeSpan = TimeSpan.FromSeconds(RemainingSeconds);
                 //timerText.text = timeSpan.ToString(@"mm\:ss");
-                if (activeCoroutine != null)
-                    StopCoroutine(activeCoroutine);
+              //  if (activeCoroutine != null)
+               //     StopCoroutine(activeCoroutine);
                 timerText.gameObject.SetActive(true);
-                activeCoroutine = StartCoroutine(CountdownCoroutine());
+                //activeCoroutine = StartCoroutine(CountdownCoroutine());
             }
 
             if (infoWorld.state == "s_init" || UIController.Instance.UI_EndingPhase_eng.activeSelf ||

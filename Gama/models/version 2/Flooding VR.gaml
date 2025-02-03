@@ -278,6 +278,8 @@ species unity_linker parent: abstract_unity_linker {
 	action add_to_send_world(map map_to_send) {
 		map_to_send["remaining_time"] <- int((current_timeout - gama.machine_time)/1000);
 		map_to_send["state"] <- world.state;
+		map_to_send["score"] <- round(world.score);
+		map_to_send["casualties"] <- world.casualties;
 		//map_to_send["winning"] <- winning;
 	//	map_to_send["playback_finished"] <- playback_finished;
 		 

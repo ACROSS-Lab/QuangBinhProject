@@ -9,10 +9,7 @@ namespace Gama_Provider.Simulation
 
         [SerializeField] private float duration;
 
-        private void Start()
-        {
-            //StartEnergizedEffect(duration);
-        }
+      
 
         public void StartEnergizedEffect(float customDuration)
         {
@@ -21,13 +18,13 @@ namespace Gama_Provider.Simulation
             energizedEffect.GetComponentInChildren<CircularProgressBar>()
                 .ActivateCountdown(customDuration);
 
-          //  StartCoroutine(EndEnergizedEffect(customDuration));
+            StartCoroutine(EndEnergizedEffect(customDuration));
         }
 
         IEnumerator EndEnergizedEffect(float delay)
         {
             yield return new WaitForSeconds(delay);
-            //energizedEffect.SetActive(false);
+            energizedEffect.SetActive(false);
         }
     }
 }
