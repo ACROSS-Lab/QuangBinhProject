@@ -88,7 +88,7 @@ global control: fsm {
 	
 	list<geometry> water_limit_drain;
 	list<geometry> water_limit_well;
-	geometry water_limit_danger;
+	list<geometry> water_limit_danger;
 	
 	
 	/*************************************************************
@@ -517,10 +517,10 @@ global control: fsm {
 		int max_y <- (cell max_of each.grid_y);
 		geometry border <- shape.contour;
 		water_limit_well <- [];	
-		water_limit_danger <- copy(border);
+		geometry water_limit_d <- copy(border);
 		water_limit_drain <- [];
 		loop g over: drain_shape_file {
-			water_limit_danger  <- water_limit_danger - g;
+			water_limit_d  <- water_limit_d - g;
 			int is_drain_ <- int(g.attributes["drain"]);
 			if is_drain_ = 0 {
 				water_limit_well <- water_limit_well  + (g inter border);
@@ -531,11 +531,13 @@ global control: fsm {
 				}
 			}
 		}
-		ask (cell overlapping water_limit_danger) where (each.num_neigbors < 4) {
-			is_stake <- true;
-			cells_at_stake << self;
-		}
-		
+		water_limit_danger <- water_limit_d.geometries where (each.perimeter > 20);
+		loop wl over: water_limit_danger {
+			ask (cell overlapping wl) where (each.num_neigbors < 4) {
+				is_stake <- true;
+				cells_at_stake << self;
+			}
+		}		
 		if (empty(river)){ 
 			bed_cells <- [];
 			create river from:(river_shapefile);

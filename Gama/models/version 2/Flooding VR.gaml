@@ -251,8 +251,17 @@ species unity_linker parent: abstract_unity_linker {
 		do add_background_geometries(evacuation_point,up_shelter);
 	
 		//do add_background_geometries(water_limit_drain collect (each + 20),up_frontier_green);
-		do add_background_geometries(water_limit_well collect (each + 20),up_frontier_orange);
-		do add_background_geometries(water_limit_danger.geometries collect (each + 20),up_frontier_red);
+		list<geometry> water_limit_well_ts;
+		geometry ir <- init_river + 100;
+		loop  wl over: water_limit_well {
+			if (ir overlaps wl) {
+				water_limit_well_ts <- water_limit_well_ts + (wl - ir).geometries where (each.perimeter > 100);
+			} else {
+				water_limit_well_ts << wl;
+			}
+		}
+		do add_background_geometries(water_limit_well_ts collect (each + 20),up_frontier_orange);
+		do add_background_geometries(water_limit_danger collect (each + 20),up_frontier_red);
 	
 		
 	}
@@ -452,7 +461,9 @@ experiment Launch  autorun: true type: unity {
 		 		draw shape color: drowned ? river_color : color border: drowned ? darker(river_color):color;	
 		 	}
 		 	graphics "end_of_world" {
-				draw water_limit_danger + 20 color: #red;
+				loop d over: water_limit_danger {
+					draw d + 20 color: #red;
+				}
 				loop d over: water_limit_well {
 					draw d + 20 color: #orange;
 				}

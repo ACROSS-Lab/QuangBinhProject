@@ -149,7 +149,9 @@ experiment Run  type:gui autorun: true{
 		 		draw shape color: drowned ? river_color : color border: drowned ? darker(river_color):color;	
 		 	} 
 		 	graphics "end_of_world" {
-				draw water_limit_danger + 20 color: #red; 
+				loop d over: water_limit_danger {
+					draw d + 20 color: #red;
+				}
 				loop d over: water_limit_well {
 					draw d + 20 color: #orange;
 				}
