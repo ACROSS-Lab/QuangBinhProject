@@ -134,7 +134,7 @@ experiment Run  type:gui autorun: true{
 	  
 	output { 
 		
-		layout #none controls: true toolbars: true editors: false parameters: false consoles: true tabs: false;
+		layout #none controls: false toolbars: false editors: false parameters: false consoles: false tabs: false;
 		display map type: 3d axes: false background: background_color antialias: false{
 			camera 'default' location: {1441.2246,3297.5234,8595.6544} target: {1441.2246,3297.3733,0.0};
 			//	grid cell border: #black;
@@ -147,7 +147,7 @@ experiment Run  type:gui autorun: true{
 			}
 		 	species buildings {
 		 		draw shape color: drowned ? river_color : color border: drowned ? darker(river_color):color;	
-		 	}
+		 	} 
 		 	graphics "end_of_world" {
 				draw water_limit_danger + 20 color: #red; 
 				loop d over: water_limit_well {

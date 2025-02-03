@@ -201,6 +201,11 @@ species unity_linker parent: abstract_unity_linker {
 	unity_property up_water;
 	unity_property up_shelter;
 	unity_property up_injuries;
+	
+	
+	unity_property up_frontier_green;
+	unity_property up_frontier_orange;
+	unity_property up_frontier_red;
 	bool do_send_world <- true;
 	
 	map<string, dyke> dykes;
@@ -221,6 +226,19 @@ species unity_linker parent: abstract_unity_linker {
 		up_dam <- geometry_properties("dam", "dam", dam_aspect, #ray_interactable, false);
 		up_water <- geometry_properties("water", nil, water_aspect, #no_interaction,false);
 		up_shelter <- geometry_properties("shelter", nil, shelter_aspect,#ray_interactable,false);
+		
+		unity_aspect frontier_green_aspect <- geometry_aspect(50.0, #green,  precision);
+		unity_aspect frontier_orange_aspect <- geometry_aspect(50.0, #orange,  precision);
+		unity_aspect frontier_red_aspect <- geometry_aspect(50.0, #red,  precision);
+	
+		up_frontier_green<- geometry_properties("frontier_green", nil, frontier_green_aspect, #no_interaction, false);
+		up_frontier_orange<- geometry_properties("frontier_orange", nil, frontier_orange_aspect, #no_interaction, false);
+		up_frontier_red<- geometry_properties("frontier_red", nil, frontier_red_aspect, #no_interaction, false);
+	
+		
+		unity_properties << up_frontier_green;
+		unity_properties << up_frontier_orange;
+		unity_properties << up_frontier_red;
 
 		unity_properties << up_people;
 		unity_properties << up_dyke;
@@ -231,6 +249,10 @@ species unity_linker parent: abstract_unity_linker {
 		
 		//add the static_geometry agents as static agents/geometries to send to unity with the up_geom unity properties.
 		do add_background_geometries(evacuation_point,up_shelter);
+	
+		//do add_background_geometries(water_limit_drain collect (each + 20),up_frontier_green);
+		do add_background_geometries(water_limit_well collect (each + 20),up_frontier_orange);
+		do add_background_geometries(water_limit_danger.geometries collect (each + 20),up_frontier_red);
 	
 		
 	}
