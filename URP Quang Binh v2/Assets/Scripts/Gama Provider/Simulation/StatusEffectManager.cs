@@ -9,16 +9,20 @@ namespace Gama_Provider.Simulation
 
         [SerializeField] private float duration;
 
-      
 
+        public void UpdateEnergizedEffect(float val)
+        {
+            energizedEffect.GetComponentInChildren<CircularProgressBar>().updateIndicator(val);
+
+        }
         public void StartEnergizedEffect(float customDuration)
         {
             energizedEffect.SetActive(true);
 
             energizedEffect.GetComponentInChildren<CircularProgressBar>()
                 .ActivateCountdown(customDuration);
-
-            StartCoroutine(EndEnergizedEffect(customDuration));
+            if (energizedEffect.GetComponentInChildren<CircularProgressBar>().isTimer)
+                StartCoroutine(EndEnergizedEffect(customDuration));
         }
 
         IEnumerator EndEnergizedEffect(float delay)

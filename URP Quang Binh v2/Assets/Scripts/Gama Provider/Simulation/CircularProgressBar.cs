@@ -7,9 +7,9 @@ namespace Gama_Provider.Simulation
     {
         private bool _isActive;
 
-        private float _indicatorTimer;
-        private float _maxIndicatorTimer;
-
+        private float _indicator;
+        private float _maxIndicator;
+        public bool isTimer = true;
         private Image _radialProgressBar;
 
         private void Awake()
@@ -17,16 +17,22 @@ namespace Gama_Provider.Simulation
             _radialProgressBar = GetComponent<Image>();
         }
 
+
         private void Update()
         {
+            Debug.Log("_isActive: " + _isActive);
+
             if (_isActive)
             {
-                _indicatorTimer -= Time.deltaTime;
+                if (isTimer) 
+                    _indicator -= Time.deltaTime;
 
-                var currentRatio = _indicatorTimer / _maxIndicatorTimer;
 
-                Debug.Log("Indicator time: " + _indicatorTimer);
-                Debug.Log("Max indicator time: " + _maxIndicatorTimer);
+                Debug.Log("_indicator: " + _indicator);
+                var currentRatio = _indicator / _maxIndicator;
+
+               // Debug.Log("Indicator time: " + _indicator);
+               // Debug.Log("Max indicator time: " + _maxIndicator);
 
                 switch (currentRatio)
                 {
@@ -43,25 +49,27 @@ namespace Gama_Provider.Simulation
                         break;
                 }
 
-                _radialProgressBar.fillAmount = _indicatorTimer / _maxIndicatorTimer;
-                Debug.Log("_radialProgressBar.fillAmount: " + _radialProgressBar.fillAmount);
+                _radialProgressBar.fillAmount = currentRatio;
+              //  Debug.Log("_radialProgressBar.fillAmount: " + _radialProgressBar.fillAmount);
 
-                if (_indicatorTimer / _maxIndicatorTimer <= 0.5f)
-                {
-                }
-
-                if (_indicatorTimer <= 0)
+               
+                if (_indicator <= 0)
                 {
                     StopCountdown();
                 }
             }
         }
 
+        public void updateIndicator(float newVal)
+        {
+            _indicator = newVal;
+            Debug.Log("updateIndicator _indicator: " + _indicator);
+        }
         public void ActivateCountdown(float countdownTime)
         {
             _isActive = true;
-            _maxIndicatorTimer = countdownTime;
-            _indicatorTimer = _maxIndicatorTimer;
+            _maxIndicator = countdownTime;
+            _indicator = _maxIndicator;
         }
 
         private void StopCountdown()

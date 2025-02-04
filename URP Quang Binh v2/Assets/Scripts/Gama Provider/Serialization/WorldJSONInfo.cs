@@ -16,7 +16,7 @@ public class WorldJSONInfo
 
     public List<int> offsetYGeom;
 
-    public List<GAMAPoint> pointsGeom;
+    public List<GAMAPoint> pointsGeom; 
 
     public List<int> ranking;
     public List<string> players;
@@ -25,6 +25,10 @@ public class WorldJSONInfo
     public string state;
     public bool playback_finished;
     public int remaining_time;
+
+    public int score;
+
+    public int casualties;
 
     public static WorldJSONInfo CreateFromJSON(string jsonString)
     {

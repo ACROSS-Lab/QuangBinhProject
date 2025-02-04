@@ -142,8 +142,7 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI timerText;
 
     protected float LastTime;
-    protected float RemainingSeconds;  
-
+    protected float RemainingSeconds;
 
     // ############################################ UNITY FUNCTIONS ############################################
     void Awake()
@@ -361,14 +360,22 @@ public class SimulationManager : MonoBehaviour
 
             if (infoWorld.state == "s_init")
             {
-                
+                Debug.Log("infoWorld.casualties: " + infoWorld.casualties + " UIController.Instance.people_safe_on.activeSelf:" + UIController.Instance.people_safe_on.activeSelf);
+                if (UIController.Instance.people_safe_on.activeSelf)
+                {
+                    UIController.Instance.people_safe_on.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(1000 - infoWorld.casualties);
+                } 
             }
             else if (infoWorld.state == "s_diking")
             {
-                //timeText.text = "Remaining Time: " + Math.Max(0, infoWorld.remaining_time);
-            }
+                //timeText.text = "Remaining Time: " + Math.Max(0, infoWorld.remaining_time); 
+            } 
             else if (infoWorld.state == "s_flooding")
             {
+                if (UIController.Instance.people_safe_on.activeSelf)
+                {
+                    UIController.Instance.people_safe_on.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(1000 - infoWorld.casualties);
+                }
             }
 
             if (infoWorld.state != "s_init" && infoWorld.remaining_time > LastTime)

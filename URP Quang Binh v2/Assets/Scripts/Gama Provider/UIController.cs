@@ -80,6 +80,7 @@ public class UIController : MonoBehaviour
                 {
                     UI_FloodingPhase_eng.SetActive(false);
                 }
+                people_safe_on.GetComponent<StatusEffectManager>().StartEnergizedEffect(1000);
 
                 if (FloodingInitPhase)
                 {
@@ -168,7 +169,6 @@ public void StartMenuDikingPhase()
         flood_time.SetActive(true);
         people_safe_on.SetActive(true);
         people_safe_off.SetActive(false);
-       
         DikingStart = false;
 
         SimulationManager.Instance.DisplayFutureDike = false;

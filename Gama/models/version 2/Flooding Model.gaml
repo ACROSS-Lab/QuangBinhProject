@@ -20,7 +20,7 @@ global control: fsm {
  	int num_step <- 350;
  	int num_step_add <- num_step - 50;
  	
- 	float diking_duration <- 120.0;
+ 	float diking_duration <- 60.0;
 	
 	int num_rounds <- 3;
 	
