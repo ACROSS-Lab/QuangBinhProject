@@ -183,23 +183,23 @@ Material:
     m_Ints: []
     m_Floats:
     - Vector1_10EB46E7: 0.874
-    - Vector1_12094A6A: 0.07
-    - Vector1_276CFA84: 1.649
+    - Vector1_12094A6A: 0
+    - Vector1_276CFA84: 3
     - Vector1_34AA93A4: 1
     - Vector1_380E174C: 18.62
     - Vector1_4B804F1: 1.02
-    - Vector1_5E63D775: 0.987
+    - Vector1_5E63D775: 1
     - Vector1_6F1356E9: 0.1
-    - Vector1_8163804F: 1.32
+    - Vector1_8163804F: 1.71
     - Vector1_82D25EEE: 0.1
-    - Vector1_86FC2385: 0.1
-    - Vector1_9A6CDA63: 1
-    - Vector1_A01E7616: 0.31
+    - Vector1_86FC2385: 0.43
+    - Vector1_9A6CDA63: 0
+    - Vector1_A01E7616: 0
     - Vector1_A6116528: 0.37
-    - Vector1_A99CC525: 0.09
+    - Vector1_A99CC525: 5
     - Vector1_AA127297: -0.03
-    - Vector1_C09E8EE0: 0.734
-    - Vector1_D1C0A90B: 3
+    - Vector1_C09E8EE0: 0
+    - Vector1_D1C0A90B: 10
     - Vector1_E35C987E: 0
     - _AORemapMax: 1
     - _AORemapMin: 0
@@ -332,18 +332,18 @@ Material:
     - _ZTestTransparent: 4
     - _ZWrite: 0
     m_Colors:
-    - Color_150F8878: {r: 0.16583595, g: 0.8113208, b: 0.47145686, a: 0.77254903}
-    - Color_3311DE9B: {r: 0, g: 0.1509434, b: 0.007841218, a: 0.8784314}
+    - Color_150F8878: {r: 0, g: 0.27450982, b: 0.26884234, a: 0.77254903}
+    - Color_3311DE9B: {r: 1, g: 1, b: 1, a: 0.6313726}
     - Color_65F0F92: {r: 1, g: 1, b: 1, a: 1}
     - Vector2_55F9F952: {r: 1, g: 0, b: 0, a: 0}
     - Vector2_74235613: {r: 0.25, g: -1, b: 0, a: 0}
     - Vector2_7B143DA2: {r: 10, g: 10, b: 0, a: 0}
     - Vector2_8D373A62: {r: -16.7, g: -13.02, b: 0, a: 0}
-    - Vector2_9CC078F0: {r: 0.01, g: 0.1, b: 0, a: 0}
+    - Vector2_9CC078F0: {r: 0.05, g: 0.05, b: 0, a: 0}
     - Vector2_A7ABB0BC: {r: 0.5, g: 0.1, b: 0, a: 0}
-    - Vector2_B69D7F47: {r: -0.1, g: -0.1, b: 0, a: 0}
-    - Vector2_CE6A866F: {r: 1, g: 1, b: 0, a: 0}
-    - Vector2_DF5FC430: {r: 0.03, g: 0.01, b: 0, a: 0}
+    - Vector2_B69D7F47: {r: 0, g: 0.1, b: 0, a: 0}
+    - Vector2_CE6A866F: {r: 0, g: 1, b: 0, a: 0}
+    - Vector2_DF5FC430: {r: 0.01, g: -0.05, b: 0, a: 0}
     - Vector2_F47C6FA1: {r: 5, g: 10, b: 0, a: 0}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _BaseColorMap_MipInfo: {r: 0, g: 0, b: 0, a: 0}

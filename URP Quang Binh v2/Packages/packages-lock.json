@@ -17,7 +17,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.collab-proxy": {
-      "version": "2.5.2",
+      "version": "2.6.0",
       "depth": 0,
       "source": "registry",
       "dependencies": {},
@@ -90,7 +90,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.learn.iet-framework": {
-      "version": "4.0.2",
+      "version": "4.0.3",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -301,7 +301,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.xr.openxr": {
-      "version": "1.13.1",
+      "version": "1.13.2",
       "depth": 0,
       "source": "registry",
       "dependencies": {

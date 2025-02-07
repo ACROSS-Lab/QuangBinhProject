@@ -2,6 +2,7 @@
 using QuickTest;
 using UnityEngine.UI;
 using Gama_Provider.Simulation;
+using TMPro;
 
 public class UIController : MonoBehaviour
 {
@@ -13,8 +14,8 @@ public class UIController : MonoBehaviour
     public GameObject UI_DykingPhase_viet;
     public GameObject UI_FloodingPhase_viet;
     public GameObject UI_EndingPhase_viet;
-    public Text TextEndEng;
-    public Text TextEndViet;
+    // public TextMeshProUGUI TextEndEng;
+    // public TextMeshProUGUI TextEndViet;
 
     public GameObject LogosUI;
     public GameObject Timer_on;
@@ -23,6 +24,17 @@ public class UIController : MonoBehaviour
     public GameObject flood_time;
     public GameObject people_safe_on; 
     public GameObject people_safe_off;
+
+    public GameObject UI_FinalScore;
+    public GameObject UI_HUD;
+    public GameObject UI_Hint, UI_Hint_viet, UI_Hint_eng;
+    public GameObject UI_ScoreRound_viet, UI_ScoreRound_eng;
+    public GameObject UI_Length_viet, UI_Length_eng;
+    public TextMeshProUGUI score, finalScore, bestScore;
+    public TextMeshProUGUI roundTxt;
+    public TextMeshProUGUI dykeLength, damLength;
+
+    int round;
 
     protected float TimeForDisplayingFloodUI = 2.0f; // in second
     protected float TimerForDisplayingFloodUI = 0.0f;
@@ -47,17 +59,17 @@ public class UIController : MonoBehaviour
     public void Update()
     {
        
-        if (Input.GetKeyDown(KeyCode.Space) && UI_ChoiceOfLanguage.active)
+        if (Input.GetKeyDown(KeyCode.Space) && UI_ChoiceOfLanguage.activeInHierarchy)
         {
             SetInVietnamese(false);
         }
 
-        if (Input.GetKeyDown(KeyCode.Space) && UI_DykingPhase_eng.active)
+        if (Input.GetKeyDown(KeyCode.Space) && UI_DykingPhase_eng.activeInHierarchy)
         {
             StartDikingPhase();
         }
 
-        if (Input.GetKeyDown(KeyCode.Space) && UI_EndingPhase_eng.active)
+        if (Input.GetKeyDown(KeyCode.Space) && UI_EndingPhase_eng.activeInHierarchy)
         {
             RestartGame();
         }
@@ -114,10 +126,16 @@ public class UIController : MonoBehaviour
         if (InVietnamese)
         {
             UI_FloodingPhase_viet.SetActive(true);
+            UI_Hint_viet.SetActive(true);
+            UI_ScoreRound_viet.SetActive(true);
+            UI_Length_viet.SetActive(true);
         }
         else
         {
             UI_FloodingPhase_eng.SetActive(true);
+            UI_Hint_eng.SetActive(true);
+            UI_ScoreRound_eng.SetActive(true);
+            UI_Length_eng.SetActive(true);
         }
 
         FloodingPhase = true;
@@ -192,20 +210,23 @@ public void StartMenuDikingPhase()
         }
     } 
 
-    public void EndGame(int score)
+    public void EndGame()
     {
+        Debug.Log("endthegame");
         LogosUI.SetActive(false);
        
         if (InVietnamese)
         {
-            TextEndViet.text = ("" + score + "%");
             UI_EndingPhase_viet.SetActive(true);
         }
         else
         {
             UI_EndingPhase_eng.SetActive(true);
-            TextEndEng.text = ("" + score + "%");
         }
+
+        finalScore.text = score.text;
+        UI_FinalScore.SetActive(true);
+        
     }
 
     public void RestartGame()
@@ -214,6 +235,28 @@ public void StartMenuDikingPhase()
             UI_EndingPhase_viet.SetActive(false);
         else 
             UI_EndingPhase_eng.SetActive(false);
+
+        UI_FinalScore.SetActive(false);
         UI_ChoiceOfLanguage.SetActive(true);
+    }
+
+    public void UpdateScore(int score)
+    {
+        this.score.text = score.ToString();
+        if(score > int.Parse(bestScore.text)) bestScore.text = score.ToString();
+        if(round >= 3) EndGame();
+    }
+
+    public void UpdateRound(int round)
+    {
+        if(!UI_HUD.activeInHierarchy) UI_HUD.SetActive(true);
+        roundTxt.text = "" + round;
+        this.round = int.Parse(roundTxt.text);
+        if(round >= 3) UI_Hint.SetActive(true);
+    }
+
+    public void UpdateLength(TextMeshProUGUI text, float length)
+    {
+        text.text = length.ToString() + "m";
     }
 }

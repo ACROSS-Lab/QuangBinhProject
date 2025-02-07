@@ -77,11 +77,12 @@ global {
 	}
 	
 	 action end_game_action {
-	 	ask unity_linker {do sendEndGame;}
+	 	//ask unity_linker {do sendEndGame;}
 	 }
 	
 	action exit_flooding {
 		do exit_flooding_base;
+		ask unity_linker {do send_message players: unity_player as list mes: ["score":: round(world.score)];}
 	}
 	
 	action exit_init {
@@ -123,14 +124,19 @@ global {
 		diking_over <- false;
 		
 		//write "enter_diking";
-		ask unity_linker {do send_static_geometries();}
+		ask unity_linker {
+			do send_static_geometries();
+			do send_message players: unity_player as list mes: ["round":: current_round];
+		}
 		flooding_requested_from_gama <- false;
 		diking_requested_from_gama <- false;
 		restart_requested_from_gama <- false;	
+		
+		
 	}
 	
 	action enter_flooding {
-		//write "enter_flooding";
+		write "enter_flooding";
 		
 		do enter_flooding_base;
 		
@@ -275,8 +281,14 @@ species unity_linker parent: abstract_unity_linker {
 		
 		do send_message players: unity_player as list mes: ["score":: int(100* (1 - casualties/nb_of_people)), "round":: current_round, "endgame"::current_round >= num_rounds];
 	}
+	
+	action sendLengthData {
+		do send_message players: unity_player as list mes: ["dykeLength":: round(world.dyke_length)];
+		do send_message players: unity_player as list mes: ["damLength":: round(world.dam_length)];
+	}
+	
 	action add_to_send_world(map map_to_send) {
-		map_to_send["remaining_time"] <- int((current_timeout - gama.machine_time)/1000);
+//		map_to_send["remaining_time"] <- int((current_timeout - gama.machine_time)/1000);
 		map_to_send["state"] <- world.state;
 		map_to_send["score"] <- round(world.score);
 		map_to_send["casualties"] <- world.casualties;
@@ -369,6 +381,7 @@ species unity_linker parent: abstract_unity_linker {
 			// All the dykes are sent to Unity during the diking phass
 			do add_geometries_to_send(dyke where !each.is_dam, up_dyke);
 			do add_geometries_to_send(dyke where each.is_dam, up_dam);
+			do sendLengthData;
 			// The river is not changed so we keep it unchanged
 			if (river_already_sent_in_diking_phase) {do add_geometries_to_keep(river);} 
 			else {do add_geometries_to_send(river collect each.shape_to_export, up_water); river_already_sent_in_diking_phase <- true;}

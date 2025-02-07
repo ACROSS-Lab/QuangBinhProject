@@ -114,6 +114,9 @@ public class SimulationManager : MonoBehaviour
     protected GameObject endPoint;
 
     protected ScoreMessage scoreM;
+    protected RoundMessage roundM;
+    protected DykeLengthMessage dykeM;
+    protected DamLengthMessage damM;
 
     protected Vector3 originalStartPosition;
     protected bool firstPositionStored;
@@ -499,8 +502,23 @@ public class SimulationManager : MonoBehaviour
         UpdateGame();
         if (scoreM != null)
         {
-            UIController.Instance.EndGame(scoreM.score);
+            UIController.Instance.UpdateScore(scoreM.score);
             scoreM = null;
+        }
+        if(roundM != null)
+        {
+            UIController.Instance.UpdateRound(roundM.round);
+            roundM = null;
+        }
+        if(dykeM != null)
+        {
+            UIController.Instance.UpdateLength(UIController.Instance.dykeLength, dykeM.dykeLength);
+            dykeM = null;
+        }
+        if(damM != null)
+        {
+            UIController.Instance.UpdateLength(UIController.Instance.damLength, damM.damLength);
+            damM = null;
         }
     }
 
@@ -966,7 +984,7 @@ public class SimulationManager : MonoBehaviour
     {
     }
 
-    private async void HandleServerMessageReceived(String firstKey, String content)
+    private void HandleServerMessageReceived(String firstKey, String content)
     {
         if (content == null || content.Equals("{}")) return;
         if (firstKey == null)
@@ -1012,6 +1030,20 @@ public class SimulationManager : MonoBehaviour
                 break;
             case "score":
                 scoreM = ScoreMessage.CreateFromJSON(content);
+                
+                break;
+
+            case "round":
+                roundM = RoundMessage.CreateFromJSON(content);
+                UIController.Instance.UpdateRound(roundM.round);
+                break;
+            
+            case "dykeLength":
+                dykeM = DykeLengthMessage.CreateFromJSON(content);
+                break;
+
+            case "damLength":
+                damM = DamLengthMessage.CreateFromJSON(content);
                 break;
 
             case "properties":
@@ -1193,6 +1225,38 @@ public class ScoreMessage
     }
 }
 
+[Serializable]
+public class RoundMessage
+{
+    public int round;
+
+    public static RoundMessage CreateFromJSON(string jsonString)
+    {
+        return JsonUtility.FromJson<RoundMessage>(jsonString);
+    }
+}
+
+[Serializable]
+public class DykeLengthMessage
+{
+    public float dykeLength;
+
+    public static DykeLengthMessage CreateFromJSON(string jsonString)
+    {
+        return JsonUtility.FromJson<DykeLengthMessage>(jsonString);
+    }
+}
+
+[Serializable]
+public class DamLengthMessage
+{
+    public float damLength;
+
+    public static DamLengthMessage CreateFromJSON(string jsonString)
+    {
+        return JsonUtility.FromJson<DamLengthMessage>(jsonString);
+    }
+}
 
 public static class Extensions
 {
@@ -1201,3 +1265,6 @@ public static class Extensions
         return (result = obj.GetComponent<T>()) != null;
     }
 }
+
+
+
