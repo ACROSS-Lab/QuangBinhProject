@@ -734,6 +734,7 @@ species buildings parent: obstacle schedules: []{
 species dyke parent: obstacle schedules: []{
 	float length;
 	bool is_dam <- false;
+	float rotation;
 	init {
 		length <- shape.perimeter;
 		if (is_dam) {
@@ -742,6 +743,15 @@ species dyke parent: obstacle schedules: []{
 			dyke_length <- dyke_length + length;
 		}
 		shape <- shape + 20;
+		
+		// Calculate rotation angle
+        list<point> points <- shape.points;
+        point start_point <- first(points);
+        point end_point <- points[length(points) - 2];
+        float dx <- end_point.x - start_point.x;
+        float dy <- end_point.y - start_point.y;
+        rotation <- atan(dx/dy);
+     
 		do compute_height();
 		do build();
 	}

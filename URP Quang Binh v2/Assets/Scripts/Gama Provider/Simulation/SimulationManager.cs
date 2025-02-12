@@ -581,6 +581,18 @@ public class SimulationManager : MonoBehaviour
                 Vector3 pos = converter.fromGAMACRS(pt[0], pt[1], pt[2]);
                 pos.y += pos.y + prop.yOffsetF;
                 float rot = prop.rotationCoeffF * ((0.0f + pt[3]) / parameters.precision) + prop.rotationOffsetF;
+
+                if (infoWorld.attributes != null && infoWorld.attributes.Count > 0)
+                {
+                    float length = infoWorld.attributes[i].length;
+                    float rotation = infoWorld.attributes[i].rotation;
+                    if(length > 0)
+                    {
+                        obj.transform.localScale = new Vector3(obj.transform.localScale.x, obj.transform.localScale.y, length);
+                        rot = rotation;
+                    }
+                }
+
                 obj.transform.SetPositionAndRotation(pos, Quaternion.AngleAxis(rot, Vector3.up));
                 //obj.SetActive(true);
                 toRemove.Remove(name);
