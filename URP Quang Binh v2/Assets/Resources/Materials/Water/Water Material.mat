@@ -182,21 +182,21 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - Vector1_10EB46E7: 0.874
+    - Vector1_10EB46E7: 0
     - Vector1_12094A6A: 0
     - Vector1_276CFA84: 3
     - Vector1_34AA93A4: 1
-    - Vector1_380E174C: 18.62
+    - Vector1_380E174C: 16.63
     - Vector1_4B804F1: 1.02
     - Vector1_5E63D775: 1
-    - Vector1_6F1356E9: 0.1
+    - Vector1_6F1356E9: 0.05
     - Vector1_8163804F: 1.71
     - Vector1_82D25EEE: 0.1
-    - Vector1_86FC2385: 0.43
+    - Vector1_86FC2385: 0.3
     - Vector1_9A6CDA63: 0
     - Vector1_A01E7616: 0
     - Vector1_A6116528: 0.37
-    - Vector1_A99CC525: 5
+    - Vector1_A99CC525: 1.35
     - Vector1_AA127297: -0.03
     - Vector1_C09E8EE0: 0
     - Vector1_D1C0A90B: 10
@@ -341,7 +341,7 @@ Material:
     - Vector2_8D373A62: {r: -16.7, g: -13.02, b: 0, a: 0}
     - Vector2_9CC078F0: {r: 0.05, g: 0.05, b: 0, a: 0}
     - Vector2_A7ABB0BC: {r: 0.5, g: 0.1, b: 0, a: 0}
-    - Vector2_B69D7F47: {r: 0, g: 0.1, b: 0, a: 0}
+    - Vector2_B69D7F47: {r: 0.1, g: 0.1, b: 0, a: 0}
     - Vector2_CE6A866F: {r: 0, g: 1, b: 0, a: 0}
     - Vector2_DF5FC430: {r: 0.01, g: -0.05, b: 0, a: 0}
     - Vector2_F47C6FA1: {r: 5, g: 10, b: 0, a: 0}

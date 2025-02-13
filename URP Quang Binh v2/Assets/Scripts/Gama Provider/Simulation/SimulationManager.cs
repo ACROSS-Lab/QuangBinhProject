@@ -588,8 +588,8 @@ public class SimulationManager : MonoBehaviour
                     float rotation = infoWorld.attributes[i].rotation;
                     if(length > 0)
                     {
-                        obj.transform.localScale = new Vector3(obj.transform.localScale.x, obj.transform.localScale.y, length);
-                        rot = rotation;
+                        obj.transform.localScale = new Vector3(obj.transform.localScale.x, obj.transform.localScale.y, length/36);
+                        rot = -rotation;
                     }
                 }
 
@@ -961,7 +961,7 @@ public class SimulationManager : MonoBehaviour
         }
         else if (obj.tag.Equals("dam"))
         {
-            SimulationManagerSolo.ChangeColor(obj, Color.magenta);
+            SimulationManagerSolo.ChangeColor(obj, new Color32(255, 165, 0, 255));
         }
     }
 
@@ -985,11 +985,14 @@ public class SimulationManager : MonoBehaviour
 
     static public void ChangeColor(GameObject obj, Color color)
     {
-        Renderer[] renderers = obj.gameObject.GetComponentsInChildren<Renderer>();
-        for (int i = 0; i < renderers.Length; i++)
-        {
-            renderers[i].material.color = color; // renderers[i].material.color == Color.red ? Color.gray : Color.red;
-        }
+        // Renderer[] renderers = obj.gameObject.GetComponentsInChildren<Renderer>();
+        // for (int i = 0; i < renderers.Length; i++)
+        // {
+        //     renderers[i].material.color = color; // renderers[i].material.color == Color.red ? Color.gray : Color.red;
+        // }
+
+        Renderer rend = obj.GetComponent<MeshRenderer>();
+        rend.material.color = color;
     }
 
     protected virtual void ManageOtherMessages(string content)

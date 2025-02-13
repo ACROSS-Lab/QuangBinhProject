@@ -17,7 +17,7 @@ global control: fsm {
 		
  	bool save_results <- false;
  	
- 	int num_step <- 10;// 350;
+ 	int num_step <- 5;// 350;
  	int num_step_add <- num_step;// 50;
  	
  	float diking_duration <- 60.0;
