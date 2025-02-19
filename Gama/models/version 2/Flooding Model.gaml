@@ -17,7 +17,7 @@ global control: fsm {
 		
  	bool save_results <- false;
  	
- 	int num_step <- 5;// 350;
+ 	int num_step <- 350;// 350;
  	int num_step_add <- num_step;// 50;
  	
  	float diking_duration <- 60.0;
@@ -750,7 +750,7 @@ species dyke parent: obstacle schedules: []{
         point end_point <- points[length(points) - 2];
         float dx <- end_point.x - start_point.x;
         float dy <- end_point.y - start_point.y;
-        rotation <- atan(dx/dy);
+        rotation <- dy = 0 ?  (dx > 0 ? 180 / 2 : -180 / 2) : atan(dx/dy);
      
 		do compute_height();
 		do build();
