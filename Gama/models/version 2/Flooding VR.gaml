@@ -380,17 +380,20 @@ species unity_linker parent: abstract_unity_linker {
 			do add_geometries_to_send(river collect each.shape_to_export,up_water);
 			
 		} else if (state = "s_diking") {
+			list<dyke> dykes_ <- (dyke where !each.is_dam);
 			// All the dykes are sent to Unity during the diking phass
-			list<float> dykes_length <- (dyke where !each.is_dam) collect each.length;
-			list<float> dykes_rotation <- (dyke where !each.is_dam) collect each.rotation; 
+			list<float> dykes_length <- dykes_ collect each.length;
+			list<float> dykes_rotation <- dykes_ collect each.rotation; 
 			map<string, list<float>> dykes_atts <- ["length" :: dykes_length ,"rotation" :: dykes_rotation];
+			do add_geometries_to_send(dykes_, up_dyke, dykes_atts);
 			
-			list<float> dams_length <- (dyke where each.is_dam) collect each.length;
-			list<float> dams_rotation <- (dyke where each.is_dam) collect each.rotation;
+			list<dyke> dams_ <- (dyke where each.is_dam);
+			
+			list<float> dams_length <- dams_ collect each.length;
+			list<float> dams_rotation <- dams_ collect each.rotation;
 			map<string, list<float>> dams_atts <- ["length" :: dams_length ,"rotation" :: dams_rotation];
 			
-			do add_geometries_to_send(dyke where !each.is_dam, up_dyke, dykes_atts);
-			do add_geometries_to_send(dyke where each.is_dam, up_dam, dams_atts);
+			do add_geometries_to_send(dams_, up_dam, dams_atts);
 			
 //			do add_geometries_to_keep(dyke);
 			do sendLengthData;
