@@ -1050,7 +1050,6 @@ public class SimulationManager : MonoBehaviour
 
             case "round":
                 roundM = RoundMessage.CreateFromJSON(content);
-                UIController.Instance.UpdateRound(roundM.round);
                 break;
             
             case "dykeLength":

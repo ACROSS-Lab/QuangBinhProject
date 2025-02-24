@@ -381,7 +381,6 @@ species unity_linker parent: abstract_unity_linker {
 			
 		} else if (state = "s_diking") {
 			list<dyke> dykes_ <- (dyke where !each.is_dam);
-			// All the dykes are sent to Unity during the diking phass
 			list<float> dykes_length <- dykes_ collect each.length;
 			list<float> dykes_rotation <- dykes_ collect each.rotation; 
 			map<string, list<float>> dykes_atts <- ["length" :: dykes_length ,"rotation" :: dykes_rotation];
