@@ -20,7 +20,7 @@ namespace Gama_Provider.Simulation
 
         private void Update()
         {
-            Debug.Log("_isActive: " + _isActive);
+            // Debug.Log("_isActive: " + _isActive);
 
             if (_isActive)
             {
@@ -28,7 +28,7 @@ namespace Gama_Provider.Simulation
                     _indicator -= Time.deltaTime;
 
 
-                Debug.Log("_indicator: " + _indicator);
+                // Debug.Log("_indicator: " + _indicator);
                 var currentRatio = _indicator / _maxIndicator;
 
                // Debug.Log("Indicator time: " + _indicator);
@@ -63,7 +63,7 @@ namespace Gama_Provider.Simulation
         public void updateIndicator(float newVal)
         {
             _indicator = newVal;
-            Debug.Log("updateIndicator _indicator: " + _indicator);
+            // Debug.Log("updateIndicator _indicator: " + _indicator);
         }
         public void ActivateCountdown(float countdownTime)
         {

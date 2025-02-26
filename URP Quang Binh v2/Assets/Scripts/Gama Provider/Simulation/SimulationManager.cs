@@ -405,7 +405,7 @@ public class SimulationManager : MonoBehaviour
 
             //RemainingSeconds -= Time.unscaledDeltaTime;
             //TimeSpan timeSpan = TimeSpan.FromSeconds(Math.Max(0, RemainingSeconds));
-            Debug.Log("Remaining time span: " + Math.Max(0, (int)LastTime));
+            // Debug.Log("Remaining time span: " + Math.Max(0, (int)LastTime));
             //timerText.text = timeSpan.ToString(@"mm\:ss");
 
             //TimeSpan timeSpan = TimeSpan.FromSeconds(RemainingSeconds);
@@ -588,8 +588,19 @@ public class SimulationManager : MonoBehaviour
                     float rotation = infoWorld.attributes[i].rotation;
                     if(length > 0)
                     {
-                        obj.transform.localScale = new Vector3(obj.transform.localScale.x, obj.transform.localScale.y, length/36);
+                        Vector3 currentScale = obj.transform.localScale;
                         rot = -rotation;
+                        
+                        if(obj.transform.localPosition != Vector3.zero && pos != obj.transform.localPosition)
+                        {
+                            float lostLength = Vector3.Distance(pos, obj.transform.localPosition);
+                            pos = (pos + obj.transform.localPosition)/2;
+                            obj.transform.localScale = new Vector3(currentScale.x, currentScale.y, currentScale.z - lostLength/36);
+                        }
+                        else
+                        {
+                            obj.transform.localScale = new Vector3(currentScale.x, currentScale.y, length/36);
+                        }
                     }
                 }
 
