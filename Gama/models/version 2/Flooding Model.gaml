@@ -174,7 +174,6 @@ global control: fsm {
 	file river_shapefile <- file("../../includes/gis/river_clean.shp");
 	
 	//if defined, used to create people agents
-	shape_file people_shape_file <- shape_file("../../includes/gis/people.shp");
 
 	//Shapefile for the buildings
 	file buildings_shapefile <- file("../../includes/gis/buildings.shp");
@@ -487,17 +486,9 @@ global control: fsm {
 	}
 	
 	action init_people {
-
-		if (people_shape_file != nil) {
-			create people from: people_shape_file with:(evacuation_time:int(get("evacuation")));
-			
-		} else {
-			create people number: nb_of_people {
-				location <- init_loc != nil ?init_loc : any_location_in(one_of(buildings));
-			}
+		create people number: nb_of_people {
+			location <- init_loc != nil ?init_loc : any_location_in(one_of(buildings));
 		}
-		
-	
 	}
 
 	action init_roads {
