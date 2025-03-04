@@ -217,18 +217,18 @@ species unity_linker parent: abstract_unity_linker {
 	map<string, dyke> dykes;
 	init {
 		
-		unity_aspect people_aspect <- prefab_aspect("Prefabs/Visual Prefabs/People/WalkingMen",400,0.2,1.0,-90.0, precision);
+		unity_aspect people_aspect <- prefab_aspect("Prefabs/Visual Prefabs/People/WalkingMenTest",400,0.2,1.0,-90.0, precision);
 		unity_aspect people_aspect_injured <- prefab_aspect("Prefabs/Visual Prefabs/People/Injuries",400,0.2,1.0,-90.0, precision);
 //		unity_aspect dyke_aspect <- geometry_aspect(40.0, "Materials/Dike/Dike", #gray,  precision);
 //		unity_aspect dam_aspect <- geometry_aspect(40.0, "Materials/Dike/Dam", #magenta, precision);
-		unity_aspect dyke_aspect <- prefab_aspect("Prefabs/DikeBlock", 3, 0.0, 1.0, 0.0, precision);
-		unity_aspect dam_aspect <- prefab_aspect("Prefabs/DamBlock", 3, 0.0, 1.0, 0.0, precision);
+		unity_aspect dyke_aspect <- prefab_aspect("Prefabs/DikeBlock", 2.5, 0.0, 1.0, 0.0, precision);
+		unity_aspect dam_aspect <- prefab_aspect("Prefabs/DamBlock", 2.5, 0.0, 1.0, 0.0, precision);
 	//	unity_aspect water_aspect <- geometry_aspect(5.0, #blue,precision);
 		unity_aspect water_aspect <- geometry_aspect(10.0, "Materials/Water/Water Material",precision);
 		
 		unity_aspect shelter_aspect <- prefab_aspect("Prefabs/Shelter",150.0,0.0,1.0,0.0, precision);
 		
-		up_people<- geometry_properties("people", nil, people_aspect, #no_interaction, false);
+		up_people<- geometry_properties("people", "people", people_aspect, #no_interaction, false);
 		up_injuries<- geometry_properties("injury", nil, people_aspect_injured, #no_interaction, false);
 		up_dyke <- geometry_properties("dyke", "dyke", dyke_aspect, #ray_interactable, false);
 		up_dam <- geometry_properties("dam", "dam", dam_aspect, #ray_interactable, false);
@@ -359,16 +359,24 @@ species unity_linker parent: abstract_unity_linker {
 
 
 	action add_people {
-		list<people> fleeing_p <- people where (each.state = "s_fleeing");
-		ask fleeing_p {
-			name <- "fleeing_" + int(self);
+//		list<people> fleeing_p <- people where (each.state = "s_fleeing");
+//		ask fleeing_p {
+//			name <- "fleeing_" + (int(self) mod 1000);
+//		}
+//		list<people> injured_p <- people where (each.state = "s_drowned");
+//		ask injured_p {
+//			name <- "injury_" + (int(self) mod 1000);
+//		}
+//		do add_geometries_to_send(fleeing_p,up_people);
+//		do add_geometries_to_send(injured_p,up_injuries);
+		
+		list<people> affected_p <- people where (each.state = "s_fleeing" or each.state = "s_drowned");
+		ask affected_p {
+			name <- "affected_" + (int(self) mod 1000);
 		}
-		list<people> injured_p <- people where (each.state = "s_drowned");
-		ask injured_p {
-			name <- "injury_" + int(self);
-		}
-		do add_geometries_to_send(fleeing_p,up_people);
-		do add_geometries_to_send(injured_p,up_injuries);
+		list<bool> injured <- affected_p collect (each.state = "s_drowned");
+		map<string, list<bool>> people_atts <- ["injured":: injured];
+		do add_geometries_to_send(affected_p, up_people, people_atts);
 	}
 	/**
 	 * What are the agents to send to Unity, and what are the agents that remain unchanged ? 

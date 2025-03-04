@@ -343,7 +343,7 @@ Material:
     - Vector2_A7ABB0BC: {r: 0.5, g: 0.1, b: 0, a: 0}
     - Vector2_B69D7F47: {r: 0.1, g: 0.1, b: 0, a: 0}
     - Vector2_CE6A866F: {r: 0, g: 1, b: 0, a: 0}
-    - Vector2_DF5FC430: {r: 0.01, g: -0.05, b: 0, a: 0}
+    - Vector2_DF5FC430: {r: 0.01, g: -0.03, b: 0, a: 0}
     - Vector2_F47C6FA1: {r: 5, g: 10, b: 0, a: 0}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _BaseColorMap_MipInfo: {r: 0, g: 0, b: 0, a: 0}

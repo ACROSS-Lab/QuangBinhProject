@@ -7,4 +7,5 @@ public class Attributes
 
     public float length;
     public float rotation;
+    public bool injured;
 }

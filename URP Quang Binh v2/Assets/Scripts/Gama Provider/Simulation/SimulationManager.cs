@@ -266,38 +266,6 @@ public class SimulationManager : MonoBehaviour
             infoWorld = null;
         }
 
-        if (converter != null && data != null)
-        {
-            //manageUpdateTerrain();
-        }
-
-        if (converter != null && dataLoc != null)
-        {
-            //manageSetValueTerrain();
-        }
-
-        if (converter != null && dataTeleport != null)
-        {
-            //manageTeleportationArea();
-        }
-
-        if (converter != null && dataWall != null)
-        {
-            //manageWalls();
-        }
-
-        if (enableMove != null)
-        {
-            //playerMovement(enableMove.enableMove);
-            //enableMove = null;
-        }
-
-        if (infoAnimation != null)
-        {
-            //updateAnimation();
-            //infoAnimation = null;
-        }
-
         if (IsGameState(GameState.LOADING_DATA) && ConnectionManager.Instance.getUseMiddleware())
         {
             if (TimerSendInit > 0)
@@ -577,6 +545,7 @@ public class SimulationManager : MonoBehaviour
                     }
                 }
 
+                Transform transform = obj.transform;
                 List<int> pt = infoWorld.pointsLoc[cptPrefab].c;
                 Vector3 pos = converter.fromGAMACRS(pt[0], pt[1], pt[2]);
                 pos.y += pos.y + prop.yOffsetF;
@@ -584,27 +553,47 @@ public class SimulationManager : MonoBehaviour
 
                 if (infoWorld.attributes != null && infoWorld.attributes.Count > 0)
                 {
-                    float length = infoWorld.attributes[i].length;
-                    float rotation = infoWorld.attributes[i].rotation;
-                    if(length > 0)
+                    if(obj.CompareTag("dam") || obj.CompareTag("dyke"))
                     {
-                        Vector3 currentScale = obj.transform.localScale;
-                        rot = -rotation;
-                        
-                        if(obj.transform.localPosition != Vector3.zero && pos != obj.transform.localPosition)
+                        float length = infoWorld.attributes[i].length;
+                        float rotation = infoWorld.attributes[i].rotation;
+
+                        if(length > 0)
                         {
-                            float lostLength = Vector3.Distance(pos, obj.transform.localPosition);
-                            pos = (pos + obj.transform.localPosition)/2;
-                            obj.transform.localScale = new Vector3(currentScale.x, currentScale.y, currentScale.z - lostLength/36);
+                            Vector3 currentScale = transform.localScale;
+                            rot = -rotation;
+                            
+                            if(transform.localPosition != Vector3.zero && pos != transform.localPosition)
+                            {
+                                float lostLength = Vector3.Distance(pos, transform.localPosition);
+                                pos = (pos + transform.localPosition)/2;
+                                transform.localScale = new Vector3(currentScale.x, currentScale.y, currentScale.z - lostLength/36);
+                            }
+                            else
+                            {
+                                transform.localScale = new Vector3(currentScale.x, currentScale.y, length/36);
+                            }
+                        }
+                    }
+
+                    else if(obj.CompareTag("people"))
+                    {
+                        if(!obj.activeInHierarchy) obj.SetActive(true);
+                        bool injured = infoWorld.attributes[i].injured;
+                        if(injured)
+                        {
+                            transform.GetChild(0).gameObject.SetActive(true);
+                            transform.GetChild(1).eulerAngles = new Vector3(90, 0, 0);
                         }
                         else
                         {
-                            obj.transform.localScale = new Vector3(currentScale.x, currentScale.y, length/36);
-                        }
+                            transform.GetChild(0).gameObject.SetActive(false);
+                            transform.GetChild(1).eulerAngles = new Vector3(0, 0, 0);
+                        } 
                     }
                 }
 
-                obj.transform.SetPositionAndRotation(pos, Quaternion.AngleAxis(rot, Vector3.up));
+                transform.SetPositionAndRotation(pos, Quaternion.AngleAxis(rot, Vector3.up));
                 //obj.SetActive(true);
                 toRemove.Remove(name);
                 cptPrefab++;
@@ -915,9 +904,20 @@ public class SimulationManager : MonoBehaviour
         {
             List<object> o = geometryMap[id];
             GameObject obj = (GameObject)o[0];
+            if(obj.CompareTag("people"))
+            {
+                obj.SetActive(false);
+            }
+            else
+            {
+                obj.transform.position = new Vector3(0, -100, 0);
+                geometryMap.Remove(id);
+                Destroy(obj);
+            }
+
             obj.transform.position = new Vector3(0, -100, 0);
-            geometryMap.Remove(id);
-            GameObject.Destroy(obj);
+                geometryMap.Remove(id);
+                Destroy(obj);
         }
 
         //infoWorld = null;
