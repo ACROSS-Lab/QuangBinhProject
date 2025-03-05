@@ -171,28 +171,28 @@ global control: fsm {
 	 *************************************************************/
 
 	//Shapefile for the river
-	file river_shapefile <- file("../../includes/gis/river_clean.shp");
+	file river_shapefile <- file("../../includes/gis/water_polygon.shp");
 	
 	//if defined, used to create people agents
 
 	//Shapefile for the buildings
-	file buildings_shapefile <- file("../../includes/gis/buildings.shp");
+	file buildings_shapefile <- file("../../includes/gis/building_polygon.shp");
 	
 	//Shapefile for the evacuation points
-	file shape_file_evacuation <- file("../../includes/gis/evacuation_point.shp");
+	file shape_file_evacuation <- file("../../includes/gis/amenity_point.shp");
 	
 	//Shapefile for the roads
-	file shape_file_roads <- file("../../includes/gis/road.shp");
+	file shape_file_roads <- file("../../includes/gis/highway_line.shp");
 	
 	//Data elevation file : small, medium and large definition files are availables
 	//file dem_file <- file("../../includes/dem/dem_small.tif");
 	file dem_file <- file("../../includes/dem/terrain89x211.asc");
 	
 	
-	shape_file drain_shape_file <- shape_file("../../includes/gis/drain.shp");
+	shape_file drain_shape_file <- shape_file("../../includes/gis/office_polygon.shp");
 
 	//Shape of the environment using the bounding box of Quang Binh
-	geometry shape <- envelope(file("../../includes/gis/QBBB.shp"));
+	geometry shape <- envelope(file("../../includes/gis/boundary.shp"));
 	
 
 	/*************************************************************
@@ -514,9 +514,9 @@ global control: fsm {
 			water_limit_d  <- water_limit_d - g;
 			int is_drain_ <- int(g.attributes["drain"]);
 			if is_drain_ = 0 {
-				water_limit_well <- water_limit_well  + (g inter border);
+				water_limit_well << (g inter border);
 			} else {
-				water_limit_drain <- water_limit_drain + (g inter border);
+				water_limit_drain << (g inter border);
 				ask cell overlapping g {
 					is_drain <- length(neighbors) < 4;
 				}
