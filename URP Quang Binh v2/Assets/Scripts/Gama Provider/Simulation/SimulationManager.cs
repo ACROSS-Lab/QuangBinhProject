@@ -256,7 +256,7 @@ public class SimulationManager : MonoBehaviour
         if (handleGeometriesRequested && infoWorld != null && infoWorld.isInit)
         {
             sendMessageToReactivatePositionSent = true;
-            GenerateGeometries(true, new List<string>());
+            GenerateGeometries(true, new HashSet<string>());
             handleGeometriesRequested = false;
             UpdateGameState(GameState.GAME);
         }
@@ -491,7 +491,7 @@ public class SimulationManager : MonoBehaviour
     }
 
 
-    void GenerateGeometries(bool initGame, List<string> toRemove)
+    void GenerateGeometries(bool initGame, HashSet<string> toRemove)
     {
         if (infoWorld.position != null && infoWorld.position.Count > 1 &&
             (initGame || !sendMessageToReactivatePositionSent))
@@ -890,7 +890,7 @@ public class SimulationManager : MonoBehaviour
     private void UpdateAgentsList()
     {
         ManageOtherInformation();
-        List<string> toRemove = new List<string>(geometryMap.Keys);
+        HashSet<string> toRemove = new HashSet<string>(geometryMap.Keys);
 
         // foreach (List<object> obj in geometryMap.Values) {
         //((GameObject) obj[0]).SetActive(false);
