@@ -2,8 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using WebSocketSharp;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
+using System.Text.Json;
 using System.Linq;
 
 public class ConnectionManager : WebSocketConnector
@@ -18,7 +17,7 @@ public class ConnectionManager : WebSocketConnector
     public event Action<String, String> OnServerMessageReceived;
 
     // called when a "json_state" message is received 
-    public event Action<JObject> OnConnectionStateReceived;
+    public event Action<JsonElement> OnConnectionStateReceived;
 
     // called when a connection request fails
     public event Action<bool> OnConnectionAttempted;
@@ -92,9 +91,10 @@ public class ConnectionManager : WebSocketConnector
                 { "id", StaticInformation.getId() },
                 { "heartbeat", "" + HeartbeatInMs }
             };
-            string jsonStringId = JsonConvert.SerializeObject(jsonId);
+            string jsonStringId = JsonSerializer.Serialize(jsonId);
             SendMessageToServer(jsonStringId, new Action<bool>((success) =>
             {
+                Debug.Log("ConnectionManager: HandleConnectionOpen -> " + jsonStringId);
                 if (success)
                 {
                 }
@@ -107,8 +107,9 @@ public class ConnectionManager : WebSocketConnector
     {
         if (e.IsText)
         {
-            JObject jsonObj = JObject.Parse(e.Data);
-            string type = (string)jsonObj["type"];
+            JsonDocument jsonObj = JsonDocument.Parse(e.Data);
+            JsonElement root = jsonObj.RootElement.Clone();
+            string type = root.GetProperty("type").GetString();
 
 
             if (UseMiddleware)
@@ -117,7 +118,7 @@ public class ConnectionManager : WebSocketConnector
                 {
                     case "ping":
                         var jsonId = new Dictionary<string, string> { { "type", "pong" } };
-                        string jsonStringId = JsonConvert.SerializeObject(jsonId);
+                        string jsonStringId = JsonSerializer.Serialize(jsonId);
                         SendMessageToServer(jsonStringId, new Action<bool>((success) =>
                         {
                             if (success)
@@ -126,9 +127,9 @@ public class ConnectionManager : WebSocketConnector
                         }));
                         break;
                     case "json_state":
-                        OnConnectionStateReceived?.Invoke(jsonObj);
-                        bool authenticated = (bool)jsonObj["in_game"];
-                        bool connected = (bool)jsonObj["connected"];
+                        OnConnectionStateReceived?.Invoke(root);
+                        bool authenticated = root.GetProperty("in_game").GetBoolean();
+                        bool connected = root.GetProperty("connected").GetBoolean();
 
                         if (authenticated && connected)
                         {
@@ -156,8 +157,8 @@ public class ConnectionManager : WebSocketConnector
                         break;
 
                     case "json_output":
-                        JObject content = (JObject)jsonObj["contents"];
-                        String firstKey = content.Properties().Select(pp => pp.Name).FirstOrDefault();
+                        JsonElement content = root.GetProperty("contents");
+                        string firstKey = content.EnumerateObject().FirstOrDefault().Name;
                         OnServerMessageReceived?.Invoke(firstKey, content.ToString());
                         break;
 
@@ -167,9 +168,9 @@ public class ConnectionManager : WebSocketConnector
             }
             else if (type.Equals("SimulationOutput"))
             {
-                JValue content = (JValue)jsonObj["content"];
+                string content = root.GetProperty("content").GetString();
                 // Debug.Log("MessageSeparator: " + MessageSeparator);
-                foreach (String mes in content.ToString().Split(MessageSeparator))
+                foreach (String mes in content.Split(MessageSeparator))
                 {
                     if (!mes.IsNullOrEmpty())
                         OnServerMessageReceived?.Invoke(null, mes);
@@ -251,7 +252,7 @@ public class ConnectionManager : WebSocketConnector
             { "expr", expression }
         };
 
-        string jsonStringExpression = JsonConvert.SerializeObject(jsonExpression);
+        string jsonStringExpression = JsonSerializer.Serialize(jsonExpression);
         SendMessageToServer(jsonStringExpression, new Action<bool>((success) =>
         {
             if (!success)
@@ -274,7 +275,7 @@ public class ConnectionManager : WebSocketConnector
 
     public void SendExecutableAsk(string action, Dictionary<string, string> arguments)
     {
-        string argsJSON = JsonConvert.SerializeObject(arguments);
+        string argsJSON = JsonSerializer.Serialize(arguments);
         Dictionary<string, string> jsonExpression = null;
         jsonExpression = new Dictionary<string, string>
         {
@@ -284,7 +285,7 @@ public class ConnectionManager : WebSocketConnector
             { "agent", AgentToSendInfo }
         };
 
-        string jsonStringExpression = JsonConvert.SerializeObject(jsonExpression);
+        string jsonStringExpression = JsonSerializer.Serialize(jsonExpression);
 
         SendMessageToServer(jsonStringExpression, new Action<bool>((success) =>
         {
@@ -312,7 +313,7 @@ public class ConnectionManager : WebSocketConnector
         {
             { "type", "disconnect_properly" }
         };
-        string jsonStringExpression = JsonConvert.SerializeObject(jsonExpression);
+        string jsonStringExpression = JsonSerializer.Serialize(jsonExpression);
         SendMessageToServer(jsonStringExpression, new Action<bool>((success) =>
         {
             if (!success)

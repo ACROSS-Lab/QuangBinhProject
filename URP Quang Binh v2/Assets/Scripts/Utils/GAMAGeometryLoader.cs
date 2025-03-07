@@ -1,9 +1,8 @@
 using UnityEngine;
 using WebSocketSharp;
 using System;
-using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json;
 using System.Linq;
 
 public class GAMAGeometryLoader : ConnectionWithGama
@@ -86,7 +85,7 @@ public class GAMAGeometryLoader : ConnectionWithGama
             { "id", "geomloader" },
             { "heartbeat", "5000" }
         };
-        string jsonStringId = JsonConvert.SerializeObject(jsonId);
+        string jsonStringId = JsonSerializer.Serialize(jsonId);
         SendMessageToServer(jsonStringId, new Action<bool>((success) =>
         {
             if (success)
@@ -323,18 +322,19 @@ public class GAMAGeometryLoader : ConnectionWithGama
     {
         if (e.IsText)
         {
-            JObject jsonObj = JObject.Parse(e.Data);
-            string type = (string)jsonObj["type"];
+            JsonDocument jsonObj = JsonDocument.Parse(e.Data);
+            JsonElement root = jsonObj.RootElement.Clone();
+            string type = root.GetProperty("type").GetString();
 
             if (type.Equals("json_output"))
             {
-                JObject content = (JObject)jsonObj["contents"];
-                String firstKey = content.Properties().Select(pp => pp.Name).FirstOrDefault();
+                JsonElement content = root.GetProperty("contents");
+                string firstKey = content.EnumerateObject().FirstOrDefault().Name;
                 HandleServerMessageReceived(firstKey, content.ToString());
             }
             else if (type.Equals("json_state"))
             {
-                Boolean inGame = (Boolean)jsonObj["in_game"];
+                Boolean inGame = root.GetProperty("in_game").GetBoolean();
                 if (inGame)
                 {
                     Dictionary<string, string> args = new Dictionary<string, string>

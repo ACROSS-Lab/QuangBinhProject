@@ -2,7 +2,7 @@
 using WebSocketSharp;
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 public class ConnectionWithGama : MonoBehaviour
 {
@@ -20,7 +20,7 @@ public class ConnectionWithGama : MonoBehaviour
 
     public void SendExecutableAsk(string action, Dictionary<string, string> arguments)
     {
-        string argsJSON = JsonConvert.SerializeObject(arguments);
+        string argsJSON = JsonSerializer.Serialize(arguments);
         Dictionary<string, string> jsonExpression = null;
         jsonExpression = new Dictionary<string, string>
         {
@@ -30,7 +30,7 @@ public class ConnectionWithGama : MonoBehaviour
             { "agent", AgentToSendInfo }
         };
 
-        string jsonStringExpression = JsonConvert.SerializeObject(jsonExpression);
+        string jsonStringExpression = JsonSerializer.Serialize(jsonExpression);
 
         SendMessageToServer(jsonStringExpression, new Action<bool>((success) =>
         {
