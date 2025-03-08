@@ -235,7 +235,7 @@ public class GAMAGeometryLoader : ConnectionWithGama
                         mc.convex = true;
                     }
 
-                    mc.sharedMesh = polyGen.surroundMesh;
+                    //mc.sharedMesh = polyGen.surroundMesh;
                     // mc.isTrigger = prop.isTrigger;
                 }
 
