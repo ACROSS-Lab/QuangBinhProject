@@ -45,5 +45,5 @@ public class WorldJSONInfo
 [System.Serializable]
 public class GAMAPoint
 {
-    public List<int> c;
+    public int[] c;
 }

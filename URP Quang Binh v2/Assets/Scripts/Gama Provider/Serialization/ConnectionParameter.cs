@@ -6,8 +6,8 @@ using UnityEngine;
 public class ConnectionParameter
 {
     public int precision;
-    public List<int> position;
-    public List<int> world;
+    public int[] position;
+    public int[] world;
 
     public List<string> hotspots;
     public int minPlayerUpdateDuration;

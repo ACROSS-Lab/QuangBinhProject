@@ -46,21 +46,21 @@ public class CoordinateConverter
             (GamaCRSCoefZ * z) / precision + GamaCRSOffsetZ, (GamaCRSCoefY * y) / precision + GamaCRSOffsetY);
     }
 
-    public List<int> toGAMACRS(Vector3 pos)
+    public int[] toGAMACRS(Vector3 pos)
     {
-        List<int> position = new List<int>();
-        position.Add((int)((pos.x - GamaCRSOffsetX) / GamaCRSCoefX * precision));
-        position.Add((int)((pos.z - GamaCRSOffsetY) / GamaCRSCoefY * precision));
+        int[] position = new int[3];
+        position[0] = ((int)((pos.x - GamaCRSOffsetX) / GamaCRSCoefX * precision));
+        position[1] = ((int)((pos.z - GamaCRSOffsetY) / GamaCRSCoefY * precision));
 
         return position;
     }
 
-    public List<int> toGAMACRS3D(Vector3 pos)
+    public int[] toGAMACRS3D(Vector3 pos)
     {
-        List<int> position = new List<int>();
-        position.Add((int)((pos.x - GamaCRSOffsetX) / GamaCRSCoefX * precision));
-        position.Add((int)((pos.z - GamaCRSOffsetY) / GamaCRSCoefY * precision));
-        position.Add((int)((pos.y - GamaCRSOffsetZ) / GamaCRSCoefZ * precision));
+        int[] position = new int[3];
+        position[0] = ((int)((pos.x - GamaCRSOffsetX) / GamaCRSCoefX * precision));
+        position[1] = ((int)((pos.z - GamaCRSOffsetY) / GamaCRSCoefY * precision));
+        position[2] = ((int)((pos.y - GamaCRSOffsetZ) / GamaCRSCoefZ * precision));
 
         return position;
     }

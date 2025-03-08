@@ -205,7 +205,7 @@ public class GAMAGeometryLoader : ConnectionWithGama
                 obj = instantiatePrefab(name, prop);
 
 
-                List<int> pt = infoWorld.pointsLoc[cptPrefab].c;
+                int[] pt = infoWorld.pointsLoc[cptPrefab].c;
                 Vector3 pos = converter.fromGAMACRS(pt[0], pt[1], pt[2]);
                 pos.y += pos.y + prop.yOffsetF;
                 float rot = prop.rotationCoeffF * ((0.0f + pt[3]) / parameters.precision) + prop.rotationOffsetF;
@@ -221,7 +221,7 @@ public class GAMAGeometryLoader : ConnectionWithGama
                     polyGen.Init(converter);
                 }
 
-                List<int> pt = infoWorld.pointsGeom[cptGeom].c;
+                int[] pt = infoWorld.pointsGeom[cptGeom].c;
                 float YoffSet = (0.0f + infoWorld.offsetYGeom[cptGeom]) / (0.0f + parameters.precision);
 
                 obj = polyGen.GeneratePolygons(true, name, pt, prop, parameters.precision);

@@ -17,105 +17,109 @@
  */
 
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using TriangleNet.Geometry;
 
-/// <summary>
-/// Class to triangulate (create render triangles for) a custom polygon mesh.
-/// </summary>
 public class Triangulation
 {
-    #region TRIANGULATION
+    // Custom comparer for Vector2 that uses a specified tolerance for equality.
+    private class Vector2ToleranceComparer : IEqualityComparer<Vector2>
+    {
+        private readonly float tolerance;
+        public Vector2ToleranceComparer(float tolerance)
+        {
+            this.tolerance = tolerance;
+        }
+
+        public bool Equals(Vector2 a, Vector2 b)
+        {
+            return Mathf.Abs(a.x - b.x) < tolerance && Mathf.Abs(a.y - b.y) < tolerance;
+        }
+
+        public int GetHashCode(Vector2 obj)
+        {
+            // Quantize the values using a centered bucket approach.
+            int hashX = Mathf.FloorToInt((obj.x + tolerance / 2f) / tolerance);
+            int hashY = Mathf.FloorToInt((obj.y + tolerance / 2f) / tolerance);
+            // Combine the quantized values with a prime multiplier to form the hash code.
+            return hashX * 397 ^ hashY;
+        }
+    }
     
     /// <summary>
     /// Perform triangulation for a custom (polygon) mesh.
     /// </summary>
-    /// <returns>boolean value indicating whether the triangulation was successful (true) or not (false) (note: error list not implemented yet, therefore the function always returns true by default in this implementation).</returns>
-    /// <param name="points">Vector2 List containing all the input vertices of the (polygon) mesh that the triangulation is performed on.</param>
-    /// <param name="holes">List of Vector2 List containing all the input vertex list representing holes in the input (polygon) mesh.</param>
-    /// <param name="vertexY">The input (polygon) mesh is created in 2D along the x- and z-dimension in the 3D space. This int parameter provides an option to set the polygon's y-dimension value.</param>
-    /// <param name="outIndices">Int List representing all indexes of the successful triangulation process.</param>
-    /// <param name="outVertices">Vector3 List representing all 3D vertices of the successful triangulation process.</param>
+    /// <param name="points">List of Vector2 points representing the polygon boundary.</param>
+    /// <param name="holes">List of lists of Vector2 points representing holes in the polygon.</param>
+    /// <param name="vertexY">Y-coordinate value for the resulting 3D vertices.</param>
+    /// <param name="outIndices">Output list of triangle indices.</param>
+    /// <param name="outVertices">Output list of 3D vertices.</param>
+    /// <returns>Always returns true (error handling not implemented).</returns>
     public static bool triangulate(List<Vector2> points, List<List<Vector2>> holes, float vertexY, out List<int> outIndices, out List<Vector3> outVertices)
     {
-        // create polygon with points and segments based on input parameter
+        // Create the polygon and precompute boundary Vertex objects to avoid redundant allocations.
         Polygon poly = new Polygon();
-        for (int i = 0; i < points.Count; i++)
+        int pointCount = points.Count;
+        Vertex[] boundaryVertices = new Vertex[pointCount];
+        for (int i = 0; i < pointCount; i++)
         {
-            // add point
-            poly.Add(new Vertex(points[i].x, points[i].y));
-
-            // add segments
-            // connect last point with first point to establish closing segment (closed polygon)
-            if (i == points.Count - 1)
+            boundaryVertices[i] = new Vertex(points[i].x, points[i].y);
+            poly.Add(boundaryVertices[i]);
+        }
+        
+        // Add segments to close the polygon.
+        for (int i = 0; i < pointCount; i++)
+        {
+            int next = (i + 1) % pointCount;
+            poly.Add(new Segment(boundaryVertices[i], boundaryVertices[next]));
+        }
+        
+        // Handle holes if provided.
+        if (holes != null)
+        {
+            foreach (List<Vector2> holePoints in holes)
             {
-                poly.Add(new Segment(new Vertex(points[i].x, points[i].y), new Vertex(points[0].x, points[0].y)));
-            }
-            // connect current point with following point
-            else
-            {
-                poly.Add(new Segment(new Vertex(points[i].x, points[i].y), new Vertex(points[i + 1].x, points[i + 1].y)));
+                int holeCount = holePoints.Count;
+                Vertex[] holeVertices = new Vertex[holeCount];
+                for (int j = 0; j < holeCount; j++)
+                {
+                    holeVertices[j] = new Vertex(holePoints[j].x, holePoints[j].y);
+                }
+                // Add the hole contour to the polygon.
+                poly.Add(new Contour(holeVertices), true);
             }
         }
-
-        // handle holes in polygon (if there are any)
-        for (int i = 0; i < holes.Count; i++)
-        {
-            // create list of vertices for current hole
-            List<Vertex> vertices = new List<Vertex>();
-            for (int j = 0; j < holes[i].Count; j++)
-            {
-                vertices.Add(new Vertex(holes[i][j].x, holes[i][j].y));
-            }
-            // add current hole vertices as contour
-            poly.Add(new Contour(vertices), true);
-        }
-
-        // perform TRIANGULATION
+        
+        // Perform triangulation using Triangle.NET.
         var mesh = poly.Triangulate();
-
-        // prepare return values
-        //
-        outVertices = new List<Vector3>();
-        outIndices = new List<int>();
-
-        // traverse all triangles of the mesh
+        
+        // Preallocate output lists; each triangle contributes 3 vertices.
+        outVertices = new List<Vector3>(mesh.Triangles.Count * 3);
+        outIndices = new List<int>(mesh.Triangles.Count * 3);
+        
+        // Dictionary to quickly check for duplicate vertices using our tolerance comparer.
+        var vertexMap = new Dictionary<Vector2, int>(new Vector2ToleranceComparer(Mathf.Epsilon));
+        
+        // Process each triangle and its vertices.
         foreach (ITriangle t in mesh.Triangles)
         {
-            // traverse each vertex of current triangle
+            // Process vertices in reverse order to maintain the correct winding order.
             for (int j = 2; j >= 0; j--)
             {
-                // check if vertex already exists in the vertex list
-                bool found = false;
-                for (int k = 0; k < outVertices.Count; k++)
+                var vertex = t.GetVertex(j);
+                Vector2 key = new Vector2((float)vertex.X, (float)vertex.Y);
+                int index;
+                if (!vertexMap.TryGetValue(key, out index))
                 {
-                    // note: check Z value since for some reason Unity is mixing up Z and Y
-                    //if ((outVertices[k].x == t.GetVertex(j).X) && (outVertices[k].z == t.GetVertex(j).Y))     // inaccurate approach to compare floating points (see https://docs.unity3d.com/ScriptReference/Mathf.Approximately.html)
-                    if ((System.Math.Abs(outVertices[k].x - t.GetVertex(j).X) < Mathf.Epsilon) &&
-                        (System.Math.Abs(outVertices[k].z - t.GetVertex(j).Y) < Mathf.Epsilon))
-                    {
-                        // add index to found vertex
-                        outIndices.Add(k);
-                        found = true;
-                        break;  // leave loop
-                    }
+                    index = outVertices.Count;
+                    outVertices.Add(new Vector3((float)vertex.X, vertexY, (float)vertex.Y));
+                    vertexMap.Add(key, index);
                 }
-
-                // if a vertex was never found, add/create it as well as adding an index to that vertex
-                if (!found)
-                {
-                    //outVertices.Add(new Vector3((float)t.GetVertex(j).X, 0.0f, (float)t.GetVertex(j).Y));
-                    outVertices.Add(new Vector3((float)t.GetVertex(j).X, vertexY, (float)t.GetVertex(j).Y));
-                    outIndices.Add(outVertices.Count - 1);  // pointing to the newly added vertex (== last one in the list)
-                }
+                outIndices.Add(index);
             }
         }
-
-        // default: return true for successfull triangulation
-        // TODO: create error list -> optional for implementation
+        
+        // Return true to indicate success (error handling can be added as needed).
         return true;
     }
-
-    #endregion
 }

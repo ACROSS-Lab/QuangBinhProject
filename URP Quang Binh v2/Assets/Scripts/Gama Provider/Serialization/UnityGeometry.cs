@@ -78,11 +78,11 @@ public class UnityGeometry
 [System.Serializable]
 public class UnityPoint
 {
-    public List<int> c;
+    public int[] c;
 
     public UnityPoint()
     {
-        c = new List<int>();
+        c = new int[3];
     }
 
     public UnityPoint(Vector3 vect, CoordinateConverter converter)

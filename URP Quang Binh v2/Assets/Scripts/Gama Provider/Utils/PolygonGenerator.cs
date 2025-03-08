@@ -33,16 +33,17 @@ public class PolygonGenerator
     /// <summary>
     /// Generate polygons from a list of int coordinates. The list is assumed to store x,y in pairs.
     /// </summary>
-    public GameObject GeneratePolygons(bool editMode, string name, List<int> points, PropertiesGAMA prop, int precision)
+    public GameObject GeneratePolygons(bool editMode, string name, int[] points, PropertiesGAMA prop, int precision)
     {
-        List<Vector2> pts = new List<Vector2>();
-        for (int i = 0; i < points.Count - 1; i += 2)
+        int pointCount = points.Length;
+        Vector2[] pts = new Vector2[pointCount / 2]; // Allocate array with required size
+        
+        for (int i = 0; i < pointCount - 1; i += 2)
         {
-            Vector2 p = converter.fromGAMACRS2D(points[i], points[i + 1]);
-            pts.Add(p);
+            pts[i / 2] = converter.fromGAMACRS2D(points[i], points[i + 1]);
         }
-        Vector2[] meshDataPoints = pts.ToArray();
-        return GeneratePolygons(editMode, name, meshDataPoints, prop, precision);
+
+        return GeneratePolygons(editMode, name, pts, prop, precision);
     }
 
     /// <summary>
