@@ -38,7 +38,7 @@ public class SimulationManager : MonoBehaviour
     // Z offset and scale
     protected float GamaCRSOffsetZ = 0.0f;
 
-    protected List<GameObject> toFollow;
+    protected HashSet<GameObject> toFollow;
 
     XRInteractionManager interactionManager;
 
