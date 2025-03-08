@@ -5,6 +5,8 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
+using System.Collections.Generic;
+
 namespace TriangleNet.Tools
 {
     using System;
@@ -76,80 +78,19 @@ namespace TriangleNet.Tools
         /// </remarks>
         private void QuickSort(int left, int right)
         {
-            int oleft = left;
-            int oright = right;
-            int arraysize = right - left + 1;
-            int pivot;
-            double pivotx, pivoty;
-            Vertex temp;
-
-            var array = this.points;
-
-            if (arraysize < 32)
+            // Sort the subarray from 'left' to 'right' (inclusive) using Array.Sort.
+            Array.Sort(this.points, left, right - left + 1, new VertexComparer());
+        }
+        
+        private class VertexComparer : IComparer<Vertex>
+        {
+            public int Compare(Vertex v1, Vertex v2)
             {
-                // Insertion sort
-                for (int i = left + 1; i <= right; i++)
-                {
-                    var a = array[i];
-                    int j = i - 1;
-                    while (j >= left && (array[j].x > a.x || (array[j].x == a.x && array[j].y > a.y)))
-                    {
-                        array[j + 1] = array[j];
-                        j--;
-                    }
-                    array[j + 1] = a;
-                }
-
-                return;
-            }
-
-            // Choose a random pivot to split the array.
-            pivot = rand.Next(left, right);
-            pivotx = array[pivot].x;
-            pivoty = array[pivot].y;
-            // Split the array.
-            left--;
-            right++;
-            while (left < right)
-            {
-                // Search for a vertex whose x-coordinate is too large for the left.
-                do
-                {
-                    left++;
-                }
-                while ((left <= right) && ((array[left].x < pivotx) ||
-                    ((array[left].x == pivotx) && (array[left].y < pivoty))));
-
-                // Search for a vertex whose x-coordinate is too small for the right.
-                do
-                {
-                    right--;
-                }
-                while ((left <= right) && ((array[right].x > pivotx) ||
-                    ((array[right].x == pivotx) && (array[right].y > pivoty))));
-
-                if (left < right)
-                {
-                    // Swap the left and right vertices.
-                    temp = array[left];
-                    array[left] = array[right];
-                    array[right] = temp;
-                }
-            }
-
-            if (left > oleft)
-            {
-                // Recursively sort the left subset.
-                QuickSort(oleft, left);
-            }
-
-            if (oright > right + 1)
-            {
-                // Recursively sort the right subset.
-                QuickSort(right + 1, oright);
+                int cmp = v1.x.CompareTo(v2.x);
+                return cmp != 0 ? cmp : v1.y.CompareTo(v2.y);
             }
         }
-
+        
         #endregion
 
         #region Alternate axes
