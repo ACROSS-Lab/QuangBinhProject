@@ -54,7 +54,7 @@ public class SimulationManager : MonoBehaviour
     // public static event Action<WorldJSONInfo> OnWorldDataReceived;
     // ########################################################################
 
-    protected Dictionary<string, List<object>> geometryMap;
+    protected Dictionary<string, object[]> geometryMap;
     protected Dictionary<string, PropertiesGAMA> propertyMap = null;
     protected List<GameObject> SelectedObjects;
 
@@ -219,7 +219,7 @@ public class SimulationManager : MonoBehaviour
 
     void Start()
     {
-        geometryMap = new Dictionary<string, List<object>>();
+        geometryMap = new Dictionary<string, object[]>();
         handleGeometriesRequested = false;
         // handlePlayerParametersRequested = false;
         handleGroundParametersRequested = false;
@@ -526,7 +526,7 @@ public class SimulationManager : MonoBehaviour
                 }
                 else
                 {
-                    List<object> o = geometryMap[name];
+                    object[] o = geometryMap[name];
                     GameObject obj2 = (GameObject)o[0];
                     PropertiesGAMA p = (PropertiesGAMA)o[1];
                     if (p == prop)
@@ -636,9 +636,9 @@ public class SimulationManager : MonoBehaviour
                     GameObject.Destroy(objOld);
                 }
 
-                List<object> pL = new List<object>();
-                pL.Add(obj);
-                pL.Add(prop);
+                object[] pL = new object[2];
+                pL[0] = obj;
+                pL[1] = prop;
                 toRemove.Remove(name);
 
                 if (!initGame)
@@ -878,9 +878,9 @@ public class SimulationManager : MonoBehaviour
             }
         }
 
-        List<object> pL = new List<object>();
-        pL.Add(obj);
-        pL.Add(prop);
+        object[] pL = new object[2];
+        pL[0] = obj;
+        pL[1] = prop;
         if (!initGame) geometryMap.Add(name, pL);
         instantiateGO(obj, name, prop);
         return obj;
@@ -902,7 +902,7 @@ public class SimulationManager : MonoBehaviour
         // List<string> ids = new List<string>(geometryMap.Keys);
         foreach (string id in toRemove)
         {
-            List<object> o = geometryMap[id];
+            object[] o = geometryMap[id];
             GameObject obj = (GameObject)o[0];
             if(obj.CompareTag("people"))
             {
