@@ -22,6 +22,9 @@
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEditor;
+using Unity.Collections;
+using Unity.Jobs;
+using Unity.Burst;
 
 public class PolyExtruderLight : MonoBehaviour
 {
@@ -33,45 +36,88 @@ public class PolyExtruderLight : MonoBehaviour
     public float polygonArea;         // reference to area of (top) polygon
     public Vector2 polygonCentroid;   // reference to centroid of (top) polygon
 
-    // If no custom material is provided, we fallback to this shader.
-    // Change this to "Standard" if you use the Built-in Render Pipeline,
-    // or "HDRP/Lit" if you use HDRP, etc.
     [Header("Material Configuration")]
     public string fallbackShader = "Universal Render Pipeline/Lit";
 
-    // We store a reference to the material you pass in (if any).
+    // Custom or fallback material reference.
     private Material prismMaterial;
 
-    // reference to extrusion height (Y axis)
     private static readonly float DEFAULT_BOTTOM_Y = 0.0f;
     private static readonly float DEFAULT_TOP_Y = 1.0f;
     private float extrusionHeightY = 1.0f;
 
-    // reference to original input vertices of Polygon in Vector2 Array format
+    // Original polygon vertices (2D)
     private Vector2[] originalPolygonVertices;
     public Vector2[] OriginalPolygonVertices { get { return originalPolygonVertices; } }
 
-    // cached references to GameObject Components
+    // Cached component references
     private Transform prismTransform;
     private MeshFilter prismMeshFilter;
     private MeshRenderer prismMeshRenderer;
 
     #endregion
 
+    #region BurstJobs
+
+    [BurstCompile]
+    public struct CalculateAreaCentroidJob : IJob
+    {
+        [ReadOnly] public NativeArray<Vector2> vertices;
+        // results[0] = doubleArea, results[1] = centroidX, results[2] = centroidY
+        public NativeArray<float> results; 
+
+        public void Execute()
+        {
+            float doubleArea = 0f;
+            float centroidX = 0f;
+            float centroidY = 0f;
+            int len = vertices.Length;
+            for (int i = 0; i < len; i++)
+            {
+                Vector2 vCurr = vertices[i];
+                Vector2 vNext = vertices[(i + 1) % len];
+                float cross = vCurr.x * vNext.y - vNext.x * vCurr.y;
+                doubleArea += cross;
+                centroidX += (vCurr.x + vNext.x) * cross;
+                centroidY += (vCurr.y + vNext.y) * cross;
+            }
+            results[0] = doubleArea;
+            results[1] = centroidX;
+            results[2] = centroidY;
+        }
+    }
+
+    [BurstCompile]
+    public struct AreVerticesClockwiseJob : IJob
+    {
+        [ReadOnly] public NativeArray<Vector2> vertices;
+        // result[0] will hold the computed edgesSum.
+        public NativeArray<float> result;
+
+        public void Execute()
+        {
+            float edgesSum = 0f;
+            int len = vertices.Length;
+            for (int i = 0; i < len; i++)
+            {
+                Vector2 vCurr = vertices[i];
+                Vector2 vNext = vertices[(i + 1) % len];
+                edgesSum += (vNext.x - vCurr.x) * (vNext.y + vCurr.y);
+            }
+            result[0] = edgesSum;
+        }
+    }
+
+    #endregion
 
     #region MeshCreator
 
     /// <summary>
     /// Create a prism based on the input parameters, combining everything into a single mesh.
     /// </summary>
-    /// <param name="prismName">Name of the prism within the Unity scene.</param>
-    /// <param name="height">Height of the prism (distance along the y-axis).</param>
-    /// <param name="vertices">Vector2 Array representing the input data of the polygon.</param>
-    /// <param name="color">Color of the prism’s material.</param>
-    /// <param name="mat">Optional custom Material. If null, a fallback material is created.</param>
     public void createPrism(string prismName, float height, Vector2[] vertices, Color32 color, Material mat = null)
     {
-        // store data
+        // Store data.
         this.prismName = prismName;
         this.extrusionHeightY = height;
         this.originalPolygonVertices = vertices;
@@ -82,17 +128,15 @@ public class PolyExtruderLight : MonoBehaviour
         this.prismMeshFilter = this.gameObject.AddComponent<MeshFilter>();
         this.prismMeshRenderer = this.gameObject.AddComponent<MeshRenderer>();
 
-        // store the custom material (may be null)
+        // Store the custom material (may be null)
         this.prismMaterial = mat;
 
-        // ensure vertices are clockwise
-        bool vertexOrderClockwise = areVerticesOrderedClockwise(this.originalPolygonVertices);
-        if (!vertexOrderClockwise)
+        // Ensure vertices are clockwise
+        if (!areVerticesOrderedClockwise(this.originalPolygonVertices))
             System.Array.Reverse(this.originalPolygonVertices);
 
-        // calculate area and centroid
-        bool isAreaAndCentroidSet = calculateAreaAndCentroid(this.originalPolygonVertices);
-        if (isAreaAndCentroidSet)
+        // Calculate area and centroid
+        if (calculateAreaAndCentroid(this.originalPolygonVertices))
         {
             initPrism();
         }
@@ -103,60 +147,58 @@ public class PolyExtruderLight : MonoBehaviour
     }
 
     /// <summary>
-    /// Determine whether the input vertices are ordered clockwise or counter-clockwise.
+    /// Determine whether the input vertices are ordered clockwise using a Burst job.
     /// </summary>
     private bool areVerticesOrderedClockwise(Vector2[] vertices)
     {
-        float edgesSum = 0.0f;
-        for(int i = 0; i < vertices.Length; i++)
+        NativeArray<Vector2> nativeVertices = new NativeArray<Vector2>(vertices, Allocator.TempJob);
+        NativeArray<float> result = new NativeArray<float>(1, Allocator.TempJob);
+        var job = new AreVerticesClockwiseJob
         {
-            if(i+1 == vertices.Length)
-            {
-                edgesSum += (vertices[0].x - vertices[i].x) * (vertices[0].y + vertices[i].y);
-            }
-            else
-            {
-                edgesSum += (vertices[i + 1].x - vertices[i].x) * (vertices[i + 1].y + vertices[i].y);
-            }
-        }
-        return (edgesSum >= 0.0f);
+            vertices = nativeVertices,
+            result = result
+        };
+        job.Run();
+        float edgesSum = result[0];
+        result.Dispose();
+        nativeVertices.Dispose();
+        return edgesSum >= 0f;
     }
 
     /// <summary>
-    /// Calculate area and centroid of the polygon (2D).
+    /// Calculate area and centroid of the polygon (2D) using a Burst job.
     /// </summary>
     private bool calculateAreaAndCentroid(Vector2[] vertices)
     {
-        double doubleArea = 0.0;
-        double centroidX = 0.0;
-        double centroidY = 0.0;
+        NativeArray<Vector2> nativeVertices = new NativeArray<Vector2>(vertices, Allocator.TempJob);
+        NativeArray<float> results = new NativeArray<float>(3, Allocator.TempJob); // [0]: doubleArea, [1]: centroidX, [2]: centroidY
 
-        for (int i = 0; i < vertices.Length; i++)
+        var job = new CalculateAreaCentroidJob
         {
-            Vector2 vCurr = vertices[i];
-            Vector2 vNext = (i + 1 == vertices.Length) ? vertices[0] : vertices[i + 1];
+            vertices = nativeVertices,
+            results = results
+        };
+        job.Run();
 
-            double cross = (vCurr.x * vNext.y) - (vNext.x * vCurr.y);
-            doubleArea += cross;
-            centroidX += (vCurr.x + vNext.x) * cross;
-            centroidY += (vCurr.y + vNext.y) * cross;
+        float doubleArea = results[0];
+        float centroidX = results[1];
+        float centroidY = results[2];
+
+        // Compute absolute area.
+        float polygonArea = (doubleArea < 0f) ? -0.5f * doubleArea : 0.5f * doubleArea;
+        this.polygonArea = polygonArea;
+
+        // The centroid formula: divide by (3 * doubleArea). (The sign cancels out.)
+        float sixTimesArea = doubleArea * 3f;
+        bool valid = !Mathf.Approximately(polygonArea, 0f);
+        if (valid)
+        {
+            this.polygonCentroid = new Vector2(centroidX / sixTimesArea, centroidY / sixTimesArea);
         }
 
-        double polygonArea = (doubleArea < 0) ? -0.5 * doubleArea : 0.5 * doubleArea;
-        this.polygonArea = (float)polygonArea;
-
-        double sixTimesArea = doubleArea * 3.0; 
-        if (!Mathf.Approximately(0.0f, (float)polygonArea))
-        {
-            this.polygonCentroid = new Vector2(
-                (float)(centroidX / sixTimesArea),
-                (float)(centroidY / sixTimesArea));
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        results.Dispose();
+        nativeVertices.Dispose();
+        return valid;
     }
 
     /// <summary>
@@ -164,7 +206,7 @@ public class PolyExtruderLight : MonoBehaviour
     /// </summary>
     private void initPrism()
     {
-        // Create child objects for bottom, top, and surround
+        // Create child objects for bottom, top, and surround.
         GameObject goB = new GameObject("bottom_" + this.prismName);
         goB.transform.parent = this.transform;
         MeshFilter mfB = goB.AddComponent<MeshFilter>();
@@ -180,9 +222,9 @@ public class PolyExtruderLight : MonoBehaviour
         MeshFilter mfS = goS.AddComponent<MeshFilter>();
         Mesh surroundMesh = mfS.mesh;
 
-        // Triangulate bottom
+        // Triangulate bottom.
         List<Vector2> pointsB = new List<Vector2>();
-        for(int i=0; i<originalPolygonVertices.Length; i++)
+        for (int i = 0; i < originalPolygonVertices.Length; i++)
             pointsB.Add(originalPolygonVertices[i] - polygonCentroid);
 
         List<List<Vector2>> holesB = new List<List<Vector2>>();
@@ -190,13 +232,13 @@ public class PolyExtruderLight : MonoBehaviour
                                   out List<int> indicesB, out List<Vector3> verticesB);
         redrawMesh(bottomMesh, verticesB, indicesB);
 
-        // flip bottom polygon so it's visible from outside
+        // Flip bottom polygon so it's visible from outside.
         goB.transform.localScale = new Vector3(-1f, -1f, -1f);
         goB.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
 
-        // Triangulate top
+        // Triangulate top.
         List<Vector2> pointsT = new List<Vector2>();
-        for(int i=0; i<originalPolygonVertices.Length; i++)
+        for (int i = 0; i < originalPolygonVertices.Length; i++)
             pointsT.Add(originalPolygonVertices[i] - polygonCentroid);
 
         List<List<Vector2>> holesT = new List<List<Vector2>>();
@@ -204,16 +246,16 @@ public class PolyExtruderLight : MonoBehaviour
                                   out List<int> indicesT, out List<Vector3> verticesT);
         redrawMesh(topMesh, verticesT, indicesT);
 
-        // Triangulate surround
+        // Triangulate surround.
         List<Vector3> verticesS = new List<Vector3>();
         List<int> indicesS = new List<int>();
 
-        // The bottom set
-        foreach(Vector2 vb in pointsB)
+        // The bottom set.
+        foreach (Vector2 vb in pointsB)
             verticesS.Add(new Vector3(vb.x, DEFAULT_BOTTOM_Y, vb.y));
 
-        // The top set
-        foreach(Vector2 vt in pointsT)
+        // The top set.
+        foreach (Vector2 vt in pointsT)
             verticesS.Add(new Vector3(vt.x, DEFAULT_TOP_Y, vt.y));
 
         int countB = pointsB.Count;
@@ -224,7 +266,7 @@ public class PolyExtruderLight : MonoBehaviour
         {
             if (i == (sumQuads - 1))
             {
-                // last quad
+                // Last quad.
                 indicesS.Add(indexB);
                 indicesS.Add(0);
                 indicesS.Add(indexT);
@@ -235,7 +277,7 @@ public class PolyExtruderLight : MonoBehaviour
             }
             else
             {
-                // normal quad
+                // Normal quad.
                 indicesS.Add(indexB);
                 indicesS.Add(indexB + 1);
                 indicesS.Add(indexT);
@@ -250,10 +292,10 @@ public class PolyExtruderLight : MonoBehaviour
         }
         redrawMesh(surroundMesh, verticesS, indicesS);
 
-        // Combine bottom, top, surround into a single mesh
+        // Combine bottom, top, and surround into a single mesh.
         MeshFilter[] meshFilters = new MeshFilter[] { mfB, mfS, mfT };
         CombineInstance[] combine = new CombineInstance[meshFilters.Length];
-        for(int i=0; i<meshFilters.Length; i++)
+        for (int i = 0; i < meshFilters.Length; i++)
         {
             combine[i].mesh = meshFilters[i].sharedMesh;
             combine[i].transform = meshFilters[i].transform.localToWorldMatrix;
@@ -263,18 +305,18 @@ public class PolyExtruderLight : MonoBehaviour
         combinedMesh.name = this.prismName + "_CombinedMesh";
         combinedMesh.CombineMeshes(combine);
 
-        // Assign to main prism
+        // Assign to main prism.
         this.prismMeshFilter.mesh = combinedMesh;
 
-        // Apply a valid material
+        // Apply a valid material.
         applyFinalMaterial();
 
-        // Clean up child objects
+        // Clean up child objects.
         Destroy(goB);
         Destroy(goS);
         Destroy(goT);
 
-        // Adjust final transforms
+        // Adjust final transforms.
         updateHeight(this.extrusionHeightY);
         updateColor(this.prismColor);
         setAnchorPosToCentroid();
@@ -299,19 +341,16 @@ public class PolyExtruderLight : MonoBehaviour
     {
         if (this.prismMaterial != null)
         {
-            // Use the provided material
             this.prismMeshRenderer.material = this.prismMaterial;
         }
         else
         {
-            // Fallback to a newly created material using the fallback shader
             Material fallbackMat = new Material(Shader.Find(fallbackShader));
             this.prismMeshRenderer.material = fallbackMat;
         }
     }
 
     #endregion
-
 
     #region MeshManipulator
 
@@ -336,7 +375,6 @@ public class PolyExtruderLight : MonoBehaviour
         {
             this.prismColor = color;
         }
-        // If the material is valid, set its color.
         if (this.prismMeshRenderer != null && this.prismMeshRenderer.material != null)
         {
             this.prismMeshRenderer.material.color = this.prismColor;
@@ -359,7 +397,6 @@ public class PolyExtruderLight : MonoBehaviour
     /// </summary>
     private void createCombinedMesh()
     {
-        // Create child objects for bottom, top, and surround
         GameObject goB = new GameObject();
         goB.transform.parent = this.transform;
         MeshFilter mfB = goB.AddComponent<MeshFilter>();
@@ -375,9 +412,8 @@ public class PolyExtruderLight : MonoBehaviour
         MeshFilter mfS = goS.AddComponent<MeshFilter>();
         Mesh surroundMesh = mfS.mesh;
 
-        // Triangulate bottom
         List<Vector2> pointsB = new List<Vector2>();
-        for(int i=0; i<originalPolygonVertices.Length; i++)
+        for (int i = 0; i < originalPolygonVertices.Length; i++)
             pointsB.Add(originalPolygonVertices[i] - polygonCentroid);
 
         List<List<Vector2>> holesB = new List<List<Vector2>>();
@@ -385,13 +421,11 @@ public class PolyExtruderLight : MonoBehaviour
                                   out List<int> indicesB, out List<Vector3> verticesB);
         redrawMesh(bottomMesh, verticesB, indicesB);
 
-        // flip bottom polygon so it's visible from outside
         goB.transform.localScale = new Vector3(-1f, -1f, -1f);
         goB.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
 
-        // Triangulate top
         List<Vector2> pointsT = new List<Vector2>();
-        for(int i=0; i<originalPolygonVertices.Length; i++)
+        for (int i = 0; i < originalPolygonVertices.Length; i++)
             pointsT.Add(originalPolygonVertices[i] - polygonCentroid);
 
         List<List<Vector2>> holesT = new List<List<Vector2>>();
@@ -399,16 +433,13 @@ public class PolyExtruderLight : MonoBehaviour
                                   out List<int> indicesT, out List<Vector3> verticesT);
         redrawMesh(topMesh, verticesT, indicesT);
 
-        // Triangulate surround
         List<Vector3> verticesS = new List<Vector3>();
         List<int> indicesS = new List<int>();
 
-        // The bottom set
-        foreach(Vector2 vb in pointsB)
+        foreach (Vector2 vb in pointsB)
             verticesS.Add(new Vector3(vb.x, DEFAULT_BOTTOM_Y, vb.y));
 
-        // The top set
-        foreach(Vector2 vt in pointsT)
+        foreach (Vector2 vt in pointsT)
             verticesS.Add(new Vector3(vt.x, DEFAULT_TOP_Y, vt.y));
 
         int countB = pointsB.Count;
@@ -419,7 +450,6 @@ public class PolyExtruderLight : MonoBehaviour
         {
             if (i == (sumQuads - 1))
             {
-                // last quad
                 indicesS.Add(indexB);
                 indicesS.Add(0);
                 indicesS.Add(indexT);
@@ -430,7 +460,6 @@ public class PolyExtruderLight : MonoBehaviour
             }
             else
             {
-                // normal quad
                 indicesS.Add(indexB);
                 indicesS.Add(indexB + 1);
                 indicesS.Add(indexT);
@@ -445,10 +474,9 @@ public class PolyExtruderLight : MonoBehaviour
         }
         redrawMesh(surroundMesh, verticesS, indicesS);
 
-        // Combine bottom, top, surround into a single mesh
         MeshFilter[] meshFilters = new MeshFilter[] { mfB, mfS, mfT };
         CombineInstance[] combine = new CombineInstance[meshFilters.Length];
-        for(int i=0; i<meshFilters.Length; i++)
+        for (int i = 0; i < meshFilters.Length; i++)
         {
             combine[i].mesh = meshFilters[i].sharedMesh;
             combine[i].transform = meshFilters[i].transform.localToWorldMatrix;
@@ -456,11 +484,8 @@ public class PolyExtruderLight : MonoBehaviour
 
         Mesh combinedMesh = new Mesh();
         combinedMesh.CombineMeshes(combine);
-
-        // Assign to main prism
         this.prismMeshFilter.mesh = combinedMesh;
 
-        // Clean up child objects
         Destroy(goB);
         Destroy(goS);
         Destroy(goT);
@@ -470,20 +495,14 @@ public class PolyExtruderLight : MonoBehaviour
 
     public void updatePrism(MeshFilter meshFilter, Vector2[] vertices)
     {
-        // Update properties
         this.originalPolygonVertices = vertices;
         this.prismMeshFilter = meshFilter;
 
-        // Ensure vertices are clockwise
-        bool vertexOrderClockwise = areVerticesOrderedClockwise(this.originalPolygonVertices);
-        if (!vertexOrderClockwise)
+        if (!areVerticesOrderedClockwise(this.originalPolygonVertices))
             System.Array.Reverse(this.originalPolygonVertices);
 
-        // Calculate area and centroid
-        bool isAreaAndCentroidSet = calculateAreaAndCentroid(this.originalPolygonVertices);
-        if (isAreaAndCentroidSet)
+        if (calculateAreaAndCentroid(this.originalPolygonVertices))
         {
-            // Update the mesh
             createCombinedMesh();
         }
         else
