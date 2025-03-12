@@ -21,6 +21,7 @@
 
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEditor;
 
 public class PolyExtruderLight : MonoBehaviour
 {
@@ -351,6 +352,142 @@ public class PolyExtruderLight : MonoBehaviour
             this.polygonCentroid.x,
             DEFAULT_BOTTOM_Y,
             this.polygonCentroid.y);
+    }
+
+    /// <summary>
+    /// Update the mesh of the prism.
+    /// </summary>
+    private void createCombinedMesh()
+    {
+        // Create child objects for bottom, top, and surround
+        GameObject goB = new GameObject();
+        goB.transform.parent = this.transform;
+        MeshFilter mfB = goB.AddComponent<MeshFilter>();
+        Mesh bottomMesh = mfB.mesh;
+
+        GameObject goT = new GameObject();
+        goT.transform.parent = this.transform;
+        MeshFilter mfT = goT.AddComponent<MeshFilter>();
+        Mesh topMesh = mfT.mesh;
+
+        GameObject goS = new GameObject();
+        goS.transform.parent = this.transform;
+        MeshFilter mfS = goS.AddComponent<MeshFilter>();
+        Mesh surroundMesh = mfS.mesh;
+
+        // Triangulate bottom
+        List<Vector2> pointsB = new List<Vector2>();
+        for(int i=0; i<originalPolygonVertices.Length; i++)
+            pointsB.Add(originalPolygonVertices[i] - polygonCentroid);
+
+        List<List<Vector2>> holesB = new List<List<Vector2>>();
+        Triangulation.triangulate(pointsB, holesB, DEFAULT_BOTTOM_Y,
+                                  out List<int> indicesB, out List<Vector3> verticesB);
+        redrawMesh(bottomMesh, verticesB, indicesB);
+
+        // flip bottom polygon so it's visible from outside
+        goB.transform.localScale = new Vector3(-1f, -1f, -1f);
+        goB.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+
+        // Triangulate top
+        List<Vector2> pointsT = new List<Vector2>();
+        for(int i=0; i<originalPolygonVertices.Length; i++)
+            pointsT.Add(originalPolygonVertices[i] - polygonCentroid);
+
+        List<List<Vector2>> holesT = new List<List<Vector2>>();
+        Triangulation.triangulate(pointsT, holesT, DEFAULT_TOP_Y,
+                                  out List<int> indicesT, out List<Vector3> verticesT);
+        redrawMesh(topMesh, verticesT, indicesT);
+
+        // Triangulate surround
+        List<Vector3> verticesS = new List<Vector3>();
+        List<int> indicesS = new List<int>();
+
+        // The bottom set
+        foreach(Vector2 vb in pointsB)
+            verticesS.Add(new Vector3(vb.x, DEFAULT_BOTTOM_Y, vb.y));
+
+        // The top set
+        foreach(Vector2 vt in pointsT)
+            verticesS.Add(new Vector3(vt.x, DEFAULT_TOP_Y, vt.y));
+
+        int countB = pointsB.Count;
+        int indexB = 0;
+        int indexT = countB;
+        int sumQuads = verticesS.Count / 2;
+        for (int i = 0; i < sumQuads; i++)
+        {
+            if (i == (sumQuads - 1))
+            {
+                // last quad
+                indicesS.Add(indexB);
+                indicesS.Add(0);
+                indicesS.Add(indexT);
+
+                indicesS.Add(0);
+                indicesS.Add(countB);
+                indicesS.Add(indexT);
+            }
+            else
+            {
+                // normal quad
+                indicesS.Add(indexB);
+                indicesS.Add(indexB + 1);
+                indicesS.Add(indexT);
+
+                indicesS.Add(indexB + 1);
+                indicesS.Add(indexT + 1);
+                indicesS.Add(indexT);
+
+                indexB++;
+                indexT++;
+            }
+        }
+        redrawMesh(surroundMesh, verticesS, indicesS);
+
+        // Combine bottom, top, surround into a single mesh
+        MeshFilter[] meshFilters = new MeshFilter[] { mfB, mfS, mfT };
+        CombineInstance[] combine = new CombineInstance[meshFilters.Length];
+        for(int i=0; i<meshFilters.Length; i++)
+        {
+            combine[i].mesh = meshFilters[i].sharedMesh;
+            combine[i].transform = meshFilters[i].transform.localToWorldMatrix;
+        }
+
+        Mesh combinedMesh = new Mesh();
+        combinedMesh.CombineMeshes(combine);
+
+        // Assign to main prism
+        this.prismMeshFilter.mesh = combinedMesh;
+
+        // Clean up child objects
+        Destroy(goB);
+        Destroy(goS);
+        Destroy(goT);
+    }
+
+    public void updatePrism(MeshFilter meshFilter, Vector2[] vertices)
+    {
+        // Update properties
+        this.originalPolygonVertices = vertices;
+        this.prismMeshFilter = meshFilter;
+
+        // Ensure vertices are clockwise
+        bool vertexOrderClockwise = areVerticesOrderedClockwise(this.originalPolygonVertices);
+        if (!vertexOrderClockwise)
+            System.Array.Reverse(this.originalPolygonVertices);
+
+        // Calculate area and centroid
+        bool isAreaAndCentroidSet = calculateAreaAndCentroid(this.originalPolygonVertices);
+        if (isAreaAndCentroidSet)
+        {
+            // Update the mesh
+            createCombinedMesh();
+        }
+        else
+        {
+            Debug.LogWarning("[PolyExtruderLight] updatePrism failed. Area is zero for prism: " + this.prismName);
+        }
     }
 
     #endregion

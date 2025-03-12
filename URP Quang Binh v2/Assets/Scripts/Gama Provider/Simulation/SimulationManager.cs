@@ -147,6 +147,11 @@ public class SimulationManager : MonoBehaviour
     protected float LastTime;
     protected float RemainingSeconds;
 
+    //Cache
+    Dictionary<string, string> connectionID;
+    HashSet<string> toRemove = new HashSet<string>();
+    List<string> riverName = new List<string>();
+
     // ############################################ UNITY FUNCTIONS ############################################
     void Awake()
     {
@@ -177,6 +182,14 @@ public class SimulationManager : MonoBehaviour
 
         XROrigin = player.transform.Find("XR Origin (XR Rig)");
         timer.gameObject.SetActive(false);
+
+        connectionID = new Dictionary<string, string>
+        {
+            {"id", ConnectionManager.Instance.getUseMiddleware()
+                    ? ConnectionManager.Instance.GetConnectionId()
+                    : ("\"" + ConnectionManager.Instance.GetConnectionId() + "\"")
+            }
+        };
     }
 
     void StartTheFlood()
@@ -233,17 +246,7 @@ public class SimulationManager : MonoBehaviour
     {
         if (sendMessageToReactivatePositionSent)
         {
-            Dictionary<string, string> args = new Dictionary<string, string>
-            {
-                {
-                    "id",
-                    ConnectionManager.Instance.getUseMiddleware()
-                        ? ConnectionManager.Instance.GetConnectionId()
-                        : ("\"" + ConnectionManager.Instance.GetConnectionId() + "\"")
-                }
-            };
-
-            ConnectionManager.Instance.SendExecutableAsk("player_position_updated", args);
+            ConnectionManager.Instance.SendExecutableAsk("player_position_updated", connectionID);
             sendMessageToReactivatePositionSent = false;
         }
 
@@ -256,7 +259,7 @@ public class SimulationManager : MonoBehaviour
         if (handleGeometriesRequested && infoWorld != null && infoWorld.isInit)
         {
             sendMessageToReactivatePositionSent = true;
-            GenerateGeometries(true, new HashSet<string>());
+            GenerateGeometries(true, null);
             handleGeometriesRequested = false;
             UpdateGameState(GameState.GAME);
         }
@@ -273,11 +276,7 @@ public class SimulationManager : MonoBehaviour
             if (TimerSendInit <= 0)
             {
                 TimerSendInit = TimeSendInit;
-                Dictionary<string, string> args = new Dictionary<string, string>
-                {
-                    { "id", ConnectionManager.Instance.GetConnectionId() }
-                };
-                ConnectionManager.Instance.SendExecutableAsk("send_init_data", args);
+                ConnectionManager.Instance.SendExecutableAsk("send_init_data", connectionID);
             }
         }
 
@@ -506,8 +505,10 @@ public class SimulationManager : MonoBehaviour
             TimerSendPosition = TimeSendPositionAfterMoving;
         }
 
-        foreach (string n in infoWorld.keepNames)
-            toRemove.Remove(n);
+        if(toRemove != null)
+        {
+            foreach (string n in infoWorld.keepNames) toRemove.Remove(n);
+        } 
         int cptPrefab = 0;
         int cptGeom = 0;
         for (int i = 0; i < infoWorld.names.Count; i++)
@@ -595,7 +596,7 @@ public class SimulationManager : MonoBehaviour
 
                 transform.SetPositionAndRotation(pos, Quaternion.AngleAxis(rot, Vector3.up));
                 //obj.SetActive(true);
-                toRemove.Remove(name);
+                if(toRemove != null) toRemove.Remove(name);
                 cptPrefab++;
             }
             else
@@ -609,42 +610,75 @@ public class SimulationManager : MonoBehaviour
                 int[] pt = infoWorld.pointsGeom[cptGeom].c;
                 float yOffset = (0.0f + infoWorld.offsetYGeom[cptGeom]) / (0.0f + parameters.precision);
 
-                obj = polyGen.GeneratePolygons(false, name, pt, prop, parameters.precision);
+                if(initGame || !geometryMap.ContainsKey(name))
+                {
+                    obj = polyGen.GeneratePolygons(false, name, pt, prop, parameters.precision);
+                    instantiateGO(obj, name, prop);
+                    object[] pL = new object[2];
+                    pL[0] = obj;
+                    pL[1] = prop;
+                    if(!initGame) geometryMap.Add(name, pL);
+                }
+                else
+                {
+                    object[] o = geometryMap[name];
+                    GameObject obj2 = (GameObject)o[0];
+                    PropertiesGAMA p = (PropertiesGAMA)o[1];
+                    if (p == prop)
+                    {
+                        obj = obj2;
+                    }
+                    else
+                    {
+                        Debug.Log("not found obj");
+                    }
+                    polyGen.UpdatePolygon(obj, pt);
+                }
+
+                // obj = polyGen.GeneratePolygons(false, name, pt, prop, parameters.precision);
                 obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + yOffset,
                     obj.transform.position.z);
 
                 if (prop.hasCollider)
                 {
-                    MeshCollider mc = obj.AddComponent<MeshCollider>();
-                    if (prop.isGrabable)
+                    // MeshCollider mc = obj.AddComponent<MeshCollider>();
+                    // if (prop.isGrabable)
+                    // {
+                    //     mc.convex = true;
+                    // }
+
+                    // MeshCollider mc = obj.TryGetComponent<MeshCollider>();
+                    if(!obj.TryGetComponent<MeshCollider>(out MeshCollider mc)) 
                     {
-                        mc.convex = true;
+                        mc = obj.AddComponent<MeshCollider>();
+                        if (prop.isGrabable) mc.convex = true;
                     }
+                    mc.sharedMesh = obj.GetComponent<MeshFilter>().sharedMesh;
 
                     //mc.sharedMesh = polyGen.surroundMesh;
                     // mc.isTrigger = prop.isTrigger;
                 }
 
-                instantiateGO(obj, name, prop);
-                // polyGen.surroundMesh = null;
+                // instantiateGO(obj, name, prop);
+                // // polyGen.surroundMesh = null;
 
-                if (geometryMap.ContainsKey(name))
-                {
-                    GameObject objOld = (GameObject)geometryMap[name][0];
-                    // objOld.transform.position = new Vector3(0, -100, 0);
-                    geometryMap.Remove(name);
-                    GameObject.Destroy(objOld);
-                }
+                // if (geometryMap.ContainsKey(name))
+                // {
+                //     GameObject objOld = (GameObject)geometryMap[name][0];
+                //     // objOld.transform.position = new Vector3(0, -100, 0);
+                //     geometryMap.Remove(name);
+                //     GameObject.Destroy(objOld);
+                // }
 
-                object[] pL = new object[2];
-                pL[0] = obj;
-                pL[1] = prop;
-                toRemove.Remove(name);
+                // object[] pL = new object[2];
+                // pL[0] = obj;
+                // pL[1] = prop;
+                if(toRemove != null) toRemove.Remove(name);
 
-                if (!initGame)
-                {
-                    geometryMap.Add(name, pL);
-                }
+                // if (!initGame)
+                // {
+                //     geometryMap.Add(name, pL);
+                // }
 
                 //obj.SetActive(true);
                 cptGeom++;
@@ -890,7 +924,8 @@ public class SimulationManager : MonoBehaviour
     private void UpdateAgentsList()
     {
         ManageOtherInformation();
-        HashSet<string> toRemove = new HashSet<string>(geometryMap.Keys);
+        toRemove.Clear();
+        toRemove.UnionWith(geometryMap.Keys);
 
         // foreach (List<object> obj in geometryMap.Values) {
         //((GameObject) obj[0]).SetActive(false);
@@ -912,12 +947,9 @@ public class SimulationManager : MonoBehaviour
             {
                 obj.transform.position = new Vector3(0, -100, 0);
                 geometryMap.Remove(id);
+                if(obj.name.Contains("river")) Debug.Log("Remove river " + id);
                 Destroy(obj);
             }
-
-            obj.transform.position = new Vector3(0, -100, 0);
-                geometryMap.Remove(id);
-                Destroy(obj);
         }
 
         //infoWorld = null;

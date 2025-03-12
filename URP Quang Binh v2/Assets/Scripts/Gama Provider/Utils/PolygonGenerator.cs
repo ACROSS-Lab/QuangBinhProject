@@ -105,7 +105,6 @@ public class PolygonGenerator
 
         // Add PolyExtruderLight and call createPrism
         PolyExtruderLight polyExtruderLight = polyExtruderGO.AddComponent<PolyExtruderLight>();
-
         // The final parameter is the material, which can be null
         polyExtruderLight.createPrism(
             name,
@@ -116,5 +115,27 @@ public class PolygonGenerator
         );
 
         return polyExtruderGO;
+    }
+
+    /// <summary>
+    /// Update the mesh of a polygon GameObject with PolyExtruderLight.
+    /// </summary>
+    public void UpdatePolygon(GameObject obj, int[] points)
+    {
+        PolyExtruderLight polyExtruderGO = obj.GetComponent<PolyExtruderLight>();
+        MeshFilter meshFilter = obj.GetComponent<MeshFilter>();
+
+        int pointCount = points.Length;
+        Vector2[] pts = new Vector2[pointCount / 2]; // Allocate array with required size
+        
+        for (int i = 0; i < pointCount - 1; i += 2)
+        {
+            pts[i / 2] = converter.fromGAMACRS2D(points[i], points[i + 1]);
+        }
+
+        if (polyExtruderGO != null)
+        {
+            polyExtruderGO.updatePrism(meshFilter, pts);
+        }
     }
 }
