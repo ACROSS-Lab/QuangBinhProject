@@ -947,7 +947,6 @@ public class SimulationManager : MonoBehaviour
             {
                 obj.transform.position = new Vector3(0, -100, 0);
                 geometryMap.Remove(id);
-                if(obj.name.Contains("river")) Debug.Log("Remove river " + id);
                 Destroy(obj);
             }
         }

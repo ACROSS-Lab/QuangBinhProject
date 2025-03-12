@@ -464,6 +464,8 @@ public class PolyExtruderLight : MonoBehaviour
         Destroy(goB);
         Destroy(goS);
         Destroy(goT);
+
+        setAnchorPosToCentroid();
     }
 
     public void updatePrism(MeshFilter meshFilter, Vector2[] vertices)
