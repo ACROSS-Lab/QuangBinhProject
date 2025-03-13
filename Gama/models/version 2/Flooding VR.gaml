@@ -263,8 +263,8 @@ species unity_linker parent: abstract_unity_linker {
 		geometry ir <- init_river + 100;
 		loop  wl over: water_limit_well {
 			if (ir overlaps wl) {
-				water_limit_well_ts <- water_limit_well_ts + (wl - ir).geometries where (each.perimeter > 100);
-			} else {
+				water_limit_well_ts <- water_limit_well_ts + (wl - ir).geometries where ((each != nil) and (each.perimeter > 100));
+			} else if (wl != nil){
 				water_limit_well_ts << wl;
 			}
 		}
