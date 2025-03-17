@@ -186,7 +186,7 @@ global control: fsm {
 	
 	//Data elevation file : small, medium and large definition files are availables
 	//file dem_file <- file("../../includes/dem/dem_small.tif");
-	file dem_file <- file("../../includes/dem/terrain89x211.asc");
+	file dem_file <- file("../../includes/dem/hanoi.tif");
 	
 	
 	shape_file drain_shape_file <- shape_file("../../includes/gis/office_polygon.shp");
@@ -541,6 +541,10 @@ global control: fsm {
 			if (grid_y > (max_y - 200)) {
 				water_to_add <- max(0.1,(grid_y / max_y));
 			}
+			else
+			{
+				write "some water not added";
+			}
 			
 		}
 		total_water_to_add <- bed_cells sum_of each.water_to_add;
@@ -607,10 +611,26 @@ global control: fsm {
 	 */
 	action add_water {
 		if (current_step <= num_step_add) {
+			write length(bed_cells);
+
+			
 			list<cell> to_adds <- bed_cells where ((each.obstacle_height = 0) and (each.location overlaps main_river_part));
+			loop to_add over: to_adds {
+				//if (to_add.water_to_add = 0)
+
+					write to_add.water_to_add;
+
+			}
 			float coeff_to_add <- total_water_to_add / (to_adds sum_of each.water_to_add);
 			ask to_adds parallel: true{
 				water_height <- water_height + water_to_add * max_water_input  * coeff_to_add ;
+				if (water_height = 0)
+				{
+					write "current water height is zero";
+					write "water to add " + water_to_add;
+					write "max_water_input " + max_water_input;
+					write "coeff_to_add " + coeff_to_add;
+				}
 			}
 		}
 		

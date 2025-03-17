@@ -268,7 +268,7 @@ species unity_linker parent: abstract_unity_linker {
 				water_limit_well_ts << wl;
 			}
 		}
-		//do add_background_geometries(water_limit_well_ts collect (each + 20),up_frontier_orange);
+		do add_background_geometries(water_limit_well_ts collect (each + 20),up_frontier_orange);
 		do add_background_geometries(water_limit_danger collect (each + 20),up_frontier_red);
 	
 		
@@ -483,7 +483,7 @@ experiment Launch  autorun: true type: unity {
 	
 	output { 
 		
-		layout #none controls: false toolbars: false editors: false parameters: false consoles: false tabs: false;
+		//layout #none controls: false toolbars: false editors: false parameters: false consoles: false tabs: false;
 		display map type: 3d axes: false background: background_color antialias: false{
 			camera 'default' location: {1441.2246,3297.5234,8595.6544} target: {1441.2246,3297.3733,0.0};
 			//	grid cell border: #black;
@@ -527,7 +527,7 @@ experiment Launch  autorun: true type: unity {
 			species unity_player {
 				draw circle(30) at: location + {0, 0, 50} color: rgb(color, 0.5) ;
 			}
-
+grid cell border: #black;
 			//mesh cell above: 0 triangulation: true smooth: false color: cell collect each.color visible: river_in_3D transparency: 0.5;
 			//species water_particule; 
 			
