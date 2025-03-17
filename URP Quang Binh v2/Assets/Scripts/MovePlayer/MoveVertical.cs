@@ -10,32 +10,21 @@ public class MoveVertical : InputData
     public float minY = 0.0f;
     public float maxY = 1500.0f;
 
-    public InputHelpers.Axis2D stick = InputHelpers.Axis2D.PrimaryAxis2D;
-
 
     private void FixedUpdate()
     {
         if (SimulationManager.Instance.IsGameState(GameState.GAME))
-        {
-            MoveVertially();
-        }
+            MoveVertically();
     }
 
-    private void MoveVertially()
+    private void MoveVertically()
     {
         InputDevice hand = RightHand ? _rightController : _leftController;
         Vector2 val;
-        hand.TryReadAxis2DValue(stick, out val);
+        hand.TryGetFeatureValue(CommonUsages.primary2DAxis, out val);
         transform.Translate(Vector3.up * Time.fixedDeltaTime * Speed * val.y);
-        if (transform.position.y < minY)
-        {
-            Vector3 v = new Vector3(transform.position.x, minY, transform.position.z);
-            transform.position = v;
-        }
-        else if (transform.position.y > maxY)
-        {
-            Vector3 v = new Vector3(transform.position.x, maxY, transform.position.z);
-            transform.position = v;
-        }
+        Vector3 pos = transform.position;
+        pos.y = Mathf.Clamp(pos.y, minY, maxY);
+        transform.position = pos;
     }
 }

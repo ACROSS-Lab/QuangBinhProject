@@ -206,18 +206,134 @@ public class PolyExtruderLight : MonoBehaviour
     /// </summary>
     private void initPrism()
     {
+        CombineMesh();
+
+        // Apply a valid material.
+        applyFinalMaterial();
+
+        // Adjust final transforms.
+        updateHeight(this.extrusionHeightY);
+        updateColor(this.prismColor);
+        setAnchorPosToCentroid();
+    }
+
+    /// <summary>
+    /// Rebuild mesh from vertices and indices.
+    /// </summary>
+    private void redrawMesh(Mesh mesh, List<Vector3> vertices, List<int> indices)
+    {
+        mesh.Clear();
+        mesh.vertices = vertices.ToArray();
+        mesh.triangles = indices.ToArray();
+        mesh.RecalculateNormals();
+        mesh.RecalculateBounds();
+    }
+
+    /// <summary>
+    /// Assign the final material to the combined mesh.
+    /// </summary>
+    private void applyFinalMaterial()
+    {
+        if (this.prismMaterial != null)
+        {
+            this.prismMeshRenderer.material = this.prismMaterial;
+        }
+        else
+        {
+            Material fallbackMat = new Material(Shader.Find(fallbackShader));
+            this.prismMeshRenderer.material = fallbackMat;
+        }
+    }
+
+    #endregion
+
+    #region MeshManipulator
+
+    /// <summary>
+    /// Adjusts the prism’s extrusion height by scaling the y-axis.
+    /// </summary>
+    public void updateHeight(float height)
+    {
+        if (!Mathf.Approximately(this.extrusionHeightY, height))
+        {
+            this.extrusionHeightY = height;
+        }
+        this.prismTransform.localScale = new Vector3(1f, this.extrusionHeightY, 1f);
+    }
+
+    /// <summary>
+    /// Updates the color of the prism’s material.
+    /// </summary>
+    public void updateColor(Color32 color)
+    {
+        if (!this.prismColor.Equals(color))
+        {
+            this.prismColor = color;
+        }
+        if (this.prismMeshRenderer != null && this.prismMeshRenderer.material != null)
+        {
+            this.prismMeshRenderer.material.color = this.prismColor;
+        }
+    }
+
+    /// <summary>
+    /// Repositions the prism so that its centroid is at (x,z) = (centroid.x, centroid.y).
+    /// </summary>
+    private void setAnchorPosToCentroid()
+    {
+        this.gameObject.transform.localPosition = new Vector3(
+            this.polygonCentroid.x,
+            DEFAULT_BOTTOM_Y,
+            this.polygonCentroid.y);
+    }
+
+    /// <summary>
+    /// Update the mesh of the prism.
+    /// </summary>
+    private void CreateCombinedMesh()
+    {
+        CombineMesh();
+
+        setAnchorPosToCentroid();
+    }
+
+    public void updatePrism(MeshFilter meshFilter, Vector2[] vertices)
+    {
+        this.originalPolygonVertices = vertices;
+        this.prismMeshFilter = meshFilter;
+
+        if (!areVerticesOrderedClockwise(this.originalPolygonVertices))
+            System.Array.Reverse(this.originalPolygonVertices);
+
+        if (calculateAreaAndCentroid(this.originalPolygonVertices))
+        {
+            CreateCombinedMesh();
+        }
+        else
+        {
+            Debug.LogWarning("[PolyExtruderLight] updatePrism failed. Area is zero for prism: " + this.prismName);
+        }
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Create and combine small meshes into a single mesh.
+    /// </summary>
+    private void CombineMesh()
+    {
         // Create child objects for bottom, top, and surround.
-        GameObject goB = new GameObject("bottom_" + this.prismName);
+        GameObject goB = new GameObject();
         goB.transform.parent = this.transform;
         MeshFilter mfB = goB.AddComponent<MeshFilter>();
         Mesh bottomMesh = mfB.mesh;
 
-        GameObject goT = new GameObject("top_" + this.prismName);
+        GameObject goT = new GameObject();
         goT.transform.parent = this.transform;
         MeshFilter mfT = goT.AddComponent<MeshFilter>();
         Mesh topMesh = mfT.mesh;
 
-        GameObject goS = new GameObject("surround_" + this.prismName);
+        GameObject goS = new GameObject();
         goS.transform.parent = this.transform;
         MeshFilter mfS = goS.AddComponent<MeshFilter>();
         Mesh surroundMesh = mfS.mesh;
@@ -302,214 +418,14 @@ public class PolyExtruderLight : MonoBehaviour
         }
 
         Mesh combinedMesh = new Mesh();
-        combinedMesh.name = this.prismName + "_CombinedMesh";
         combinedMesh.CombineMeshes(combine);
 
         // Assign to main prism.
         this.prismMeshFilter.mesh = combinedMesh;
 
-        // Apply a valid material.
-        applyFinalMaterial();
-
         // Clean up child objects.
         Destroy(goB);
         Destroy(goS);
         Destroy(goT);
-
-        // Adjust final transforms.
-        updateHeight(this.extrusionHeightY);
-        updateColor(this.prismColor);
-        setAnchorPosToCentroid();
     }
-
-    /// <summary>
-    /// Rebuild mesh from vertices and indices.
-    /// </summary>
-    private void redrawMesh(Mesh mesh, List<Vector3> vertices, List<int> indices)
-    {
-        mesh.Clear();
-        mesh.vertices = vertices.ToArray();
-        mesh.triangles = indices.ToArray();
-        mesh.RecalculateNormals();
-        mesh.RecalculateBounds();
-    }
-
-    /// <summary>
-    /// Assign the final material to the combined mesh.
-    /// </summary>
-    private void applyFinalMaterial()
-    {
-        if (this.prismMaterial != null)
-        {
-            this.prismMeshRenderer.material = this.prismMaterial;
-        }
-        else
-        {
-            Material fallbackMat = new Material(Shader.Find(fallbackShader));
-            this.prismMeshRenderer.material = fallbackMat;
-        }
-    }
-
-    #endregion
-
-    #region MeshManipulator
-
-    /// <summary>
-    /// Adjusts the prism’s extrusion height by scaling the y-axis.
-    /// </summary>
-    public void updateHeight(float height)
-    {
-        if (!Mathf.Approximately(this.extrusionHeightY, height))
-        {
-            this.extrusionHeightY = height;
-        }
-        this.prismTransform.localScale = new Vector3(1f, this.extrusionHeightY, 1f);
-    }
-
-    /// <summary>
-    /// Updates the color of the prism’s material.
-    /// </summary>
-    public void updateColor(Color32 color)
-    {
-        if (!this.prismColor.Equals(color))
-        {
-            this.prismColor = color;
-        }
-        if (this.prismMeshRenderer != null && this.prismMeshRenderer.material != null)
-        {
-            this.prismMeshRenderer.material.color = this.prismColor;
-        }
-    }
-
-    /// <summary>
-    /// Repositions the prism so that its centroid is at (x,z) = (centroid.x, centroid.y).
-    /// </summary>
-    private void setAnchorPosToCentroid()
-    {
-        this.gameObject.transform.localPosition = new Vector3(
-            this.polygonCentroid.x,
-            DEFAULT_BOTTOM_Y,
-            this.polygonCentroid.y);
-    }
-
-    /// <summary>
-    /// Update the mesh of the prism.
-    /// </summary>
-    private void createCombinedMesh()
-    {
-        GameObject goB = new GameObject();
-        goB.transform.parent = this.transform;
-        MeshFilter mfB = goB.AddComponent<MeshFilter>();
-        Mesh bottomMesh = mfB.mesh;
-
-        GameObject goT = new GameObject();
-        goT.transform.parent = this.transform;
-        MeshFilter mfT = goT.AddComponent<MeshFilter>();
-        Mesh topMesh = mfT.mesh;
-
-        GameObject goS = new GameObject();
-        goS.transform.parent = this.transform;
-        MeshFilter mfS = goS.AddComponent<MeshFilter>();
-        Mesh surroundMesh = mfS.mesh;
-
-        List<Vector2> pointsB = new List<Vector2>();
-        for (int i = 0; i < originalPolygonVertices.Length; i++)
-            pointsB.Add(originalPolygonVertices[i] - polygonCentroid);
-
-        List<List<Vector2>> holesB = new List<List<Vector2>>();
-        Triangulation.triangulate(pointsB, holesB, DEFAULT_BOTTOM_Y,
-                                  out List<int> indicesB, out List<Vector3> verticesB);
-        redrawMesh(bottomMesh, verticesB, indicesB);
-
-        goB.transform.localScale = new Vector3(-1f, -1f, -1f);
-        goB.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
-
-        List<Vector2> pointsT = new List<Vector2>();
-        for (int i = 0; i < originalPolygonVertices.Length; i++)
-            pointsT.Add(originalPolygonVertices[i] - polygonCentroid);
-
-        List<List<Vector2>> holesT = new List<List<Vector2>>();
-        Triangulation.triangulate(pointsT, holesT, DEFAULT_TOP_Y,
-                                  out List<int> indicesT, out List<Vector3> verticesT);
-        redrawMesh(topMesh, verticesT, indicesT);
-
-        List<Vector3> verticesS = new List<Vector3>();
-        List<int> indicesS = new List<int>();
-
-        foreach (Vector2 vb in pointsB)
-            verticesS.Add(new Vector3(vb.x, DEFAULT_BOTTOM_Y, vb.y));
-
-        foreach (Vector2 vt in pointsT)
-            verticesS.Add(new Vector3(vt.x, DEFAULT_TOP_Y, vt.y));
-
-        int countB = pointsB.Count;
-        int indexB = 0;
-        int indexT = countB;
-        int sumQuads = verticesS.Count / 2;
-        for (int i = 0; i < sumQuads; i++)
-        {
-            if (i == (sumQuads - 1))
-            {
-                indicesS.Add(indexB);
-                indicesS.Add(0);
-                indicesS.Add(indexT);
-
-                indicesS.Add(0);
-                indicesS.Add(countB);
-                indicesS.Add(indexT);
-            }
-            else
-            {
-                indicesS.Add(indexB);
-                indicesS.Add(indexB + 1);
-                indicesS.Add(indexT);
-
-                indicesS.Add(indexB + 1);
-                indicesS.Add(indexT + 1);
-                indicesS.Add(indexT);
-
-                indexB++;
-                indexT++;
-            }
-        }
-        redrawMesh(surroundMesh, verticesS, indicesS);
-
-        MeshFilter[] meshFilters = new MeshFilter[] { mfB, mfS, mfT };
-        CombineInstance[] combine = new CombineInstance[meshFilters.Length];
-        for (int i = 0; i < meshFilters.Length; i++)
-        {
-            combine[i].mesh = meshFilters[i].sharedMesh;
-            combine[i].transform = meshFilters[i].transform.localToWorldMatrix;
-        }
-
-        Mesh combinedMesh = new Mesh();
-        combinedMesh.CombineMeshes(combine);
-        this.prismMeshFilter.mesh = combinedMesh;
-
-        Destroy(goB);
-        Destroy(goS);
-        Destroy(goT);
-
-        setAnchorPosToCentroid();
-    }
-
-    public void updatePrism(MeshFilter meshFilter, Vector2[] vertices)
-    {
-        this.originalPolygonVertices = vertices;
-        this.prismMeshFilter = meshFilter;
-
-        if (!areVerticesOrderedClockwise(this.originalPolygonVertices))
-            System.Array.Reverse(this.originalPolygonVertices);
-
-        if (calculateAreaAndCentroid(this.originalPolygonVertices))
-        {
-            createCombinedMesh();
-        }
-        else
-        {
-            Debug.LogWarning("[PolyExtruderLight] updatePrism failed. Area is zero for prism: " + this.prismName);
-        }
-    }
-
-    #endregion
 }

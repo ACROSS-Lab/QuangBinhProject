@@ -14,9 +14,15 @@ public class MoveHorizontal : InputData
     [SerializeField] private float maxX = 2975;
     [SerializeField] private float minZ = -6900;
     [SerializeField] private float maxZ = 250;
-    public InputHelpers.Axis2D stick = InputHelpers.Axis2D.PrimaryAxis2D;
+
+    private Transform camTransform;
 
     // ############################################################
+
+    private void Start()
+    {
+        camTransform = Camera.main.transform;
+    }
 
     private void FixedUpdate()
     {
@@ -30,23 +36,25 @@ public class MoveHorizontal : InputData
     {
         InputDevice hand = RightHand ? _rightController : _leftController;
         Vector2 val;
-        hand.TryReadAxis2DValue(stick, out val);
-        Vector3 vectF = Camera.main.transform.forward;
+        hand.TryGetFeatureValue(CommonUsages.primary2DAxis, out val);
+
+        Vector3 vectF = camTransform.forward;
         vectF.y = 0;
         vectF = Vector3.Normalize(vectF);
 
-        Vector3 tempPosition = transform.position + (vectF * speed * Time.fixedDeltaTime * val.y);
-
-        if (tempPosition.x >= minX && tempPosition.x <= maxX && tempPosition.z >= minZ && tempPosition.z <= maxZ)
-            transform.position += (vectF * speed * Time.fixedDeltaTime * val.y);
+        transform.position = transform.position + (vectF * speed * Time.fixedDeltaTime * val.y);
+        Vector3 pos = transform.position;
+        pos.x = Mathf.Clamp(pos.x, minX, maxX);
+        pos.z = Mathf.Clamp(pos.z, minZ, maxZ);
+        transform.position = pos;
 
         if (Strafe)
         {
-            Vector3 vectR = Camera.main.transform.right;
+            Vector3 vectR = camTransform.right;
             vectR.y = 0;
             vectR = Vector3.Normalize(vectR);
 
-            transform.position += (vectR * speed * Time.fixedDeltaTime * val.x);
+            transform.position += vectR * speed * Time.fixedDeltaTime * val.x;
         }
         else
         {
