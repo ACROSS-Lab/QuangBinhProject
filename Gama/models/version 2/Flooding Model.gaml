@@ -192,7 +192,7 @@ global control: fsm {
 	shape_file drain_shape_file <- shape_file("../../includes/gis/office_polygon.shp");
 
 	//Shape of the environment using the bounding box of Quang Binh
-	geometry shape <- envelope(file("../../includes/gis/boundary.shp"));
+	geometry shape <- envelope(dem_file);
 	
 
 	/*************************************************************

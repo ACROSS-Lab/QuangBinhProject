@@ -483,7 +483,7 @@ experiment Launch  autorun: true type: unity {
 	
 	output { 
 		
-		layout #none controls: false toolbars: false editors: false parameters: false consoles: false tabs: false;
+		// layout #none controls: false toolbars: false editors: false parameters: false consoles: false tabs: false;
 		display map type: 3d axes: false background: background_color antialias: false{
 			camera 'default' location: {1441.2246,3297.5234,8595.6544} target: {1441.2246,3297.3733,0.0};
 			//	grid cell border: #black;
