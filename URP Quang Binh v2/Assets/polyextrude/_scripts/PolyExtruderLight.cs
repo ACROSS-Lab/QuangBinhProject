@@ -236,12 +236,12 @@ public class PolyExtruderLight : MonoBehaviour
     {
         if (this.prismMaterial != null)
         {
-            this.prismMeshRenderer.material = this.prismMaterial;
+            this.prismMeshRenderer.sharedMaterial = this.prismMaterial;
         }
         else
         {
             Material fallbackMat = new Material(Shader.Find(fallbackShader));
-            this.prismMeshRenderer.material = fallbackMat;
+            this.prismMeshRenderer.sharedMaterial = fallbackMat;
         }
     }
 
@@ -272,7 +272,7 @@ public class PolyExtruderLight : MonoBehaviour
         }
         if (this.prismMeshRenderer != null && this.prismMeshRenderer.material != null)
         {
-            this.prismMeshRenderer.material.color = this.prismColor;
+            this.prismMeshRenderer.sharedMaterial.color = this.prismColor;
         }
     }
 

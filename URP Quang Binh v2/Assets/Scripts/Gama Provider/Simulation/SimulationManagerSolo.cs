@@ -36,7 +36,6 @@ public class SimulationManagerSolo : SimulationManager
 
 
             FutureDike = polyGen.GeneratePolygons(false, "FutureDike", pts, propFutureDike, parameters.precision);
-            Debug.Log("Generated future dike");
         }
     }
 

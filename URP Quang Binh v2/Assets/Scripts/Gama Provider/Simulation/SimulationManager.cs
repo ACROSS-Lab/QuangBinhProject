@@ -150,7 +150,6 @@ public class SimulationManager : MonoBehaviour
     //Cache
     Dictionary<string, string> connectionID;
     HashSet<string> toRemove = new HashSet<string>();
-    List<string> riverName = new List<string>();
 
     // ############################################ UNITY FUNCTIONS ############################################
     void Awake()
@@ -584,12 +583,12 @@ public class SimulationManager : MonoBehaviour
                         if(injured)
                         {
                             transform.GetChild(0).gameObject.SetActive(true);
-                            transform.GetChild(1).eulerAngles = new Vector3(90, 0, 0);
+                            transform.GetChild(1).eulerAngles = new Vector3(0, 180, 0);
                         }
                         else
                         {
                             transform.GetChild(0).gameObject.SetActive(false);
-                            transform.GetChild(1).eulerAngles = new Vector3(0, 0, 0);
+                            transform.GetChild(1).eulerAngles = new Vector3(-90, 180, 0);
                         } 
                     }
                 }
@@ -635,52 +634,19 @@ public class SimulationManager : MonoBehaviour
                     polyGen.UpdatePolygon(obj, pt);
                 }
 
-                // obj = polyGen.GeneratePolygons(false, name, pt, prop, parameters.precision);
                 obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + yOffset,
                     obj.transform.position.z);
 
                 if (prop.hasCollider)
                 {
-                    // MeshCollider mc = obj.AddComponent<MeshCollider>();
-                    // if (prop.isGrabable)
-                    // {
-                    //     mc.convex = true;
-                    // }
-
-                    // MeshCollider mc = obj.TryGetComponent<MeshCollider>();
                     if(!obj.TryGetComponent<MeshCollider>(out MeshCollider mc)) 
                     {
                         mc = obj.AddComponent<MeshCollider>();
                         if (prop.isGrabable) mc.convex = true;
                     }
                     mc.sharedMesh = obj.GetComponent<MeshFilter>().sharedMesh;
-
-                    //mc.sharedMesh = polyGen.surroundMesh;
-                    // mc.isTrigger = prop.isTrigger;
                 }
-
-                // instantiateGO(obj, name, prop);
-                // // polyGen.surroundMesh = null;
-
-                // if (geometryMap.ContainsKey(name))
-                // {
-                //     GameObject objOld = (GameObject)geometryMap[name][0];
-                //     // objOld.transform.position = new Vector3(0, -100, 0);
-                //     geometryMap.Remove(name);
-                //     GameObject.Destroy(objOld);
-                // }
-
-                // object[] pL = new object[2];
-                // pL[0] = obj;
-                // pL[1] = prop;
                 if(toRemove != null) toRemove.Remove(name);
-
-                // if (!initGame)
-                // {
-                //     geometryMap.Add(name, pL);
-                // }
-
-                //obj.SetActive(true);
                 cptGeom++;
             }
         }
