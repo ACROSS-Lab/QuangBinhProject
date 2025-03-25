@@ -186,7 +186,7 @@ global control: fsm {
 	
 	//Data elevation file : small, medium and large definition files are availables
 	//file dem_file <- file("../../includes/dem/dem_small.tif");
-	file dem_file <- file("../../includes/dem/hanoi.tif");
+	file dem_file <- file("../../includes/dem/hanoi_larger.tif");
 	
 	
 	shape_file drain_shape_file <- shape_file("../../includes/gis/office_polygon.shp");
