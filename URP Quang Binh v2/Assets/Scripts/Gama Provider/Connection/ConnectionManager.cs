@@ -30,10 +30,6 @@ public class ConnectionManager : WebSocketConnector
 
     private string AgentToSendInfo = "simulation[0].unity_linker[0]";
 
-    // Error counters (assumed thresholds)
-    private int numErrors = 0;
-    private int numErrorsBeforeDeconnection = 3;
-
     // ############################################# UNITY FUNCTIONS #############################################
     void Awake()
     {
