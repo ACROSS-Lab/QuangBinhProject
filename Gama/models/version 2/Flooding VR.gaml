@@ -395,18 +395,16 @@ species unity_linker parent: abstract_unity_linker {
 			do add_geometries_to_send(dykes_, up_dyke, dykes_atts);
 			
 			list<dyke> dams_ <- (dyke where each.is_dam);
-			
 			list<float> dams_length <- dams_ collect each.length;
 			list<float> dams_rotation <- dams_ collect each.rotation;
 			map<string, list<float>> dams_atts <- ["length" :: dams_length ,"rotation" :: dams_rotation];
-			
 			do add_geometries_to_send(dams_, up_dam, dams_atts);
 			
 //			do add_geometries_to_keep(dyke);
 			do sendLengthData;
 			// The river is not changed so we keep it unchanged
-			if (river_already_sent_in_diking_phase) {do add_geometries_to_keep(river);} 
-			else {do add_geometries_to_send(river collect each.shape_to_export, up_water); river_already_sent_in_diking_phase <- true;}
+//			if (river_already_sent_in_diking_phase) {do add_geometries_to_keep(river);} 
+//			else {do add_geometries_to_send(river collect each.shape_to_export, up_water); river_already_sent_in_diking_phase <- true;}
 			
 		} else	if (state = "s_flooding") {
 			// We only send the people who are evacuating 
@@ -414,16 +412,17 @@ species unity_linker parent: abstract_unity_linker {
 			// We send the river (supposed to change every step)
 			do add_geometries_to_send(river collect each.shape_to_export,up_water);
 			// We send only the dykes that are not underwater
-			list<float> dykes_length <- (dyke where !each.is_dam) collect each.length;
-			list<float> dykes_rotation <- (dyke where !each.is_dam) collect each.rotation; 
+			list<dyke> dykes_ <- (dyke where !each.is_dam);
+			list<float> dykes_length <- dykes_ collect each.length;
+			list<float> dykes_rotation <- dykes_ collect each.rotation; 
 			map<string, list<float>> dykes_atts <- ["length" :: dykes_length ,"rotation" :: dykes_rotation];
+			do add_geometries_to_send(dykes_, up_dyke, dykes_atts);
 			
-			list<float> dams_length <- (dyke where each.is_dam) collect each.length;
-			list<float> dams_rotation <- (dyke where each.is_dam) collect each.rotation;
+			list<dyke> dams_ <- (dyke where each.is_dam);
+			list<float> dams_length <- dams_ collect each.length;
+			list<float> dams_rotation <- dams_ collect each.rotation;
 			map<string, list<float>> dams_atts <- ["length" :: dams_length ,"rotation" :: dams_rotation];
-			
-			do add_geometries_to_send(dyke select (!each.is_dam and !each.drowned), up_dyke, dykes_atts);	
-			do add_geometries_to_send(dyke select (each.is_dam and !each.drowned), up_dam, dams_atts);	 
+			do add_geometries_to_send(dams_, up_dam, dams_atts);	 
 		}
 	}
 

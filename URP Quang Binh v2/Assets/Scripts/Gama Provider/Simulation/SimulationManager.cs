@@ -140,9 +140,9 @@ public class SimulationManager : MonoBehaviour
 
     //[SerializeField] protected GameObject tutorial;
 
-    [SerializeField] protected StatusEffectManager timer;
-    [SerializeField] protected StatusEffectManager safeRateCount;
-    [SerializeField] private TextMeshProUGUI timerText;
+    // [SerializeField] protected StatusEffectManager timer;
+    // [SerializeField] protected StatusEffectManager safeRateCount;
+    // [SerializeField] private TextMeshProUGUI timerText;
 
     protected float LastTime;
     protected float RemainingSeconds;
@@ -180,8 +180,6 @@ public class SimulationManager : MonoBehaviour
 
 
         XROrigin = player.transform.Find("XR Origin (XR Rig)");
-        timer.gameObject.SetActive(false);
-
         connectionID = new Dictionary<string, string>
         {
             {"id", ConnectionManager.Instance.getUseMiddleware()
@@ -329,16 +327,15 @@ public class SimulationManager : MonoBehaviour
 
             if (infoWorld.state == "s_init")
             {
-                Debug.Log("infoWorld.casualties: " + infoWorld.casualties + " UIController.Instance.people_safe_on.activeSelf:" + UIController.Instance.people_safe_on.activeSelf);
                 if (UIController.Instance.people_safe_on.activeSelf)
                 {
                     UIController.Instance.people_safe_on.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(1000 - infoWorld.casualties);
                 } 
             }
-            else if (infoWorld.state == "s_diking")
-            {
-                //timeText.text = "Remaining Time: " + Math.Max(0, infoWorld.remaining_time); 
-            } 
+            // else if (infoWorld.state == "s_diking")
+            // {
+            //     //timeText.text = "Remaining Time: " + Math.Max(0, infoWorld.remaining_time); 
+            // } 
             else if (infoWorld.state == "s_flooding")
             {
                 if (UIController.Instance.people_safe_on.activeSelf)
@@ -356,15 +353,15 @@ public class SimulationManager : MonoBehaviour
                 //timerText.text = timeSpan.ToString(@"mm\:ss");
               //  if (activeCoroutine != null)
                //     StopCoroutine(activeCoroutine);
-                timerText.gameObject.SetActive(true);
+                // timerText.gameObject.SetActive(true);
                 //activeCoroutine = StartCoroutine(CountdownCoroutine());
             }
 
             if (infoWorld.state == "s_init" || UIController.Instance.UI_EndingPhase_eng.activeSelf ||
                 UIController.Instance.UI_EndingPhase_viet.activeSelf)
             {
-                timer.gameObject.SetActive(false);
-                timerText.gameObject.SetActive(false);
+                // timer.gameObject.SetActive(false);
+                // timerText.gameObject.SetActive(false);
             }
 
             LastTime = infoWorld.remaining_time;
@@ -414,19 +411,19 @@ public class SimulationManager : MonoBehaviour
         ConnectionManager.Instance.SendExecutableAsk("set_status", args);
     }
 
-    private IEnumerator CountdownCoroutine()
-    {
-        do
-        {
-            TimeSpan timeSpan = TimeSpan.FromSeconds(RemainingSeconds);
-            timerText.text = timeSpan.ToString(@"mm\:ss");
-            yield return new WaitForSecondsRealtime(1f); // Wait for 1 second, unaffected by time scale
-            RemainingSeconds--; // Decrease time
-        } while (RemainingSeconds >= 0);
+    // private IEnumerator CountdownCoroutine()
+    // {
+    //     do
+    //     {
+    //         TimeSpan timeSpan = TimeSpan.FromSeconds(RemainingSeconds);
+    //         timerText.text = timeSpan.ToString(@"mm\:ss");
+    //         yield return new WaitForSecondsRealtime(1f); // Wait for 1 second, unaffected by time scale
+    //         RemainingSeconds--; // Decrease time
+    //     } while (RemainingSeconds >= 0);
 
-        RemainingSeconds = 0;
-        yield return null;
-    }
+    //     RemainingSeconds = 0;
+    //     yield return null;
+    // }
 
     private void Update()
     {
@@ -583,12 +580,12 @@ public class SimulationManager : MonoBehaviour
                         if(injured)
                         {
                             transform.GetChild(0).gameObject.SetActive(true);
-                            transform.GetChild(1).eulerAngles = new Vector3(0, 180, 0);
+                            transform.GetChild(1).localEulerAngles = new Vector3(-90, 180, 0);
                         }
                         else
                         {
                             transform.GetChild(0).gameObject.SetActive(false);
-                            transform.GetChild(1).eulerAngles = new Vector3(-90, 180, 0);
+                            transform.GetChild(1).localEulerAngles = new Vector3(0, 180, 0);
                         } 
                     }
                 }
