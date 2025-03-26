@@ -1,15 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using System.Text.Json;
 using UnityEngine;
 using WebSocketSharp;
-using System.Linq;
-using System.Text.Json;
 
 public class GAMAGeometryExport : ConnectionWithGama
 {
     protected ConnectionParameter parameters = null;
 
-    // optional: define a scale between GAMA and Unity for the location given
+    // Optional: define a scale between GAMA and Unity for the location given
     public float GamaCRSCoefX = 1.0f;
     public float GamaCRSCoefY = 1.0f;
     public float GamaCRSOffsetX = 0.0f;
@@ -20,8 +21,7 @@ public class GAMAGeometryExport : ConnectionWithGama
 
     Dictionary<string, string> argsToSend = null;
 
-    public void ManageGeometries(GameObject objectToSend_, string ip_, string port_, float x, float y, float ox,
-        float oy)
+    public void ManageGeometries(GameObject objectToSend_, string ip_, string port_, float x, float y, float ox, float oy)
     {
         objectToSend = objectToSend_;
         if (objectToSend == null) return;
@@ -35,7 +35,6 @@ public class GAMAGeometryExport : ConnectionWithGama
         GamaCRSOffsetY = oy;
 
         UnityGeometry ug = new UnityGeometry(objectToSend, new CoordinateConverter(10000, x, y, ox, oy));
-
         string message = ug.ToJSON();
 
         argsToSend = new Dictionary<string, string>
@@ -51,12 +50,12 @@ public class GAMAGeometryExport : ConnectionWithGama
         socket.OnMessage += HandleReceivedMessage;
         socket.OnClose += HandleConnectionClosed;
 
-        // Enable the Per-message Compression extension.
-        // Saved some bandwidth
-        socket.Compression = CompressionMethod.None; //Deflate;
+        // Per-message Compression extension disabled to save bandwidth.
+        socket.Compression = CompressionMethod.None;
 
         socket.Connect();
 
+        // Simple loop to wait for parameter data before exporting geometries.
         while (continueProcess)
         {
             if (parameters != null)
@@ -72,23 +71,28 @@ public class GAMAGeometryExport : ConnectionWithGama
         continueProcess = false;
     }
 
-    void HandleConnectionOpen(object sender, System.EventArgs e)
+    void HandleConnectionOpen(object sender, EventArgs e)
     {
-        var jsonId = new Dictionary<string, string>
+        // Prebuild the entire JSON payload as a string.
+        string rawJson = "{\"type\":\"connection\",\"id\":\"geomexporter\",\"heartbeat\":\"5000\"}";
+    
+        using (var stream = new MemoryStream())
         {
-            { "type", "connection" },
-            { "id", "geomexporter" },
-            { "heartbeat", "5000" }
-        };
-        string jsonStringId = JsonSerializer.Serialize(jsonId);
-        SendMessageToServer(jsonStringId, new Action<bool>((success) =>
-        {
-            if (success)
+            using (var writer = new Utf8JsonWriter(stream))
             {
+                // Write the raw JSON in one call.
+                writer.WriteRawValue(rawJson, skipInputValidation: true);
+                writer.Flush();
             }
-        }));
+            string jsonStringId = Encoding.UTF8.GetString(stream.ToArray());
+            SendMessageToServer(jsonStringId, (success) =>
+            {
+                // Optionally handle the send success.
+            });
+        }
         Debug.Log("ConnectionManager: Connection opened");
     }
+
 
     private void ExportGeoms()
     {
@@ -96,27 +100,25 @@ public class GAMAGeometryExport : ConnectionWithGama
         if (parameters != null)
         {
             SendExecutableAsk("receive_geometries", argsToSend);
-
-
             continueProcess = false;
         }
     }
 
-    void HandleServerMessageReceived(string firstKey, String content)
+    void HandleServerMessageReceived(string firstKey, string content)
     {
-        if (content == null || content.Equals("{}")) return;
+        if (string.IsNullOrEmpty(content) || content.Equals("{}"))
+            return;
         else if (content.Contains("precision"))
             firstKey = "precision";
 
         switch (firstKey)
         {
-            // handle general informations about the simulation
+            // Handle general information about the simulation.
             case "precision":
                 parameters = ConnectionParameter.CreateFromJSON(content);
                 Debug.Log("Received parameter data");
                 break;
-
-            // handle geometries sent by GAMA at the beginning of the simulation
+            // Other cases for handling geometries can be added here.
         }
     }
 
@@ -124,28 +126,73 @@ public class GAMAGeometryExport : ConnectionWithGama
     {
         if (e.IsText)
         {
-            JsonDocument jsonObj = JsonDocument.Parse(e.Data);
-            JsonElement root = jsonObj.RootElement.Clone();
-            string type = root.GetProperty("type").GetString();
+            ReadOnlySpan<byte> jsonBytes = Encoding.UTF8.GetBytes(e.Data);
+            var reader = new Utf8JsonReader(jsonBytes, isFinalBlock: true, state: default);
 
+            string type = null;
+            string contentsJson = null;
+            bool inGameFlag = false;
+            bool foundType = false;
+            bool foundContents = false;
+            bool foundInGame = false;
 
-            if (type.Equals("json_output"))
+            // Process JSON tokens manually.
+            while (reader.Read())
             {
-                JsonElement content = root.GetProperty("contents");
-                string firstKey = content.EnumerateObject().FirstOrDefault().Name;
-                HandleServerMessageReceived(firstKey, content.ToString());
-            }
-            else if (type.Equals("json_state"))
-            {
-                Boolean inGame = root.GetProperty("in_game").GetBoolean();
-                if (inGame)
+                if (reader.TokenType == JsonTokenType.PropertyName)
                 {
-                    Dictionary<string, string> args = new Dictionary<string, string>
+                    string propertyName = reader.GetString();
+                    if (propertyName == "type")
                     {
-                        { "id", "geomexporter" }
-                    };
+                        reader.Read();
+                        type = reader.GetString();
+                        foundType = true;
+                    }
+                    else if (propertyName == "contents" && type == "json_output")
+                    {
+                        // Use JsonDocument to capture the nested object.
+                        using (JsonDocument doc = JsonDocument.ParseValue(ref reader))
+                        {
+                            contentsJson = doc.RootElement.GetRawText();
+                        }
+                        foundContents = true;
+                    }
+                    else if (propertyName == "in_game" && type == "json_state")
+                    {
+                        reader.Read();
+                        inGameFlag = reader.GetBoolean();
+                        foundInGame = true;
+                    }
+                }
+            }
 
-                    SendExecutableAsk("send_init_data", args);
+            if (foundType)
+            {
+                if (type == "json_output" && foundContents)
+                {
+                    // Manually iterate properties of the contents object to get the first key.
+                    string firstKey = null;
+                    using (JsonDocument doc = JsonDocument.Parse(contentsJson))
+                    {
+                        JsonElement root = doc.RootElement;
+                        if (root.ValueKind == JsonValueKind.Object)
+                        {
+                            foreach (JsonProperty prop in root.EnumerateObject())
+                            {
+                                firstKey = prop.Name;
+                                break;
+                            }
+                        }
+                    }
+                    HandleServerMessageReceived(firstKey, contentsJson);
+                }
+                else if (type == "json_state" && foundInGame)
+                {
+                    if (inGameFlag)
+                    {
+                        var args = new Dictionary<string, string> { { "id", "geomexporter" } };
+                        SendExecutableAsk("send_init_data", args);
+                    }
                 }
             }
         }

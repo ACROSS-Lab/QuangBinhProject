@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using UnityEngine;
 using WebSocketSharp;
 using System.Text.Json;
-using System.Linq;
 
 public class ConnectionManager : WebSocketConnector
 {
@@ -14,7 +15,7 @@ public class ConnectionManager : WebSocketConnector
     public event Action<ConnectionState> OnConnectionStateChanged;
 
     // called when a "json_simulation" message is received
-    public event Action<String, String> OnServerMessageReceived;
+    public event Action<string, string> OnServerMessageReceived;
 
     // called when a "json_state" message is received 
     public event Action<JsonElement> OnConnectionStateReceived;
@@ -24,11 +25,14 @@ public class ConnectionManager : WebSocketConnector
 
     public static ConnectionManager Instance = null;
 
-    //use to separate messages in the case where the middleware is not used
-    protected String MessageSeparator = "|||";
+    // use to separate messages in the case where the middleware is not used
+    protected string MessageSeparator = "|||";
 
-    private String AgentToSendInfo = "simulation[0].unity_linker[0]";
+    private string AgentToSendInfo = "simulation[0].unity_linker[0]";
 
+    // Error counters (assumed thresholds)
+    private int numErrors = 0;
+    private int numErrorsBeforeDeconnection = 3;
 
     // ############################################# UNITY FUNCTIONS #############################################
     void Awake()
@@ -51,6 +55,19 @@ public class ConnectionManager : WebSocketConnector
     public string GetMessageSeparator()
     {
         return MessageSeparator;
+    }
+
+    // Helper method to build JSON strings using Utf8JsonWriter
+    private static string WriteJson(Action<Utf8JsonWriter> writeAction)
+    {
+        using (var stream = new MemoryStream())
+        {
+            using (var writer = new Utf8JsonWriter(stream))
+            {
+                writeAction(writer);
+            }
+            return Encoding.UTF8.GetString(stream.ToArray());
+        }
     }
 
     // ############################################# CONNECTION HANDLER #############################################
@@ -85,19 +102,19 @@ public class ConnectionManager : WebSocketConnector
     {
         if (UseMiddleware)
         {
-            var jsonId = new Dictionary<string, string>
+            // Writing heartbeat as a number
+            string jsonStringId = WriteJson(writer =>
             {
-                { "type", "connection" },
-                { "id", StaticInformation.getId() },
-                { "heartbeat", "" + HeartbeatInMs }
-            };
-            string jsonStringId = JsonSerializer.Serialize(jsonId);
+                writer.WriteStartObject();
+                writer.WriteString("type", "connection");
+                writer.WriteString("id", StaticInformation.getId());
+                writer.WriteNumber("heartbeat", HeartbeatInMs);
+                writer.WriteEndObject();
+            });
+
             SendMessageToServer(jsonStringId, new Action<bool>((success) =>
             {
                 Debug.Log("ConnectionManager: HandleConnectionOpen -> " + jsonStringId);
-                if (success)
-                {
-                }
             }));
             Debug.Log("ConnectionManager: Connection opened");
         }
@@ -107,23 +124,25 @@ public class ConnectionManager : WebSocketConnector
     {
         if (e.IsText)
         {
+            // For further optimization, consider replacing JsonDocument with Utf8JsonReader if only a few properties are needed.
             JsonDocument jsonObj = JsonDocument.Parse(e.Data);
             JsonElement root = jsonObj.RootElement.Clone();
             string type = root.GetProperty("type").GetString();
-
 
             if (UseMiddleware)
             {
                 switch (type)
                 {
                     case "ping":
-                        var jsonId = new Dictionary<string, string> { { "type", "pong" } };
-                        string jsonStringId = JsonSerializer.Serialize(jsonId);
-                        SendMessageToServer(jsonStringId, new Action<bool>((success) =>
+                        string jsonPong = WriteJson(writer =>
                         {
-                            if (success)
-                            {
-                            }
+                            writer.WriteStartObject();
+                            writer.WriteString("type", "pong");
+                            writer.WriteEndObject();
+                        });
+                        SendMessageToServer(jsonPong, new Action<bool>((success) =>
+                        {
+                            // Optionally handle success.
                         }));
                         break;
                     case "json_state":
@@ -153,15 +172,18 @@ public class ConnectionManager : WebSocketConnector
                                 Debug.LogWarning("ConnectionManager: Already connected, waiting for authentication...");
                             }
                         }
-
                         break;
-
                     case "json_output":
                         JsonElement content = root.GetProperty("contents");
-                        string firstKey = content.EnumerateObject().FirstOrDefault().Name;
+                        string firstKey = null;
+                        // Avoid LINQ by using a simple loop.
+                        foreach (JsonProperty prop in content.EnumerateObject())
+                        {
+                            firstKey = prop.Name;
+                            break;
+                        }
                         OnServerMessageReceived?.Invoke(firstKey, content.ToString());
                         break;
-
                     default:
                         break;
                 }
@@ -169,10 +191,10 @@ public class ConnectionManager : WebSocketConnector
             else if (type.Equals("SimulationOutput"))
             {
                 string content = root.GetProperty("content").GetString();
-                // Debug.Log("MessageSeparator: " + MessageSeparator);
-                foreach (String mes in content.Split(MessageSeparator))
+                // Split using the message separator.
+                foreach (string mes in content.Split(new string[] { MessageSeparator }, StringSplitOptions.None))
                 {
-                    if (!mes.IsNullOrEmpty())
+                    if (!string.IsNullOrEmpty(mes))
                         OnServerMessageReceived?.Invoke(null, mes);
                 }
             }
@@ -181,7 +203,6 @@ public class ConnectionManager : WebSocketConnector
 
     protected override void HandleConnectionClosed(object sender, CloseEventArgs e)
     {
-        // checks if the connection was closed just after a connection request
         Debug.Log("ConnectionManager: HandleConnectionClosed");
         if (connectionRequested)
         {
@@ -238,21 +259,21 @@ public class ConnectionManager : WebSocketConnector
         }
     }
 
-    public bool IsConnectionState(ConnectionState currentState)
+    public bool IsConnectionState(ConnectionState state)
     {
-        return this.currentState == currentState;
+        return this.currentState == state;
     }
 
     public void SendExecutableExpression(string expression)
     {
-        Dictionary<string, string> jsonExpression = null;
-        jsonExpression = new Dictionary<string, string>
+        string jsonStringExpression = WriteJson(writer =>
         {
-            { "type", "expression" },
-            { "expr", expression }
-        };
+            writer.WriteStartObject();
+            writer.WriteString("type", "expression");
+            writer.WriteString("expr", expression);
+            writer.WriteEndObject();
+        });
 
-        string jsonStringExpression = JsonSerializer.Serialize(jsonExpression);
         SendMessageToServer(jsonStringExpression, new Action<bool>((success) =>
         {
             if (!success)
@@ -262,7 +283,7 @@ public class ConnectionManager : WebSocketConnector
                 if (numErrors > numErrorsBeforeDeconnection)
                 {
                     GetSocket().Close();
-                    currentState = (ConnectionState.DISCONNECTED);
+                    currentState = ConnectionState.DISCONNECTED;
                     numErrors = 0;
                 }
             }
@@ -275,17 +296,27 @@ public class ConnectionManager : WebSocketConnector
 
     public void SendExecutableAsk(string action, Dictionary<string, string> arguments)
     {
-        string argsJSON = JsonSerializer.Serialize(arguments);
-        Dictionary<string, string> jsonExpression = null;
-        jsonExpression = new Dictionary<string, string>
+        // First serialize the arguments dictionary into a JSON string.
+        string argsJSON = WriteJson(writer =>
         {
-            { "type", "ask" },
-            { "action", action },
-            { "args", argsJSON },
-            { "agent", AgentToSendInfo }
-        };
+            writer.WriteStartObject();
+            foreach (var kvp in arguments)
+            {
+                writer.WriteString(kvp.Key, kvp.Value);
+            }
+            writer.WriteEndObject();
+        });
 
-        string jsonStringExpression = JsonSerializer.Serialize(jsonExpression);
+        // Now build the outer JSON with "args" as a string.
+        string jsonStringExpression = WriteJson(writer =>
+        {
+            writer.WriteStartObject();
+            writer.WriteString("type", "ask");
+            writer.WriteString("action", action);
+            writer.WriteString("args", argsJSON);  // Write the serialized arguments as a string.
+            writer.WriteString("agent", AgentToSendInfo);
+            writer.WriteEndObject();
+        });
 
         SendMessageToServer(jsonStringExpression, new Action<bool>((success) =>
         {
@@ -296,7 +327,7 @@ public class ConnectionManager : WebSocketConnector
                 if (numErrors > numErrorsBeforeDeconnection)
                 {
                     GetSocket().Close();
-                    currentState = (ConnectionState.DISCONNECTED);
+                    currentState = ConnectionState.DISCONNECTED;
                     numErrors = 0;
                 }
             }
@@ -309,11 +340,13 @@ public class ConnectionManager : WebSocketConnector
 
     public void DisconnectProperly()
     {
-        Dictionary<string, string> jsonExpression = new Dictionary<string, string>
+        string jsonStringExpression = WriteJson(writer =>
         {
-            { "type", "disconnect_properly" }
-        };
-        string jsonStringExpression = JsonSerializer.Serialize(jsonExpression);
+            writer.WriteStartObject();
+            writer.WriteString("type", "disconnect_properly");
+            writer.WriteEndObject();
+        });
+
         SendMessageToServer(jsonStringExpression, new Action<bool>((success) =>
         {
             if (!success)
@@ -332,7 +365,6 @@ public class ConnectionManager : WebSocketConnector
         return StaticInformation.getId();
     }
 
-
     public bool getUseMiddleware()
     {
         return UseMiddleware;
@@ -346,17 +378,10 @@ public class ConnectionManager : WebSocketConnector
     }
 }
 
-
 public enum ConnectionState
 {
     DISCONNECTED,
-
-    // waiting for connection to be established
     PENDING,
-
-    // connection established, waiting for authentication
     CONNECTED,
-
-    // connection established and authenticated
     AUTHENTICATED
 }
