@@ -26,7 +26,7 @@ global control: fsm {
 	
 	int current_round <- 1;
 	
-	float simplification_river_dist <- 30.0;
+	float simplification_river_dist <- 50.0;
 	
 	bool use_tell <- true;
 	
