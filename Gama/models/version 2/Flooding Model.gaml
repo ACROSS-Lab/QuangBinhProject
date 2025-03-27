@@ -189,7 +189,9 @@ global control: fsm {
 	file dem_file <- file("../../includes/dem/hanoi_larger.tif");
 	
 	
-	shape_file drain_shape_file <- shape_file("../../includes/gis/office_polygon.shp");
+	shape_file drain_shape_file <- shape_file("../../includes/gis/water_boundary.shp");
+
+	
 
 	//Shape of the environment using the bounding box of Quang Binh
 	geometry shape <- envelope(dem_file);
@@ -208,6 +210,9 @@ global control: fsm {
 	 *************************************************************/	
 	
 	state s_start initial: true {
+		//save species_of(shape) to: "save_shapefile.shp" format: "shp" crs: "EPSG:4326";
+		//write species_of(shape);
+		//save self.shape to: "save_shapefile.shp" format: "shp" crs: "EPSG:4326";
 		enter {
 			do enter_start();
 		}
