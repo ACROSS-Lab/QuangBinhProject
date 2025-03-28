@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Jobs;
 using UnityEngine;
 
 public class PolygonGenerator
@@ -36,12 +37,33 @@ public class PolygonGenerator
     public GameObject GeneratePolygons(bool editMode, string name, int[] points, PropertiesGAMA prop, int precision)
     {
         int pointCount = points.Length;
-        Vector2[] pts = new Vector2[pointCount / 2]; // Allocate array with required size
-        
-        for (int i = 0; i < pointCount - 1; i += 2)
+        int vectorCount = pointCount / 2;
+
+        // Copy the managed array into a NativeArray for Burst processing
+        NativeArray<int> nativePoints = new NativeArray<int>(points, Allocator.TempJob);
+        NativeArray<Vector2> nativeResults = new NativeArray<Vector2>(vectorCount, Allocator.TempJob);
+
+        // Schedule the Burst-compiled job to convert points in parallel using full conversion logic.
+        var job = new CoordinateConversionJob
         {
-            pts[i / 2] = converter.fromGAMACRS2D(points[i], points[i + 1]);
-        }
+            points = nativePoints,
+            results = nativeResults,
+            coefX = converter.GamaCRSCoefX,
+            coefY = converter.GamaCRSCoefY,
+            offsetX = converter.GamaCRSOffsetX,
+            offsetY = converter.GamaCRSOffsetY,
+            precision = converter.precision
+        };
+
+        JobHandle handle = job.Schedule(vectorCount, 64);
+        handle.Complete();
+
+        // Copy results back to a managed array.
+        Vector2[] pts = nativeResults.ToArray();
+
+        // Dispose of the NativeArrays.
+        nativePoints.Dispose();
+        nativeResults.Dispose();
 
         return GeneratePolygons(editMode, name, pts, prop, precision);
     }
@@ -51,7 +73,7 @@ public class PolygonGenerator
     /// </summary>
     public GameObject GeneratePolygons(bool editMode, string name, Vector2[] meshDataPoints, PropertiesGAMA prop, int precision)
     {
-        // Prepare color from GAMA properties
+        // Prepare color from GAMA properties.
         Color32 col = Color.black;
         if (prop.visible)
         {
@@ -62,28 +84,30 @@ public class PolygonGenerator
                 BitConverter.GetBytes(prop.alpha)[0]);
         }
 
-        // Load a custom material if specified
+        // Load a custom material if specified.
         Material mat = null;
         if (prop.visible && !string.IsNullOrEmpty(prop.material))
         {
-            // e.g. "Assets/Materials/MyMaterial" (without extension) if placed in Resources folder
+            // e.g. "Assets/Materials/MyMaterial" (without extension) if placed in the Resources folder.
             mat = Resources.Load<Material>(prop.material);
         }
 
-        // Calculate the extrusion height
+        // Calculate the extrusion height.
         float extrHeight = (float)prop.height / precision;
 
-        // Create the extruded polygon object
+        // Create the extruded polygon object.
         GameObject obj = GeneratePolygon(name, meshDataPoints, extrHeight, col, mat);
 
-        // Hide mesh if not visible
+        // Hide mesh if not visible.
         if (!prop.visible)
         {
             MeshRenderer r = obj.GetComponent<MeshRenderer>();
-            if (r != null) r.enabled = false;
+            if (r != null)
+                r.enabled = false;
             foreach (MeshRenderer rr in obj.GetComponentsInChildren<MeshRenderer>())
             {
-                if (rr != null) rr.enabled = false;
+                if (rr != null)
+                    rr.enabled = false;
             }
         }
 
@@ -91,21 +115,20 @@ public class PolygonGenerator
     }
 
     /// <summary>
-    /// Internal helper that actually creates the GameObject with PolyExtruderLight.
+    /// Internal helper that creates the GameObject with PolyExtruderLight.
     /// </summary>
     private GameObject GeneratePolygon(string name, Vector2[] meshDataPoints, float extrusionHeight, Color32 color, Material mat)
     {
-        // Create a new GameObject with the given name
+        // Create a new GameObject with the given name.
         GameObject polyExtruderGO = new GameObject(name);
 
-        // Optionally offset the Y position
+        // Optionally offset the Y position.
         Vector3 pos = polyExtruderGO.transform.position;
         pos.y += offsetYBackgroundGeom;
         polyExtruderGO.transform.position = pos;
 
-        // Add PolyExtruderLight and call createPrism
+        // Add PolyExtruderLight and call createPrism.
         PolyExtruderLight polyExtruderLight = polyExtruderGO.AddComponent<PolyExtruderLight>();
-        // The final parameter is the material, which can be null
         polyExtruderLight.createPrism(
             name,
             extrusionHeight,
@@ -126,16 +149,35 @@ public class PolygonGenerator
         MeshFilter meshFilter = obj.GetComponent<MeshFilter>();
 
         int pointCount = points.Length;
-        Vector2[] pts = new Vector2[pointCount / 2]; // Allocate array with required size
-        
-        for (int i = 0; i < pointCount - 1; i += 2)
+        int vectorCount = pointCount / 2;
+
+        NativeArray<int> nativePoints = new NativeArray<int>(points, Allocator.TempJob);
+        NativeArray<Vector2> nativeResults = new NativeArray<Vector2>(vectorCount, Allocator.TempJob);
+
+        var job = new CoordinateConversionJob
         {
-            pts[i / 2] = converter.fromGAMACRS2D(points[i], points[i + 1]);
-        }
+            points = nativePoints,
+            results = nativeResults,
+            coefX = converter.GamaCRSCoefX,
+            coefY = converter.GamaCRSCoefY,
+            offsetX = converter.GamaCRSOffsetX,
+            offsetY = converter.GamaCRSOffsetY,
+            precision = converter.precision
+        };
+
+        JobHandle handle = job.Schedule(vectorCount, 64);
+        handle.Complete();
+
+        Vector2[] pts = nativeResults.ToArray();
+
+        nativePoints.Dispose();
+        nativeResults.Dispose();
 
         if (polyExtruderGO != null)
         {
             polyExtruderGO.updatePrism(meshFilter, pts);
         }
     }
+
+    // Burst-compiled job for converting pairs of ints into Vector2 values using full coordinate conversion.
 }
