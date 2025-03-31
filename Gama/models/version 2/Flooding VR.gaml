@@ -206,7 +206,7 @@ species unity_linker parent: abstract_unity_linker {
 	unity_property up_dam;
 	unity_property up_water;
 	unity_property up_shelter;
-	unity_property up_injuries;
+//	unity_property up_injuries;
 	
 	
 	unity_property up_frontier_green;
@@ -253,7 +253,7 @@ species unity_linker parent: abstract_unity_linker {
 		unity_properties << up_dam;
 		unity_properties << up_water;
 		unity_properties << up_shelter;
-		unity_properties << up_injuries;
+//		unity_properties << up_injuries;
 		
 		//add the static_geometry agents as static agents/geometries to send to unity with the up_geom unity properties.
 		do add_background_geometries(evacuation_point,up_shelter);
