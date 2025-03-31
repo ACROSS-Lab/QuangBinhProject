@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: db98514a32258de40a7f8e30ef7a6786
+guid: fef4f92959948d14a9e24b7b62ec2231
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -7,58 +7,53 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: FarmerManBodySuit
-    second: {fileID: 2100000, guid: 4213deb1ca4600b4abaaca1c0edd609f, type: 2}
+      name: DRESS3.001
+    second: {fileID: 2100000, guid: 4be159f52a8d88f46b403b049deca12d, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: FarmerManButtons
-    second: {fileID: 2100000, guid: 892bc2815e0dcc04c8daa2cdd5317d49, type: 2}
+      name: SKIN.001
+    second: {fileID: 2100000, guid: ce43ea8091333534c98e62b696947293, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: FarmerManEyebrows
-    second: {fileID: 2100000, guid: fa30036e719ca414698ea0b4248a88ed, type: 2}
+      name: SKIN4.001
+    second: {fileID: 2100000, guid: ce43ea8091333534c98e62b696947293, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: FarmerManEyesBalls
-    second: {fileID: 2100000, guid: acb17892481505546bee383ffb9c2457, type: 2}
+      name: SKIN5.001
+    second: {fileID: 2100000, guid: ce43ea8091333534c98e62b696947293, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: FarmerManEyesRound
-    second: {fileID: 2100000, guid: 9642c7011cbc7a2488921fff0f42be30, type: 2}
+      name: aiStandardSurface8.001
+    second: {fileID: 2100000, guid: b1d7ea43d003f6c45a1377b8f324d3f1, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: FarmerManEyesSmall
-    second: {fileID: 2100000, guid: 95142ffdf60277847a947c220e962751, type: 2}
+      name: pantalon_mc.001
+    second: {fileID: 2100000, guid: 221b88a2f5ec2a1479e299cbcb684441, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: FarmerManHair
-    second: {fileID: 2100000, guid: d5b8129f2d0f5c9419ee04426ffa6942, type: 2}
+      name: pasted__HAIR5.001
+    second: {fileID: 2100000, guid: 9c70de752c514c343a1bafa2f1570eaa, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: FarmerManHat
-    second: {fileID: 2100000, guid: aeadbe8a031540f4c8a7d3bc96f70862, type: 2}
+      name: pasted__HAIR6.001
+    second: {fileID: 2100000, guid: 9c70de752c514c343a1bafa2f1570eaa, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: FarmerManShoes
-    second: {fileID: 2100000, guid: 33292a73691c5984480468cefbf7a0e9, type: 2}
+      name: pasted__HAIR7.001
+    second: {fileID: 2100000, guid: 9c70de752c514c343a1bafa2f1570eaa, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: FarmerManSkin
-    second: {fileID: 2100000, guid: 66550714d86abaf4fbedbd9610a68105, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: FarmerManTshirt
-    second: {fileID: 2100000, guid: b3ee25436c036e844a7f698231767bcf, type: 2}
+      name: tshirt.001
+    second: {fileID: 2100000, guid: 7dcd76bacdeae9f43ac5d461432bdb16, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

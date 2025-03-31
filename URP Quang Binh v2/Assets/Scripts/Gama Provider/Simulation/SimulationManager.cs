@@ -580,12 +580,12 @@ public class SimulationManager : MonoBehaviour
                         if(injured)
                         {
                             transform.GetChild(0).gameObject.SetActive(true);
-                            transform.GetChild(1).localEulerAngles = new Vector3(-90, 180, 0);
+                            transform.GetChild(1).localEulerAngles = new Vector3(90, 90, 0);
                         }
                         else
                         {
                             transform.GetChild(0).gameObject.SetActive(false);
-                            transform.GetChild(1).localEulerAngles = new Vector3(0, 180, 0);
+                            transform.GetChild(1).localEulerAngles = new Vector3(0, 90, 0);
                         } 
                     }
                 }
