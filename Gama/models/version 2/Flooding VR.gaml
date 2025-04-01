@@ -217,7 +217,7 @@ species unity_linker parent: abstract_unity_linker {
 	map<string, dyke> dykes;
 	init {
 		
-		unity_aspect people_aspect <- prefab_aspect("Prefabs/Visual Prefabs/People/FleeingMan",1,-30,1.0,0, precision);
+		unity_aspect people_aspect <- prefab_aspect("Prefabs/Visual Prefabs/People/FleeingMan",1,0,1.0,0, precision);
 //		unity_aspect people_aspect_injured <- prefab_aspect("Prefabs/Visual Prefabs/People/Injuries",400,0.2,1.0,-90.0, precision);
 //		unity_aspect dyke_aspect <- geometry_aspect(40.0, "Materials/Dike/Dike", #gray,  precision);
 //		unity_aspect dam_aspect <- geometry_aspect(40.0, "Materials/Dike/Dam", #magenta, precision);
@@ -226,7 +226,7 @@ species unity_linker parent: abstract_unity_linker {
 	//	unity_aspect water_aspect <- geometry_aspect(5.0, #blue,precision);
 		unity_aspect water_aspect <- geometry_aspect(5.0, "Materials/Water2/WaterVoronoi",precision);
 		
-		unity_aspect shelter_aspect <- prefab_aspect("Prefabs/Shelter",150.0,-27,1.0,0.0, precision);
+		unity_aspect shelter_aspect <- prefab_aspect("Prefabs/Shelter",150.0,0,1.0,0.0, precision);
 		
 		up_people<- geometry_properties("people", "people", people_aspect, #no_interaction, false);
 //		up_injuries<- geometry_properties("injury", nil, people_aspect_injured, #no_interaction, false);
