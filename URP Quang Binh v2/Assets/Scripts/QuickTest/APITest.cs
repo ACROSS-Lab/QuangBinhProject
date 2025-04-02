@@ -58,9 +58,11 @@ namespace QuickTest
             ConnectionManager.Instance.SendExecutableAsk("set_status", args);
         }
 
-        
+        public void TestMarkDikingOver()
+        {
+            Dictionary<string, string> args = new Dictionary<string, string>();
 
-      
-       
+            ConnectionManager.Instance.SendExecutableAsk("mark_diking_over", args);
+        }
     }
 }

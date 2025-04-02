@@ -347,8 +347,12 @@ species unity_linker parent: abstract_unity_linker {
 			}
 		} 		
 	}
-	 
 	
+	action mark_diking_over
+	{
+		diking_over <- true;
+	}
+	 
 	
 	/**
 	 * Send dynamic geometries when it is necessary. 
