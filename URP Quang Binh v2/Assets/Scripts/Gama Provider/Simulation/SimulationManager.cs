@@ -199,6 +199,12 @@ public class SimulationManager : MonoBehaviour
     {
         return LastTime;
     }
+
+    public int GetNumStep()
+    {
+        return infoWorld.num_step;
+    }
+
     void OnEnable()
     {
         if (ConnectionManager.Instance != null)
@@ -325,24 +331,34 @@ public class SimulationManager : MonoBehaviour
                 }
             }
 
-            if (infoWorld.state == "s_init")
+            if (infoWorld.state == "s_init" || infoWorld.state == "s_flooding")
             {
                 if (UIController.Instance.people_safe_on.activeSelf)
                 {
                     UIController.Instance.people_safe_on.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(1000 - infoWorld.casualties);
                 } 
+
+                if(UIController.Instance.flood_time.activeSelf)
+                {
+                   UIController.Instance.flood_time.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(infoWorld.num_step - infoWorld.current_step);
+                }
             }
             // else if (infoWorld.state == "s_diking")
             // {
             //     //timeText.text = "Remaining Time: " + Math.Max(0, infoWorld.remaining_time); 
             // } 
-            else if (infoWorld.state == "s_flooding")
-            {
-                if (UIController.Instance.people_safe_on.activeSelf)
-                {
-                    UIController.Instance.people_safe_on.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(1000 - infoWorld.casualties);
-                }
-            }
+            // else if (infoWorld.state == "s_flooding")
+            // {
+            //     if (UIController.Instance.people_safe_on.activeSelf)
+            //     {
+            //         UIController.Instance.people_safe_on.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(1000 - infoWorld.casualties);
+            //     }
+
+            //     if(UIController.Instance.flood_time.activeSelf)
+            //     {
+            //         UIController.Instance.flood_time.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(infoWorld.num_step - infoWorld.current_step);
+            //     }
+            // }
 
             if (infoWorld.state != "s_init" && infoWorld.remaining_time > LastTime)
             {
@@ -357,12 +373,12 @@ public class SimulationManager : MonoBehaviour
                 //activeCoroutine = StartCoroutine(CountdownCoroutine());
             }
 
-            if (infoWorld.state == "s_init" || UIController.Instance.UI_EndingPhase_eng.activeSelf ||
-                UIController.Instance.UI_EndingPhase_viet.activeSelf)
-            {
-                // timer.gameObject.SetActive(false);
-                // timerText.gameObject.SetActive(false);
-            }
+            // if (infoWorld.state == "s_init" || UIController.Instance.UI_EndingPhase_eng.activeSelf ||
+            //     UIController.Instance.UI_EndingPhase_viet.activeSelf)
+            // {
+            //     // timer.gameObject.SetActive(false);
+            //     // timerText.gameObject.SetActive(false);
+            // }
 
             LastTime = infoWorld.remaining_time;
 

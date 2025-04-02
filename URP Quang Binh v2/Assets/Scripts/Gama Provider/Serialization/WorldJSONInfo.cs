@@ -29,6 +29,7 @@ public class WorldJSONInfo
     public int score;
 
     public int casualties;
+    public int num_step, current_step;
 
     public static WorldJSONInfo CreateFromJSON(string jsonString)
     {

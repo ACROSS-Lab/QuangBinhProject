@@ -296,7 +296,8 @@ species unity_linker parent: abstract_unity_linker {
 		map_to_send["casualties"] <- world.casualties;
 		//map_to_send["winning"] <- winning;
 	//	map_to_send["playback_finished"] <- playback_finished;
-		 
+		map_to_send["num_step"] <- world.num_step;
+		map_to_send["current_step"] <- world.current_step;
 		
 		//write sample(world.state) + " " + sample(playback_finished);
 	} 

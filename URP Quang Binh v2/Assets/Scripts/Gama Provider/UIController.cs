@@ -35,6 +35,7 @@ public class UIController : MonoBehaviour
     public TextMeshProUGUI dykeLength, damLength;
 
     int round;
+    bool isInit = false;
 
     protected float TimeForDisplayingFloodUI = 2.0f; // in second
     protected float TimerForDisplayingFloodUI = 0.0f;
@@ -58,7 +59,6 @@ public class UIController : MonoBehaviour
 
     public void Update()
     {
-       
         if (Input.GetKeyDown(KeyCode.Space) && UI_ChoiceOfLanguage.activeInHierarchy)
         {
             SetInVietnamese(false);
@@ -147,6 +147,8 @@ public class UIController : MonoBehaviour
         people_safe_on.SetActive(true);
         people_safe_off.SetActive(false);
 
+        flood_time.GetComponent<StatusEffectManager>().StartEnergizedEffect(SimulationManager.Instance.GetNumStep());
+
 } 
 
 public void StartMenuDikingPhase()
@@ -208,6 +210,8 @@ public void StartMenuDikingPhase()
         {
             UI_FloodingPhase_eng.SetActive(true);
         }
+
+        flood_time.GetComponent<StatusEffectManager>().StartEnergizedEffect(SimulationManager.Instance.GetNumStep());
     } 
 
     public void EndGame()
@@ -236,7 +240,16 @@ public void StartMenuDikingPhase()
         else 
             UI_EndingPhase_eng.SetActive(false);
 
+        UI_HUD.SetActive(false);
+        UI_Hint.SetActive(false);
+        UI_Hint_viet.SetActive(false);
+        UI_Hint_eng.SetActive(false);
+        UI_ScoreRound_viet.SetActive(false);
+        UI_ScoreRound_eng.SetActive(false);
+        UI_Length_viet.SetActive(false);
+        UI_Length_eng.SetActive(false);
         UI_FinalScore.SetActive(false);
+
         UI_ChoiceOfLanguage.SetActive(true);
     }
 

@@ -13,7 +13,6 @@ namespace Gama_Provider.Simulation
         public void UpdateEnergizedEffect(float val)
         {
             energizedEffect.GetComponentInChildren<CircularProgressBar>().updateIndicator(val);
-
         }
         public void StartEnergizedEffect(float customDuration)
         {
