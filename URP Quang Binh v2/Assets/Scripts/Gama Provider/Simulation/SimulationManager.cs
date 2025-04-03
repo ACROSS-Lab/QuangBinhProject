@@ -343,10 +343,14 @@ public class SimulationManager : MonoBehaviour
                    UIController.Instance.flood_time.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(infoWorld.num_step - infoWorld.current_step);
                 }
             }
-            // else if (infoWorld.state == "s_diking")
-            // {
-            //     //timeText.text = "Remaining Time: " + Math.Max(0, infoWorld.remaining_time); 
-            // } 
+            else if (infoWorld.state == "s_diking")
+            {
+                if (mainButton != null && secondButton != null && mainButton.action.triggered && secondButton.action.triggered)
+                {
+                    Dictionary<string, string> args = new Dictionary<string, string>();
+                    ConnectionManager.Instance.SendExecutableAsk("mark_diking_over", args);
+                }
+            } 
             // else if (infoWorld.state == "s_flooding")
             // {
             //     if (UIController.Instance.people_safe_on.activeSelf)
@@ -459,18 +463,6 @@ public class SimulationManager : MonoBehaviour
                 ConnectionManager.Instance.Reconnect();
             }
         }
-
-        if (mainButton != null && secondButton != null && mainButton.action.triggered && secondButton.action.triggered && _currentStage == "s_diking")
-        {
-            Dictionary<string, string> args = new Dictionary<string, string>()
-            {
-                { "player_id", StaticInformation.getId() }
-            };
-
-            ConnectionManager.Instance.SendExecutableAsk("end_diking", args);
-        }
-
-        
 
         // Debug.Log("currentStage: " + currentStage + " IsGameState(GameState.GAME) :" +IsGameState(GameState.GAME));
         if (IsGameState(GameState.GAME) && UIController.Instance.DikingStart)
