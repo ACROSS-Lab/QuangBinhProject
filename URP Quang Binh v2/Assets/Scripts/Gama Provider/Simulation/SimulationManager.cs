@@ -343,14 +343,10 @@ public class SimulationManager : MonoBehaviour
                    UIController.Instance.flood_time.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(infoWorld.num_step - infoWorld.current_step);
                 }
             }
-            else if (infoWorld.state == "s_diking")
-            {
-                if (mainButton != null && secondButton != null && mainButton.action.triggered && secondButton.action.triggered)
-                {
-                    Dictionary<string, string> args = new Dictionary<string, string>();
-                    ConnectionManager.Instance.SendExecutableAsk("mark_diking_over", args);
-                }
-            } 
+            // else if (infoWorld.state == "s_diking")
+            // {
+                
+            // } 
             // else if (infoWorld.state == "s_flooding")
             // {
             //     if (UIController.Instance.people_safe_on.activeSelf)
@@ -464,6 +460,12 @@ public class SimulationManager : MonoBehaviour
             }
         }
 
+        if (mainButton != null && secondButton != null && mainButton.action.triggered && secondButton.action.triggered && _currentStage == "s_diking")
+        {
+            Dictionary<string, string> args = new Dictionary<string, string>();
+            ConnectionManager.Instance.SendExecutableAsk("mark_diking_over", args);
+        }
+
         // Debug.Log("currentStage: " + currentStage + " IsGameState(GameState.GAME) :" +IsGameState(GameState.GAME));
         if (IsGameState(GameState.GAME) && UIController.Instance.DikingStart)
             ProcessRightHandTrigger();
@@ -572,7 +574,16 @@ public class SimulationManager : MonoBehaviour
                             {
                                 float lostLength = Vector3.Distance(pos, transform.localPosition);
                                 pos = (pos + transform.localPosition)/2;
-                                transform.localScale = new Vector3(currentScale.x, currentScale.y, currentScale.z - lostLength/36);
+                                float newZ = currentScale.z - lostLength/36;
+                                if(newZ > 0) 
+                                {
+                                    transform.localScale = new Vector3(currentScale.x, currentScale.y, currentScale.z - lostLength/36);
+                                }
+                                else 
+                                {
+                                    obj.GetComponent<MeshRenderer>().enabled = false;
+                                }
+                                
                             }
                             else
                             {
