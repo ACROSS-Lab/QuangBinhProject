@@ -34,6 +34,7 @@ global control: fsm {
 	float waiting_time_in_s <- 1.5;
 	
 	geometry init_river;
+	list<geometry> all_river_parts; // NEW: Store all river parts
 	
 	float score min: 0.0;
 	
@@ -435,7 +436,10 @@ global control: fsm {
 	 *************************************************************/
 
 	init {
-		init_river  <- first(river_shapefile.contents); 
+		// FIX 1: Store all river geometries instead of just the first one
+		all_river_parts <- river_shapefile.contents;
+		init_river <- union(all_river_parts);
+		
 		if (use_tell) {
 	 		do tell("Start the game: Round 1"  ,false);
 	 	}
@@ -533,31 +537,33 @@ global control: fsm {
 				is_stake <- true;
 				cells_at_stake << self;
 			}
-		}		
+		}	
+			
 		if (empty(river)){ 
 			bed_cells <- [];
-			create river from:(river_shapefile);
-			ask cell overlapping river[0] {
+			// FIX 2: Create river agents from all parts of the shapefile
+			create river from: river_shapefile;
+			
+			// FIX 3: Consider all river agents when initializing bed cells
+			ask cell overlapping init_river {
 				bed_cells << self;
 			}
-			
 		}
+		
 		ask bed_cells {
 			if (grid_y > (max_y - 200)) {
 				water_to_add <- max(0.1,(grid_y / max_y));
 			}
-			
 		}
 		total_water_to_add <- bed_cells sum_of each.water_to_add;
 		
 		ask bed_cells where (each.obstacle_height = 0){water_height <- initial_water_height;}
 		do compute_river_shape;
-		
 	}
 	
 
 	action compute_river_shape {
-		list<cell> river_cells <- cell where (not each.already and (each.water_height > limit_drown)) ;
+		list<cell> river_cells <- cell where (not each.already and (each.water_height > limit_drown));
 		list<list<cell>> clusters <- list<list<cell>>(simple_clustering_by_distance(river_cells, 1));
 		loop c over: clusters {
 			ask c {already <- true;}
@@ -569,8 +575,6 @@ global control: fsm {
 		
 		list<list<river>> clusters_r <- list<list<river>>(simple_clustering_by_distance(river, 0.0));
 		 
-		 
-		  
 		list<river> merging_rivers;
 		loop cr over: clusters_r {
 			if length(cr) > 1 {
@@ -578,7 +582,7 @@ global control: fsm {
 				merging_rivers << first(cr);
 			}
 		}
-		ask merging_rivers parallel: true  {
+		ask merging_rivers parallel: true {
 			do update_shape;
 		}
 		ask river parallel: true {
@@ -586,13 +590,16 @@ global control: fsm {
 			shape_to_export.attributes["name"] <- name;
 		}
 		
-		/*loop cr over: clusters_r {
-			if length(cr) > 1 {
-				first(cr).shape <- union(cr);
-				ask cr - first(cr) {do die;}
+		// FIX 4: Update main_river_part to use the full river geometry when empty
+		if (empty(river)) {
+			main_river_part <- init_river;
+		} else {
+			// Try to find the largest river part near the bottom of the map
+			main_river_part <- river closest_to {world.location.x, world.shape.height};
+			if (main_river_part = nil) {
+				main_river_part <- river with_max_of(each.shape.area);
 			}
-		}*/
-		main_river_part <- river closest_to {world.location.x, world.shape.height};
+		}
 	}
 	/*
 	 * Initializes the buildings */
@@ -612,13 +619,13 @@ global control: fsm {
 	 */
 	action add_water {
 		if (current_step <= num_step_add) {
-			list<cell> to_adds <- bed_cells where ((each.obstacle_height = 0) and (each.location overlaps main_river_part));
+			// FIX 5: Make sure we're considering all river parts for water addition
+			list<cell> to_adds <- bed_cells where ((each.obstacle_height = 0) and (each.location overlaps init_river));
 			float coeff_to_add <- total_water_to_add / (to_adds sum_of each.water_to_add);
 			ask to_adds parallel: true{
-				water_height <- water_height + water_to_add * max_water_input  * coeff_to_add ;
+				water_height <- water_height + water_to_add * max_water_input * coeff_to_add;
 			}
 		}
-		
 	}
 	/**
 	 * Action to flow the water according to the altitute and the obstacle
@@ -1000,7 +1007,3 @@ species people skills: [moving] control: fsm {
 * No behaviour is attached to these agents
 *************************************************************/	
 species evacuation_point schedules: [];
-
-
-
-

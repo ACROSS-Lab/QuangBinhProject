@@ -8,7 +8,7 @@
 
 model FloodingUI 
   
-import "Flooding Model.gaml" 
+import "Flooding Model.gaml"
 
 global {   
 	   
