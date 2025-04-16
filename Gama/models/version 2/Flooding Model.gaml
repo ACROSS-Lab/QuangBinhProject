@@ -21,6 +21,8 @@ global control: fsm {
  	int num_step_add <- num_step;// 50;
  	
  	float diking_duration <- 60.0;
+ 	
+ 	float max_distance_to_be_saved <- 50 #m;
 	
 	int num_rounds <- 3;
 	
@@ -969,7 +971,7 @@ species people skills: [moving] control: fsm {
 			if (target != nil) {my_path <- road_network path_between (location, target);}
 		}
 		if my_path != nil {do follow(path: my_path, move_weights: road_weights); }
-		transition to: s_evacuated when: location = target;
+		transition to: s_evacuated when: (location distance_to target) < max_distance_to_be_saved;
 		transition to: s_drowned when: self.is_drowning();
 		transition to: s_fleeing when: my_path = nil;
 	}
