@@ -172,7 +172,7 @@ global control: fsm {
 	 *************************************************************/
 
 	//Shapefile for the river
-	file river_shapefile <- shape_file("../../includes/gis/water_polygon.shp");
+	file river_shapefile <- shape_file("../../includes/gis/water_polygon_backup.shp");
 	
 	//if defined, used to create people agents
 
@@ -187,7 +187,7 @@ global control: fsm {
 	
 	//Data elevation file : small, medium and large definition files are availables
 	//file dem_file <- file("../../includes/dem/dem_small.tif");
-	file dem_file <- file("../../includes/dem/hanoi_larger.tif");
+	file dem_file <- file("../../includes/dem/hcm_cropped_rectangular_dem.tif");
 	
 	
 	shape_file drain_shape_file <- shape_file("../../includes/gis/water_boundary.shp");
