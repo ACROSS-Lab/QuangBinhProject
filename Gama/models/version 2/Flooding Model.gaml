@@ -122,6 +122,9 @@ global control: fsm {
 	
 	// Number of evacuated people
 	int evacuated <- 0;
+	
+	//People counter
+	int people_counter <- 0;
 
 	/*************************************************************
 	 * Initial parameters for people, water and obstacles
@@ -226,6 +229,7 @@ global control: fsm {
 			}
 			
 			ask river {do die;}
+			people_counter <- 0;
 		}
 		do add_water();
 		do flow_water();
@@ -281,7 +285,8 @@ global control: fsm {
 			ask river {do die;}
 			
 			do enter_flooding();
-			score <- init_score;	
+			score <- init_score;
+			people_counter <- 0;	
 			
 		}		
 		do add_water();
@@ -728,6 +733,8 @@ species dyke parent: obstacle schedules: []{
 	float length;
 	bool is_dam <- false;
 	float rotation;
+	int init_cells;
+	float cell_percentage;
 	init {
 		length <- shape.perimeter;
 		if (is_dam) {
@@ -747,6 +754,9 @@ species dyke parent: obstacle schedules: []{
      
 		do compute_height();
 		do build();
+		
+		init_cells <- length(cells_under);
+		cell_percentage <- 1.0;
 	}
 	action check_drowning {
 		loop c over: (cells_under where (each.water_height > limit_drown)) {
@@ -763,6 +773,8 @@ species dyke parent: obstacle schedules: []{
 		/*if (drowned) {
 			do break();
 		}*/
+		
+		cell_percentage <- length(cells_under)/init_cells;
 	}
 	
 	//The height of the dyke is dyke_height minus the average height of the cells it overlaps
@@ -953,6 +965,9 @@ species people skills: [moving] control: fsm {
 		if (evacuation_time = -1) {
 			evacuation_time <- rnd(50);
 		}
+		
+		name <- "person" + people_counter;
+		people_counter <- people_counter + 1;
 	}
 
 	state s_idle initial: true {
@@ -971,7 +986,7 @@ species people skills: [moving] control: fsm {
 			if (target != nil) {my_path <- road_network path_between (location, target);}
 		}
 		if my_path != nil {do follow(path: my_path, move_weights: road_weights); }
-		transition to: s_evacuated when: (location distance_to target) < max_distance_to_be_saved;
+		transition to: s_evacuated when: target != nil and location distance_to target < max_distance_to_be_saved;
 		transition to: s_drowned when: self.is_drowning();
 		transition to: s_fleeing when: my_path = nil;
 	}

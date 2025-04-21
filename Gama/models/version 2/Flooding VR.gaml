@@ -4,7 +4,6 @@ import "Flooding Model.gaml"
  
 global { 
 	
-
 	bool use_tell <- false;
 	bool ready_to_build_dyke <- false;
 	 
@@ -218,18 +217,12 @@ species unity_linker parent: abstract_unity_linker {
 	init {
 		
 		unity_aspect people_aspect <- prefab_aspect("Prefabs/Visual Prefabs/People/FleeingMan",1,0,1.0,0, precision);
-//		unity_aspect people_aspect_injured <- prefab_aspect("Prefabs/Visual Prefabs/People/Injuries",400,0.2,1.0,-90.0, precision);
-//		unity_aspect dyke_aspect <- geometry_aspect(40.0, "Materials/Dike/Dike", #gray,  precision);
-//		unity_aspect dam_aspect <- geometry_aspect(40.0, "Materials/Dike/Dam", #magenta, precision);
 		unity_aspect dyke_aspect <- prefab_aspect("Prefabs/DikeBlock", 2.5, 0.0, 1.0, 0.0, precision);
 		unity_aspect dam_aspect <- prefab_aspect("Prefabs/DamBlock", 2.5, 0.0, 1.0, 0.0, precision);
-	//	unity_aspect water_aspect <- geometry_aspect(5.0, #blue,precision);
 		unity_aspect water_aspect <- geometry_aspect(5.0, "Materials/Water2/WaterVoronoi",precision);
-		
-		unity_aspect shelter_aspect <- prefab_aspect("Prefabs/Shelter",150.0,0,1.0,0.0, precision);
+		unity_aspect shelter_aspect <- prefab_aspect("Prefabs/Shelter",80.0,0,1.0,0.0, precision);
 		
 		up_people<- geometry_properties("people", "people", people_aspect, #no_interaction, false);
-//		up_injuries<- geometry_properties("injury", nil, people_aspect_injured, #no_interaction, false);
 		up_dyke <- geometry_properties("dyke", "dyke", dyke_aspect, #ray_interactable, false);
 		up_dam <- geometry_properties("dam", "dam", dam_aspect, #ray_interactable, false);
 		up_water <- geometry_properties("water", nil, water_aspect, #no_interaction,false);
@@ -253,7 +246,6 @@ species unity_linker parent: abstract_unity_linker {
 		unity_properties << up_dam;
 		unity_properties << up_water;
 		unity_properties << up_shelter;
-//		unity_properties << up_injuries;
 		
 		//add the static_geometry agents as static agents/geometries to send to unity with the up_geom unity properties.
 		do add_background_geometries(evacuation_point,up_shelter);
@@ -376,11 +368,8 @@ species unity_linker parent: abstract_unity_linker {
 //		do add_geometries_to_send(injured_p,up_injuries);
 		
 		list<people> affected_p <- people where (each.state = "s_fleeing" or each.state = "s_drowned");
-		ask affected_p {
-			name <- "affected_" + (int(self) mod 1000);
-		}
-		list<bool> injured <- affected_p collect (each.state = "s_drowned");
-		map<string, list<bool>> people_atts <- ["injured":: injured];
+		list<int> status <- affected_p collect (each.state = "s_drowned" ? -1 : 1);
+		map<string, list<int>> people_atts <- ["status"::status];
 		do add_geometries_to_send(affected_p, up_people, people_atts);
 	}
 	/**
@@ -418,13 +407,13 @@ species unity_linker parent: abstract_unity_linker {
 			do add_geometries_to_send(river collect each.shape_to_export,up_water);
 			// We send only the dykes that are not underwater
 			list<dyke> dykes_ <- (dyke where (!each.is_dam and !each.drowned));
-			list<float> dykes_length <- dykes_ collect each.length;
+			list<float> dykes_length <- dykes_ collect (each.length * each.cell_percentage);
 			list<float> dykes_rotation <- dykes_ collect each.rotation; 
 			map<string, list<float>> dykes_atts <- ["length" :: dykes_length ,"rotation" :: dykes_rotation];
 			do add_geometries_to_send(dykes_, up_dyke, dykes_atts);
 			
 			list<dyke> dams_ <- (dyke where (each.is_dam and !each.drowned));
-			list<float> dams_length <- dams_ collect each.length;
+			list<float> dams_length <- dams_ collect (each.length * each.cell_percentage);
 			list<float> dams_rotation <- dams_ collect each.rotation;
 			map<string, list<float>> dams_atts <- ["length" :: dams_length ,"rotation" :: dams_rotation];
 			do add_geometries_to_send(dams_, up_dam, dams_atts);	 
@@ -596,6 +585,14 @@ experiment Launch  autorun: true type: unity {
 				 	end_point <- nil;
 				}
 
+			}
+			
+			event "x"
+			{
+				if(state != "s_diking")
+				{
+					current_step <- num_step;
+				}
 			}
 			
 			graphics "Arrow" {
@@ -781,8 +778,7 @@ experiment Launch  autorun: true type: unity {
 				}
 			}
 			
-			 
-			
+				 		
 			graphics ll {
 				if (line != nil) {
 					draw line + dyke_width + 5 color: is_ok_dyke_construction ? dyke_color : #red border: #black;

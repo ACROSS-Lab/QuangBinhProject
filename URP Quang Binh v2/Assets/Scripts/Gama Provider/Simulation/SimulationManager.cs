@@ -150,6 +150,7 @@ public class SimulationManager : MonoBehaviour
     //Cache
     Dictionary<string, string> connectionID;
     HashSet<string> toRemove = new HashSet<string>();
+    List<string> transformToKeep = new List<string>();
 
     // ############################################ UNITY FUNCTIONS ############################################
     void Awake()
@@ -307,6 +308,7 @@ public class SimulationManager : MonoBehaviour
                         UIController.Instance.StartMenuDikingPhase();
                         StartMenuDone = true;
                         StartFloodingDone = false;
+                        transformToKeep = new List<string>();
                     }
                 }
             }
@@ -327,6 +329,7 @@ public class SimulationManager : MonoBehaviour
 
                     DisplayFutureDike = false;
                     Debug.Log("Display future dike is false at wait flooding");
+                    transformToKeep = new List<string>();
                     StartFloodingDone = true;
                 }
             }
@@ -460,7 +463,7 @@ public class SimulationManager : MonoBehaviour
             }
         }
 
-        if (mainButton != null && secondButton != null && mainButton.action.triggered && secondButton.action.triggered && _currentStage == "s_diking")
+        if (mainButton != null && secondButton != null && mainButton.action.inProgress && secondButton.action.inProgress && _currentStage == "s_diking")
         {
             Dictionary<string, string> args = new Dictionary<string, string>();
             ConnectionManager.Instance.SendExecutableAsk("mark_diking_over", args);
@@ -498,31 +501,23 @@ public class SimulationManager : MonoBehaviour
 
     void GenerateGeometries(bool initGame, HashSet<string> toRemove)
     {
-        if (infoWorld.position != null && infoWorld.position.Count > 1 &&
-            (initGame || !sendMessageToReactivatePositionSent))
+        if (infoWorld.position != null && infoWorld.position.Count > 1 && (initGame || !sendMessageToReactivatePositionSent))
         {
-            Vector3 pos = converter.fromGAMACRS(infoWorld.position[0], infoWorld.position[1], infoWorld.position[2]);
-            XROrigin.localPosition = pos;
-            //Camera.main.transform.position = pos;
-
-            // Debug.Log("player.transform.position: " + pos[0] + "," + pos[1] + "," + pos[2]);
+            XROrigin.localPosition = converter.fromGAMACRS(infoWorld.position[0], infoWorld.position[1], infoWorld.position[2]);
             sendMessageToReactivatePositionSent = true;
             readyToSendPosition = true;
             TimerSendPosition = TimeSendPositionAfterMoving;
         }
 
-        if(toRemove != null)
-        {
-            foreach (string n in infoWorld.keepNames) toRemove.Remove(n);
-        } 
-        int cptPrefab = 0;
-        int cptGeom = 0;
+        if(toRemove != null) foreach (string n in infoWorld.keepNames) toRemove.Remove(n);
+    
+        int cptPrefab = 0, cptGeom = 0;
+
+
         for (int i = 0; i < infoWorld.names.Count; i++)
         {
             string name = infoWorld.names[i];
-            string propId = infoWorld.propertyID[i];
-
-            PropertiesGAMA prop = propertyMap[propId];
+            PropertiesGAMA prop = propertyMap[infoWorld.propertyID[i]];
             GameObject obj = null;
 
             if (prop.hasPrefab)
@@ -544,75 +539,36 @@ public class SimulationManager : MonoBehaviour
                     {
                         obj2.transform.position = new Vector3(0, -100, 0);
                         geometryMap.Remove(name);
-                        if (toFollow != null && toFollow.Contains(obj2))
-                            toFollow.Remove(obj2);
-
-                        GameObject.Destroy(obj2);
+                        if (toFollow != null && toFollow.Contains(obj2)) toFollow.Remove(obj2);
+                        Destroy(obj2);
                         obj = instantiatePrefab(name, prop, initGame);
                     }
                 }
 
-                Transform transform = obj.transform;
-                int[] pt = infoWorld.pointsLoc[cptPrefab].c;
-                Vector3 pos = converter.fromGAMACRS(pt[0], pt[1], pt[2]);
-                pos.y += pos.y + prop.yOffsetF;
-                float rot = prop.rotationCoeffF * ((0.0f + pt[3]) / parameters.precision) + prop.rotationOffsetF;
-
-                if (infoWorld.attributes != null && infoWorld.attributes.Count > 0)
+                if(obj.CompareTag("people"))
                 {
-                    if(obj.CompareTag("dam") || obj.CompareTag("dyke"))
+                    UpdateTransform();
+                }
+                else 
+                {
+                    if(!transformToKeep.Contains(name))
                     {
-                        float length = infoWorld.attributes[i].length;
-                        float rotation = infoWorld.attributes[i].rotation;
-
-                        if(length > 0)
-                        {
-                            Vector3 currentScale = transform.localScale;
-                            rot = -rotation;
-                            
-                            if(transform.localPosition != Vector3.zero && pos != transform.localPosition)
-                            {
-                                float lostLength = Vector3.Distance(pos, transform.localPosition);
-                                pos = (pos + transform.localPosition)/2;
-                                float newZ = currentScale.z - lostLength/36;
-                                if(newZ > 0) 
-                                {
-                                    transform.localScale = new Vector3(currentScale.x, currentScale.y, currentScale.z - lostLength/36);
-                                }
-                                else 
-                                {
-                                    obj.GetComponent<MeshRenderer>().enabled = false;
-                                }
-                                
-                            }
-                            else
-                            {
-                                transform.localScale = new Vector3(currentScale.x, currentScale.y, length/36);
-                            }
-                        }
-                    }
-
-                    else if(obj.CompareTag("people"))
-                    {
-                        if(!obj.activeInHierarchy) obj.SetActive(true);
-                        bool injured = infoWorld.attributes[i].injured;
-                        if(injured)
-                        {
-                            transform.GetChild(0).gameObject.SetActive(true);
-                            transform.GetChild(1).localEulerAngles = new Vector3(90, 90, 0);
-                        }
-                        else
-                        {
-                            transform.GetChild(0).gameObject.SetActive(false);
-                            transform.GetChild(1).localEulerAngles = new Vector3(0, 90, 0);
-                        } 
+                        transformToKeep.Add(name);
+                        UpdateTransform();
                     }
                 }
 
-                transform.SetPositionAndRotation(pos, Quaternion.AngleAxis(rot, Vector3.up));
-                //obj.SetActive(true);
                 if(toRemove != null) toRemove.Remove(name);
                 cptPrefab++;
+
+                void UpdateTransform()
+                {
+                    int[] pt = infoWorld.pointsLoc[cptPrefab].c;
+                    Vector3 pos = converter.fromGAMACRS(pt[0], pt[1], pt[2]);
+                    pos.y += pos.y + prop.yOffsetF;
+                    float rot = prop.rotationCoeffF * ((0.0f + pt[3]) / parameters.precision) + prop.rotationOffsetF;
+                    obj.transform.SetPositionAndRotation(pos, Quaternion.AngleAxis(rot, Vector3.up));
+                }
             }
             else
             {
@@ -628,11 +584,15 @@ public class SimulationManager : MonoBehaviour
                 if(initGame || !geometryMap.ContainsKey(name))
                 {
                     obj = polyGen.GeneratePolygons(false, name, pt, prop, parameters.precision);
+                    obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + yOffset, obj.transform.position.z);
                     instantiateGO(obj, name, prop);
-                    object[] pL = new object[2];
-                    pL[0] = obj;
-                    pL[1] = prop;
-                    if(!initGame) geometryMap.Add(name, pL);
+                    if(!initGame) geometryMap.Add(name, new object[] { obj, prop });
+                    if(prop.hasCollider)
+                    {
+                        MeshCollider mc = obj.AddComponent<MeshCollider>();
+                        mc.sharedMesh = obj.GetComponent<MeshFilter>().sharedMesh;
+                        if (prop.isGrabable) mc.convex = true;
+                    }
                 }
                 else
                 {
@@ -642,33 +602,21 @@ public class SimulationManager : MonoBehaviour
                     if (p == prop)
                     {
                         obj = obj2;
+                        polyGen.UpdatePolygon(obj, pt);
+                        if(prop.hasCollider) obj.GetComponent<MeshCollider>().sharedMesh = obj.GetComponent<MeshFilter>().sharedMesh;
                     }
-                    else
-                    {
-                        Debug.Log("not found obj");
-                    }
-                    polyGen.UpdatePolygon(obj, pt);
                 }
-
-                obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + yOffset,
-                    obj.transform.position.z);
-
-                if (prop.hasCollider)
-                {
-                    if(!obj.TryGetComponent<MeshCollider>(out MeshCollider mc)) 
-                    {
-                        mc = obj.AddComponent<MeshCollider>();
-                        if (prop.isGrabable) mc.convex = true;
-                    }
-                    mc.sharedMesh = obj.GetComponent<MeshFilter>().sharedMesh;
-                }
+                
                 if(toRemove != null) toRemove.Remove(name);
                 cptGeom++;
             }
         }
 
+        if (infoWorld.attributes != null && infoWorld.attributes.Count > 0) ManageAttributes(infoWorld.attributes);
+
         infoWorld = null;
     }
+
 
 
     // ############################################ GAMESTATE UPDATER ############################################
@@ -972,8 +920,8 @@ public class SimulationManager : MonoBehaviour
     protected void HoverEnterInteraction(HoverEnterEventArgs ev)
     {
         GameObject obj = ev.interactableObject.transform.gameObject;
-        if ((obj.tag.Equals("dyke")) || ("dam").Equals(obj.tag))
-            SimulationManagerSolo.ChangeColor(obj, Color.blue);
+        if (obj.tag.Equals("dyke") || obj.tag.Equals("dam"))
+            ChangeColor(obj, Color.blue);
     }
 
     protected void HoverExitInteraction(HoverExitEventArgs ev)
@@ -981,11 +929,11 @@ public class SimulationManager : MonoBehaviour
         GameObject obj = ev.interactableObject.transform.gameObject;
         if (obj.tag.Equals("dyke"))
         {
-            SimulationManagerSolo.ChangeColor(obj, Color.gray);
+            ChangeColor(obj, Color.gray);
         }
         else if (obj.tag.Equals("dam"))
         {
-            SimulationManagerSolo.ChangeColor(obj, new Color32(255, 165, 0, 255));
+            ChangeColor(obj, new Color32(255, 165, 0, 255));
         }
     }
 
@@ -1175,10 +1123,24 @@ public class SimulationManager : MonoBehaviour
                         FutureDike = null;
                     }
 
-                    APITest.Instance.TestDrawDykeWithParams(StartPoint, EndPoint);
+                    DrawDykeWithParams(StartPoint, EndPoint);
                 }
             }
         }
+    }
+
+    public void DrawDykeWithParams(Vector3 startPoint, Vector3 endPoint)
+    {
+        string startPointStr = (int)startPoint.x + "," +
+                                (int)(startPoint.z >= 0 ? startPoint.z : startPoint.z * -1) + "," + "0";
+        string endPointStr = (int)endPoint.x + "," + (int)(endPoint.z >= 0 ? endPoint.z : endPoint.z * -1) + "," +
+                                "0";
+        Dictionary<string, string> args = new Dictionary<string, string>()
+        {
+            { "unity_start_point", startPointStr },
+            { "unity_end_point", endPointStr }
+        };
+        ConnectionManager.Instance.SendExecutableAsk("action_management_with_unity", args);
     }
 
     private void HandleConnectionAttempted(bool success)
