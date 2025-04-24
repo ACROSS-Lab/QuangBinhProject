@@ -1,0 +1,2 @@
+D:\Git\QuangBinhProject\URP Quang Binh v2\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\CMakeLists.txt
+D:\Git\QuangBinhProject\URP Quang Binh v2\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\CMakeLists.txt
