@@ -25,7 +25,7 @@ This repository contains both GAMA modeling components and Unity VR implementati
 
 ### GAMA Setup
 1. Install [GAMA Platform](https://gama-platform.org/)
-2. Install the [SIMPLE Plugin for GAMA] (https://github.com/project-SIMPLE/simple.toolchain/tree/Unity-6/GAMA%20Plugin)
+2. Install the [SIMPLE Plugin for GAMA](https://github.com/project-SIMPLE/simple.toolchain/tree/Unity-6/GAMA%20Plugin)
 3. Open the GAMA folder as a project
 4. Navigate to models/version 2 to access simulation models
 
