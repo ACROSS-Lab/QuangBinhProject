@@ -203,7 +203,8 @@ public class SimulationManager : MonoBehaviour
 
     public int GetNumStep()
     {
-        return infoWorld.num_step;
+        if(infoWorld != null) return infoWorld.num_step;
+        else return 350; //this is a temporary fix
     }
 
     void OnEnable()

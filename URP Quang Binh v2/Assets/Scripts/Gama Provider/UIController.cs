@@ -77,36 +77,27 @@ public class UIController : MonoBehaviour
         if (FloodingPhase)
         {
           //  globalVolume.SetActive(true);
-            if (TimerForDisplayingFloodUI > 0)
+            if (InVietnamese)
+            { 
+                UI_FloodingPhase_viet.SetActive(false);
+            }
+            else
             {
-                TimerForDisplayingFloodUI -= Time.deltaTime;
+                UI_FloodingPhase_eng.SetActive(false);
+            }
+            people_safe_on.GetComponent<StatusEffectManager>().StartEnergizedEffect(1000);
+
+            if (FloodingInitPhase)
+            {
+                FloodingInitPhase = false;
+                SimulationManager.Instance.SetStartPressed();
+            }
+            else
+            {
+                SimulationManager.Instance.SetInFlood();
             }
 
-            if (TimerForDisplayingFloodUI <= 0)
-            {
-                if (InVietnamese)
-                { 
-                    UI_FloodingPhase_viet.SetActive(false);
-                }
-                else
-                {
-                    UI_FloodingPhase_eng.SetActive(false);
-                }
-                people_safe_on.GetComponent<StatusEffectManager>().StartEnergizedEffect(1000);
-
-                if (FloodingInitPhase)
-                {
-                    FloodingInitPhase = false;
-                    SimulationManager.Instance.SetStartPressed();
-                }
-                else
-                {
-                    SimulationManager.Instance.SetInFlood();
-                   // FloodingInitPhase = true;
-                }
-
-                FloodingPhase = false;
-            }
+            FloodingPhase = false;
         }
         else
         {
@@ -149,9 +140,9 @@ public class UIController : MonoBehaviour
 
         flood_time.GetComponent<StatusEffectManager>().StartEnergizedEffect(SimulationManager.Instance.GetNumStep());
 
-} 
+    } 
 
-public void StartMenuDikingPhase()
+    public void StartMenuDikingPhase()
     {
         LogosUI.SetActive(false);
         if (InVietnamese)
