@@ -192,13 +192,13 @@ global control: fsm {
 	
 	//Data elevation file : small, medium and large definition files are availables
 	//file dem_file <- file("../../includes/dem/dem_small.tif");
-	file dem_file <- file("../../includes/dem/terrain89x211.asc");
+	file dem_file <- file("../../includes/dem/terrain_small.tif");
 	
 	
 	shape_file drain_shape_file <- shape_file("../../includes/gis/drain.shp");
 
 	//Shape of the environment using the bounding box of Quang Binh
-	geometry shape <- envelope(file("../../includes/gis/QBBB.shp"));
+	geometry shape <- envelope(dem_file);
 	
 
 	/*************************************************************
