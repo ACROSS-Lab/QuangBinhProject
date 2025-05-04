@@ -503,7 +503,7 @@ global control: fsm {
 	}
 
 	action init_roads {
-		if (empty(road)) {create road from: clean_network(shape_file_roads.contents, 0.0, false, true);}
+		if (empty(road)) {create road from: clean_network(list<geometry>(shape_file_roads.contents), 0.0, false, true);}
 		road_network <- as_edge_graph(road) with_shortest_path_algorithm "NBAStar";
 		road_weights <- road as_map (each::each.shape.perimeter);
 	}
@@ -621,8 +621,8 @@ global control: fsm {
 	 */
 	action add_water {
 		if (current_step <= num_step_add) {
-			// FIX 5: Make sure we're considering all river parts for water addition
-			list<cell> to_adds <- bed_cells where ((each.obstacle_height = 0) and (each.location overlaps init_river));
+			// Patrick: only add water on the main river part!!!!
+			list<cell> to_adds <- bed_cells where ((each.obstacle_height = 0) and (each.location overlaps main_river_part));
 			float coeff_to_add <- total_water_to_add / (to_adds sum_of each.water_to_add);
 			ask to_adds parallel: true{
 				water_height <- water_height + water_to_add * max_water_input * coeff_to_add;
