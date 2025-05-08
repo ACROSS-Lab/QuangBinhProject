@@ -123,6 +123,7 @@ public class SimulationManager : MonoBehaviour
 
     protected Boolean StartMenuDone = false;
     private string _currentStage = "s_start";
+    protected bool buildFirstDyke;
 
     private bool _inTriggerPress = false;
 
@@ -329,6 +330,7 @@ public class SimulationManager : MonoBehaviour
                     }
 
                     DisplayFutureDike = false;
+                    buildFirstDyke = false;
                     Debug.Log("Display future dike is false at wait flooding");
                     transformToKeep = new List<string>();
                     StartFloodingDone = true;
@@ -468,10 +470,11 @@ public class SimulationManager : MonoBehaviour
         {
             Dictionary<string, string> args = new Dictionary<string, string>();
             ConnectionManager.Instance.SendExecutableAsk("mark_diking_over", args);
+            Debug.Log("skip Diking phase");
         }
 
         // Debug.Log("currentStage: " + currentStage + " IsGameState(GameState.GAME) :" +IsGameState(GameState.GAME));
-        if (IsGameState(GameState.GAME) && UIController.Instance.DikingStart)
+        if (IsGameState(GameState.GAME) && _currentStage == "s_diking")
             ProcessRightHandTrigger();
 
         //UpdateTimeLeftToBuildDykes();
@@ -920,9 +923,12 @@ public class SimulationManager : MonoBehaviour
 
     protected void HoverEnterInteraction(HoverEnterEventArgs ev)
     {
-        GameObject obj = ev.interactableObject.transform.gameObject;
-        if (obj.tag.Equals("dyke") || obj.tag.Equals("dam"))
-            ChangeColor(obj, Color.blue);
+        if(_currentStage == "s_diking")
+        {
+            GameObject obj = ev.interactableObject.transform.gameObject;
+            if (obj.tag.Equals("dyke") || obj.tag.Equals("dam")) ChangeColor(obj, Color.blue);
+        }
+        
     }
 
     protected void HoverExitInteraction(HoverExitEventArgs ev)
@@ -1125,6 +1131,11 @@ public class SimulationManager : MonoBehaviour
                     }
 
                     DrawDykeWithParams(StartPoint, EndPoint);
+                    if(!buildFirstDyke)
+                    {
+                        UIController.Instance.StartDikingPhase();
+                        buildFirstDyke = true;
+                    }
                 }
             }
         }

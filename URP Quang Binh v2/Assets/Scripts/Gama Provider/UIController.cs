@@ -76,28 +76,36 @@ public class UIController : MonoBehaviour
 
         if (FloodingPhase)
         {
-          //  globalVolume.SetActive(true);
-            if (InVietnamese)
-            { 
-                UI_FloodingPhase_viet.SetActive(false);
+            if (TimerForDisplayingFloodUI > 0)
+            {
+                TimerForDisplayingFloodUI -= Time.deltaTime;
             }
             else
             {
-                UI_FloodingPhase_eng.SetActive(false);
-            }
-            people_safe_on.GetComponent<StatusEffectManager>().StartEnergizedEffect(1000);
+                if (InVietnamese)
+                { 
+                    UI_FloodingPhase_viet.SetActive(false);
+                }
+                else
+                {
+                    UI_FloodingPhase_eng.SetActive(false);
+                }
+                people_safe_on.GetComponent<StatusEffectManager>().StartEnergizedEffect(1000);
 
-            if (FloodingInitPhase)
-            {
-                FloodingInitPhase = false;
-                SimulationManager.Instance.SetStartPressed();
+                FloodingPhase = false;
+                if (FloodingInitPhase)
+                {
+                    FloodingInitPhase = false;
+                    SimulationManager.Instance.SetStartPressed();
+                }
+                else
+                {
+                    SimulationManager.Instance.SetInFlood();
+                }
             }
-            else
-            {
-                SimulationManager.Instance.SetInFlood();
-            }
+            
 
-            FloodingPhase = false;
+            
         }
         else
         {
@@ -148,8 +156,6 @@ public class UIController : MonoBehaviour
         if (InVietnamese)
             UI_DykingPhase_viet.SetActive(true);
         else UI_DykingPhase_eng.SetActive(true);
-
-      
     }
 
     public void StartDikingPhase()
@@ -242,6 +248,9 @@ public class UIController : MonoBehaviour
         UI_FinalScore.SetActive(false);
 
         UI_ChoiceOfLanguage.SetActive(true);
+        score.text = "0";
+        dykeLength.text = "0";
+        damLength.text = "0";
     }
 
     public void UpdateScore(int score)

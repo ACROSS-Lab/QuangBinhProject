@@ -22,7 +22,7 @@ global {
 	geometry shape <- envelope(bounds_shape_file);
 	
 	init {
- 		create road from: clean_network(shape_file_roads.contents, 0.0, false, true) ;
+ 		create road from: clean_network(list<geometry>(shape_file_roads.contents), 0.0, false, true) ;
 		create building from: buildings_shapefile ; 
 		create river from: river_shapefile ; 
 		 		
@@ -80,7 +80,7 @@ species unity_linker parent: abstract_unity_linker {
 		
 		//define the up_tree unity property, with the name "tree", no specific layer, no interaction, and the agents location are not sent back 
 		//to GAMA. 
-		up_road<- geometry_properties("road", nil, road_aspect, #no_interaction, false);
+		up_road<- geometry_properties("road", string(nil), road_aspect, #no_interaction, false);
 		
 		// add the up_tree unity_property to the list of unity_properties
 		unity_properties << up_road;
@@ -90,7 +90,7 @@ species unity_linker parent: abstract_unity_linker {
 		
 		//define the up_geom unity property, with the name "polygon", no specific layer, no interaction, and the agents location are not sent back 
 		//to GAMA. 
-		up_building <- geometry_properties("building", nil, building_aspect, #no_interaction, false);
+		up_building <- geometry_properties("building", string(nil), building_aspect, #no_interaction, false);
 		
 		// add the up_geom unity_property to the list of unity_properties
 		unity_properties << up_building;
@@ -99,7 +99,7 @@ species unity_linker parent: abstract_unity_linker {
 		
 		//define the up_geom unity property, with the name "polygon", no specific layer, no interaction, and the agents location are not sent back 
 		//to GAMA. 
-		up_river <- geometry_properties("river", nil, river_aspect, #no_interaction, false);
+		up_river <- geometry_properties("river", string(nil), river_aspect, #no_interaction, false);
 		
 		// add the up_geom unity_property to the list of unity_properties
 		unity_properties << up_river;

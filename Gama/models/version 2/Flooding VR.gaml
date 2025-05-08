@@ -225,16 +225,16 @@ species unity_linker parent: abstract_unity_linker {
 		up_people<- geometry_properties("people", "people", people_aspect, #no_interaction, false);
 		up_dyke <- geometry_properties("dyke", "dyke", dyke_aspect, #ray_interactable, false);
 		up_dam <- geometry_properties("dam", "dam", dam_aspect, #ray_interactable, false);
-		up_water <- geometry_properties("water", nil, water_aspect, #no_interaction,false);
-		up_shelter <- geometry_properties("shelter", nil, shelter_aspect,#ray_interactable,false);
+		up_water <- geometry_properties("water", string(nil), water_aspect, #no_interaction,false);
+		up_shelter <- geometry_properties("shelter", string(nil), shelter_aspect,#ray_interactable,false);
 		
 		unity_aspect frontier_green_aspect <- geometry_aspect(50.0, #green,  precision);
 		unity_aspect frontier_orange_aspect <- geometry_aspect(50.0, #orange,  precision);
 		unity_aspect frontier_red_aspect <- geometry_aspect(50.0, #red,  precision);
 	
-		up_frontier_green<- geometry_properties("frontier_green", nil, frontier_green_aspect, #no_interaction, false);
-		up_frontier_orange<- geometry_properties("frontier_orange", nil, frontier_orange_aspect, #no_interaction, false);
-		up_frontier_red<- geometry_properties("frontier_red", nil, frontier_red_aspect, #no_interaction, false);
+		up_frontier_green<- geometry_properties("frontier_green", string(nil), frontier_green_aspect, #no_interaction, false);
+		up_frontier_orange<- geometry_properties("frontier_orange", string(nil), frontier_orange_aspect, #no_interaction, false);
+		up_frontier_red<- geometry_properties("frontier_red", string(nil), frontier_red_aspect, #no_interaction, false);
 	
 		
 		unity_properties << up_frontier_green;
