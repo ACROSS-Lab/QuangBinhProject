@@ -13,7 +13,7 @@ global {
 	float max_value;
 	float min_value;
 	
-	shape_file river_shape_file <- shape_file("../../includes/gis/river.shp");
+	shape_file river_shape_file <- shape_file("../../includes/gis/river_clean.shp");
 
 	geometry shape <- envelope(terrain_small_grid_file);
 	

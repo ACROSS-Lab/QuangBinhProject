@@ -12,7 +12,7 @@ global {
 	unity_property up_road ;
 	unity_property up_building;
 	unity_property up_river;
-	file river_shapefile <- file("../../includes/gis/river.shp");
+	file river_shapefile <- file("../../includes/gis/river_clean.shp");
 	file shape_file_roads <- file("../../includes/gis/road.shp");
 	file buildings_shapefile <- file("../../includes/gis/buildings.shp");
 	file shape_file_evacuation <- file("../../includes/gis/evacuation_point.shp");
