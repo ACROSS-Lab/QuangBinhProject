@@ -215,7 +215,7 @@ species unity_linker parent: abstract_unity_linker {
 		
 		//define the up_car unity property, with the name "car", no specific layer, the car_aspect unity aspect, no interaction, and the agents location are not sent back 
 		//to GAMA. 
-		up_building1<- geometry_properties("building1", nil, building1_aspect, #no_interaction, false);
+		up_building1<- geometry_properties("building1", string(nil), building1_aspect, #no_interaction, false);
 		
 		// add the up_tree unity_property to the list of unity_properties
 		unity_properties << up_building1;
@@ -224,7 +224,7 @@ species unity_linker parent: abstract_unity_linker {
 		
 		//define the up_car unity property, with the name "car", no specific layer, the car_aspect unity aspect, no interaction, and the agents location are not sent back 
 		//to GAMA. 
-		up_building2<- geometry_properties("building2", nil, building2_aspect, #no_interaction, false);
+		up_building2<- geometry_properties("building2", string(nil), building2_aspect, #no_interaction, false);
 		
 		// add the up_tree unity_property to the list of unity_properties
 		unity_properties << up_building2;
@@ -234,7 +234,7 @@ species unity_linker parent: abstract_unity_linker {
 		
 		//define the up_car unity property, with the name "car", no specific layer, the car_aspect unity aspect, no interaction, and the agents location are not sent back 
 		//to GAMA. 
-		up_house1<- geometry_properties("house1", nil, house1_aspect, #no_interaction, false);
+		up_house1<- geometry_properties("house1", string(nil), house1_aspect, #no_interaction, false);
 		
 		// add the up_tree unity_property to the list of unity_properties
 		unity_properties << up_house1;
@@ -243,7 +243,7 @@ species unity_linker parent: abstract_unity_linker {
 		
 		//define the up_car unity property, with the name "car", no specific layer, the car_aspect unity aspect, no interaction, and the agents location are not sent back 
 		//to GAMA. 
-		up_house2<- geometry_properties("house2", nil, house2_aspect, #no_interaction, false);
+		up_house2<- geometry_properties("house2", string(nil), house2_aspect, #no_interaction, false);
 		
 		// add the up_tree unity_property to the list of unity_properties
 		unity_properties << up_house2;
@@ -254,13 +254,13 @@ species unity_linker parent: abstract_unity_linker {
 		
 		//define the up_geom unity property, with the name "circle", no specific layer, no interaction, and the agents location are not sent back 
 		//to GAMA. 
-		up_gama_building <- geometry_properties("field", nil, field_aspect, #no_interaction, false);
+		up_gama_building <- geometry_properties("field", string(nil), field_aspect, #no_interaction, false);
 		
 		// add the up_geom unity_property to the list of unity_properties
 		unity_properties << up_gama_building;
 		
 		unity_aspect water_aspect <- geometry_aspect(9.0, "Materials/Water2/WaterVoronoi",precision);
-		up_water <- geometry_properties("water", nil, water_aspect, #no_interaction,false);
+		up_water <- geometry_properties("water", string(nil), water_aspect, #no_interaction,false);
 		unity_properties << up_water;
 	}
 }
