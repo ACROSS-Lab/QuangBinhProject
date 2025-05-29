@@ -623,10 +623,16 @@ global control: fsm {
 		if (current_step <= num_step_add) {
 			// Patrick: only add water on the main river part!!!!
 			list<cell> to_adds <- bed_cells where ((each.obstacle_height = 0) and (each.location overlaps main_river_part));
-			float coeff_to_add <- total_water_to_add / (to_adds sum_of each.water_to_add);
-			ask to_adds parallel: true{
-				water_height <- water_height + water_to_add * max_water_input * coeff_to_add;
+			float water_to_add_sum <- to_adds sum_of each.water_to_add;
+			
+			if (water_to_add_sum != 0)
+			{
+				float coeff_to_add <- total_water_to_add / (to_adds sum_of each.water_to_add);
+				ask to_adds parallel: true{
+					water_height <- water_height + water_to_add * max_water_input * coeff_to_add;
+				}
 			}
+
 		}
 	}
 	/**
