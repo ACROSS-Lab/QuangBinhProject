@@ -94,7 +94,8 @@ global {
 
         write "Initial water cells: " + water_cell_count;
         
-        // Initialize water field - set to terrain elevation for dry cells, water elevation for wet cells
+        // Initialize water field - ONLY for cells with actual water
+        water_field <- water_field * 0;
         ask water_cell {
             int field_i <- int(grid_x);
             int field_j <- int(grid_y);
@@ -102,9 +103,9 @@ global {
             if (field_i >= 0 and field_i < water_field.columns and 
                 field_j >= 0 and field_j < water_field.rows) {
                 if (is_water) {
-                    water_field[field_i, field_j] <- water_elevation; // Show water surface
+                    water_field[field_i, field_j] <- water_elevation;
                 } else {
-                    water_field[field_i, field_j] <- terrain_elevation; // Show terrain (no water visible)
+                    water_field[field_i, field_j] <- 0.0; // No water = 0
                 }
             }
         }
@@ -377,7 +378,7 @@ global {
             
             if (field_i >= 0 and field_i < water_field.columns and 
                 field_j >= 0 and field_j < water_field.rows) {
-                water_field[field_i, field_j] <- terrain_elevation; // Show terrain when water disappears
+                water_field[field_i, field_j] <- 0.0;
             }
         }
         
@@ -454,7 +455,8 @@ global {
             total_infiltrated <- 0.0;
         }
         
-        // Reset water field - set to terrain elevation for dry cells, water elevation for wet cells
+        // Reset water field - ONLY for cells that actually have water
+        water_field <- water_field * 0;
         ask water_cell {
             int field_i <- int(grid_x);
             int field_j <- int(grid_y);
@@ -462,9 +464,9 @@ global {
             if (field_i >= 0 and field_i < water_field.columns and 
                 field_j >= 0 and field_j < water_field.rows) {
                 if (is_water) {
-                    water_field[field_i, field_j] <- water_elevation; // Show water surface
+                    water_field[field_i, field_j] <- water_elevation;
                 } else {
-                    water_field[field_i, field_j] <- terrain_elevation; // Show terrain (no water visible)
+                    water_field[field_i, field_j] <- 0.0; // No water = 0
                 }
             }
         }
@@ -522,26 +524,18 @@ experiment ArcGISFloodSimulation type: gui {
                 smooth: false
                 triangulation: true;
 
-            // Display water as mesh - only show where there's actual water
+            // Display water as mesh - physics-based water flow
             mesh water_field
                 scale: 10
-                color: rgb(0, 100, 255, 180) // Semi-transparent blue water
+                color: rgb(0, 100, 255, 150) // Semi-transparent blue water
                 smooth: false  
                 triangulation: true;
-                
-            // Display water cells as agents for better visibility during rain
-            ask water_cell {
-                if (water_depth > 0.01) { // Only show cells with significant water
-                    draw shape scaled_by 0.8 color: rgb(0, 150, 255, 100);
-                }
-            }
         }
         
         display "Simulation_Info" refresh: true {
             chart "Water Statistics" type: series {
                 data "Active Water Cells" value: length(active_water_cells) color: #blue;
                 data "Simulation Time (h)" value: simulation_time color: #red;
-                data "Precipitation (mm/h)" value: precipitation_rate color: #green;
             }
         }
     }
