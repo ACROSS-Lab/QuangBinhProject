@@ -771,12 +771,12 @@ experiment CompleteArcGISFloodSimulation type: gui {
             }
         }
         
-        display "Infiltration_Map" refresh: false {
-            mesh infiltration_rate_map 
-                color: palette([#white, #brown])
-                scale: 1
-                triangulation: true;
-        }
+//        display "Infiltration_Map" refresh: false {
+//            mesh infiltration_rate_map 
+//                color: palette([#white, #brown])
+//                scale: 1
+//                triangulation: true;
+//        }
     }
     
     // ============= USER COMMANDS =============
