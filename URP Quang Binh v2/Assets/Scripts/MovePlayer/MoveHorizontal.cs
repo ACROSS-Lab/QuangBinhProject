@@ -6,6 +6,9 @@ using UnityEngine.XR;
 public class MoveHorizontal : InputData
 {
     public bool RightHand = true;
+    public bool UseKeyboard = false;
+    public GameObject player;
+
 
     [SerializeField] private float speed = 10000.0f;
     [SerializeField] private float speedRotation = 10.0f;
@@ -16,12 +19,15 @@ public class MoveHorizontal : InputData
     [SerializeField] private float maxZ = 250;
 
     private Transform camTransform;
-
+   
     // ############################################################
 
     private void Start()
     {
-        camTransform = Camera.main.transform;
+        if (!UseKeyboard)
+            camTransform = Camera.main.transform;
+        else
+            camTransform = player.transform;
     }
 
     private void FixedUpdate()
@@ -34,19 +40,28 @@ public class MoveHorizontal : InputData
 
     private void MoveHorizontally()
     {
-        InputDevice hand = RightHand ? _rightController : _leftController;
         Vector2 val;
-        hand.TryGetFeatureValue(CommonUsages.primary2DAxis, out val);
 
+        if (UseKeyboard)
+        {
+            float vh = Input.GetAxis("Horizontal");
+            float vv = Input.GetAxis("Vertical");
+            val = new Vector2(vh, vv);
+        }
+        else
+        {
+            InputDevice hand = RightHand ? _rightController : _leftController;
+            hand.TryGetFeatureValue(CommonUsages.primary2DAxis, out val);
+        }
         Vector3 vectF = camTransform.forward;
         vectF.y = 0;
         vectF = Vector3.Normalize(vectF);
 
-        transform.position = transform.position + (vectF * speed * Time.fixedDeltaTime * val.y);
-        Vector3 pos = transform.position;
+        camTransform.position = camTransform.position + (vectF * speed * Time.fixedDeltaTime * val.y);
+        Vector3 pos = camTransform.position;
         pos.x = Mathf.Clamp(pos.x, minX, maxX);
         pos.z = Mathf.Clamp(pos.z, minZ, maxZ);
-        transform.position = pos;
+        camTransform.position = pos;
 
         if (Strafe)
         {
@@ -54,11 +69,11 @@ public class MoveHorizontal : InputData
             vectR.y = 0;
             vectR = Vector3.Normalize(vectR);
 
-            transform.position += vectR * speed * Time.fixedDeltaTime * val.x;
+            camTransform.position += vectR * speed * Time.fixedDeltaTime * val.x;
         }
         else
         {
-            transform.Rotate(new Vector3(0, 1, 0), Time.fixedDeltaTime * speedRotation * val.x);
+            camTransform.Rotate(new Vector3(0, 1, 0), Time.fixedDeltaTime * speedRotation * val.x);
         }
     }
 }

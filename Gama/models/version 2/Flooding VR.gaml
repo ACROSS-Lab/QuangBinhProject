@@ -279,6 +279,7 @@ species unity_linker parent: abstract_unity_linker {
 	action sendLengthData {
 		do send_message players: unity_player as list mes: ["dykeLength":: round(world.dyke_length)];
 		do send_message players: unity_player as list mes: ["damLength":: round(world.dam_length)];
+		write "send length:"+ round(world.dyke_length) ;
 	}
 	
 	action add_to_send_world(map map_to_send) {
@@ -484,7 +485,7 @@ experiment Launch  autorun: true type: unity {
 	
 	output { 
 		
-		layout #none controls: false toolbars: false editors: false parameters: false consoles: false tabs: false;
+		layout #none controls: true toolbars: true editors: true parameters: false consoles: false tabs: false;
 		display map type: 3d axes: false background: background_color antialias: false{
 			camera 'default' location: {1441.2246,3297.5234,8595.6544} target: {1441.2246,3297.3733,0.0};
 			//	grid cell border: #black;

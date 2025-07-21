@@ -17,10 +17,10 @@ global control: fsm {
 		
  	bool save_results <- false;
  	
- 	int num_step <- 350;
+ 	int num_step <- 50;//350;
  	int num_step_add <- num_step;// 50;
  	
- 	float diking_duration <- 60.0;
+ 	float diking_duration <- 30.0;//60.0;
  	
  	float max_distance_to_be_saved <- 50 #m;
 	

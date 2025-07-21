@@ -3,10 +3,23 @@ using UnityEngine;
 public class RotateTowardsCamera : MonoBehaviour
 {
     Transform camTransform;
+    
 
     void Start()
     {
         camTransform = Camera.main.transform;
+        Debug.Log("camTransform: " + camTransform);
+
+        if (camTransform == null)
+        {
+            GameObject cam = GameObject.FindGameObjectWithTag("MainCamera");
+            if (cam != null)
+            {
+                camTransform = cam.transform;
+            }
+        }
+
+        
     }
 
     void Update()

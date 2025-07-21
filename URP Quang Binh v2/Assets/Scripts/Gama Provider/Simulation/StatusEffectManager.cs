@@ -14,13 +14,26 @@ namespace Gama_Provider.Simulation
         {
             energizedEffect.GetComponentInChildren<CircularProgressBar>().updateIndicator(val);
         }
+        public void StartEnergizedEffect(float customDuration, bool isTimer)
+        {
+            energizedEffect.SetActive(true);
+
+            CircularProgressBar c = energizedEffect.GetComponentInChildren<CircularProgressBar>();
+            c.isTimer = isTimer;
+            c.ActivateCountdown(customDuration);
+
+            if (c.isTimer)
+                StartCoroutine(EndEnergizedEffect(customDuration));
+        }
+
         public void StartEnergizedEffect(float customDuration)
         {
             energizedEffect.SetActive(true);
 
-            energizedEffect.GetComponentInChildren<CircularProgressBar>()
-                .ActivateCountdown(customDuration);
-            if (energizedEffect.GetComponentInChildren<CircularProgressBar>().isTimer)
+            CircularProgressBar c = energizedEffect.GetComponentInChildren<CircularProgressBar>();
+            c.ActivateCountdown(customDuration);
+
+            if (c.isTimer)
                 StartCoroutine(EndEnergizedEffect(customDuration));
         }
 

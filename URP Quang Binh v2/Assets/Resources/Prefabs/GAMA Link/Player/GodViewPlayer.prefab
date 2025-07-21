@@ -460,9 +460,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Speed: 2
   RightHand: 0
+  UseKeyboard: 0
   minY: 0
   maxY: 150
-  stick: 1
+  player: {fileID: 0}
 --- !u!114 &2610731287024547879
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -476,6 +477,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   RightHand: 1
+  UseKeyboard: 0
+  player: {fileID: 0}
   speed: 2
   speedRotation: 10
   Strafe: 0
@@ -483,4 +486,3 @@ MonoBehaviour:
   maxX: 2975
   minZ: -6900
   maxZ: 250
-  stick: 1

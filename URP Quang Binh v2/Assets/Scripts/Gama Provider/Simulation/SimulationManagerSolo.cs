@@ -4,44 +4,19 @@ using UnityEngine;
 
 public class SimulationManagerSolo : SimulationManager
 {
+
+    
     protected override void GenerateFutureDike()
     {
-        // Debug.Log("Will generate a future dike");
-        if (polyGen == null)
-        {
-            polyGen = PolygonGenerator.GetInstance();
-            polyGen.Init(converter);
+       if(rightXRRayInteractor != null && rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit)) {
+            GenerateFutureDike(raycastHit.point);
         }
 
-        if (rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit))
-        {
-            if (FutureDike != null)
-            {
-                FutureDike.SetActive(false);
-
-                GameObject.DestroyImmediate(FutureDike);
-            }
-
-            Vector2[] pts = new Vector2[5];
-            Vector3 _endPoint = raycastHit.point;
-            Vector2 direction = new Vector2(_endPoint.x - StartPoint.x, _endPoint.z - StartPoint.z).normalized;
-            Vector2 Per = Vector2.Perpendicular(direction);
-            Per = new Vector2(Per.x * 10.0f, Per.y * 10.0f);
-
-            pts[0] = new Vector2(StartPoint.x + Per.x, StartPoint.z + Per.y);
-            pts[1] = new Vector2(_endPoint.x + Per.x, _endPoint.z + Per.y);
-            pts[2] = new Vector2(_endPoint.x - Per.x, _endPoint.z - Per.y);
-            pts[3] = new Vector2(StartPoint.x - Per.x, StartPoint.z - Per.y);
-            pts[4] = pts[0];
-
-
-            FutureDike = polyGen.GeneratePolygons(false, "FutureDike", pts, propFutureDike, parameters.precision);
-        }
     }
 
     protected override void OtherUpdate()
-    {
-        if (DisplayFutureDike)
+    { 
+        if (!UseKeyboard && DisplayFutureDike)
         {
             // Debug.Log("Display future dike is true at other update");
             GenerateFutureDike();

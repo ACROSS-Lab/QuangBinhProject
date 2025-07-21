@@ -22,7 +22,10 @@ public class SimulationManager : MonoBehaviour
     protected GameObject player;
 
     [SerializeField] protected GameObject Ground;
-
+     
+    public bool UseKeyboard = false;
+    public LayerMask selectableLayers;
+    public GameObject MouseObj;
 
     // optional: define a scale between GAMA and Unity for the location given
     [Header("Coordinate conversion parameters")]
@@ -107,7 +110,7 @@ public class SimulationManager : MonoBehaviour
 
   //  protected Coroutine activeCoroutine = null;
 
-    protected Vector3 StartPoint;
+    protected Vector3 StartPoint = Vector3.zero;
     protected Vector3 EndPoint;
 
     protected GameObject startPoint;
@@ -182,6 +185,10 @@ public class SimulationManager : MonoBehaviour
 
 
         XROrigin = player.transform.Find("XR Origin (XR Rig)");
+        if (XROrigin == null)
+        {
+            XROrigin = player.transform;
+        }
         connectionID = new Dictionary<string, string>
         {
             {"id", ConnectionManager.Instance.getUseMiddleware()
@@ -313,7 +320,7 @@ public class SimulationManager : MonoBehaviour
                         transformToKeep = new List<string>();
                     }
                 }
-            }
+            } 
 
             if (infoWorld.state == "wait_flooding")
             {
@@ -344,9 +351,14 @@ public class SimulationManager : MonoBehaviour
                     UIController.Instance.people_safe_on.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(1000 - infoWorld.casualties);
                 } 
 
-                if(UIController.Instance.flood_time.activeSelf)
+         
+                if (UseKeyboard) //UIController.Instance.Timer_on.activeSelf)
                 {
-                   UIController.Instance.flood_time.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(infoWorld.num_step - infoWorld.current_step);
+                    UIController.Instance.Timer_on.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(infoWorld.num_step - infoWorld.current_step);
+                } else
+                {
+                    UIController.Instance.flood_time.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(infoWorld.num_step - infoWorld.current_step);
+
                 }
             }
             // else if (infoWorld.state == "s_diking")
@@ -492,12 +504,12 @@ public class SimulationManager : MonoBehaviour
         }
         if(dykeM != null)
         {
-            UIController.Instance.UpdateLength(UIController.Instance.dykeLength, dykeM.dykeLength);
+            UIController.Instance.UpdateLength(true, dykeM.dykeLength);
             dykeM = null;
         }
         if(damM != null)
         {
-            UIController.Instance.UpdateLength(UIController.Instance.damLength, damM.damLength);
+            UIController.Instance.UpdateLength(false, damM.damLength);
             damM = null;
         }
     }
@@ -1093,48 +1105,150 @@ public class SimulationManager : MonoBehaviour
         }
     }
 
+    protected void GenerateFutureDike(Vector3 _endPoint)
+    {
+        if (polyGen == null)
+        {
+            polyGen = PolygonGenerator.GetInstance();
+            polyGen.Init(converter);
+        }
+        if ((StartPoint - _endPoint).sqrMagnitude > 20)
+        {
+
+            if (FutureDike != null)
+            {
+                FutureDike.SetActive(false);
+
+                GameObject.DestroyImmediate(FutureDike);
+            }
+
+            Vector2[] pts = new Vector2[5];
+            Vector2 direction = new Vector2(_endPoint.x - StartPoint.x, _endPoint.z - StartPoint.z).normalized;
+            Vector2 Per = Vector2.Perpendicular(direction);
+            Per = new Vector2(Per.x * 10.0f, Per.y * 10.0f);
+
+            pts[0] = new Vector2(StartPoint.x + Per.x, StartPoint.z + Per.y);
+            pts[1] = new Vector2(_endPoint.x + Per.x, _endPoint.z + Per.y);
+            pts[2] = new Vector2(_endPoint.x - Per.x, _endPoint.z - Per.y);
+            pts[3] = new Vector2(StartPoint.x - Per.x, StartPoint.z - Per.y);
+            pts[4] = pts[0];
+
+
+
+            FutureDike = polyGen.GeneratePolygons(false, "FutureDike", pts, propFutureDike, parameters.precision);
+        }
+    }
+
     protected void ProcessRightHandTrigger()
     {
-        if (rightHandTriggerButton != null && rightHandTriggerButton.action.triggered)
+        if (UseKeyboard)
         {
-            if (!_inTriggerPress)
-            {
-                _inTriggerPress = true;
-                if (rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit))
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            bool hasHit = Physics.Raycast(ray, out RaycastHit raycastHit, 5000f, selectableLayers);
+            if (hasHit) {
+                if (Input.GetMouseButtonDown(1))
                 {
-                    StartPoint = raycastHit.point;
-                    startPoint.transform.position = StartPoint;
-                    DisplayFutureDike = true;
-                    Debug.Log("Display future dike is true when selecting a point");
-                }
-            }
-        }
-
-        if (rightHandTriggerButton != null && !rightHandTriggerButton.action.inProgress)
-        {
-            if (_inTriggerPress)
-            {
-                _inTriggerPress = false;
-                if (rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit))
-                {
-                    EndPoint = raycastHit.point;
-                    endPoint.transform.position = EndPoint;
-                    // endPoint.active = true;
-                    DisplayFutureDike = false;
-                    Debug.Log("Display future dike is false when release the right hand");
-                    if (FutureDike != null)
+                    GameObject touchedObject = raycastHit.collider.gameObject;
+                    if (touchedObject.CompareTag("dyke") || touchedObject.CompareTag("dam"))
                     {
-                        FutureDike.SetActive(false);
-                        GameObject.DestroyImmediate(FutureDike);
+                        Dictionary<string, string> args = new Dictionary<string, string> {
+                         {"id", touchedObject.name }
+                    };
+                        ConnectionManager.Instance.SendExecutableAsk("destroy_dyke", args);
 
-                        FutureDike = null;
                     }
 
-                    DrawDykeWithParams(StartPoint, EndPoint);
-                    if(!buildFirstDyke)
+                }
+                else if (Input.GetMouseButtonDown(0))
+                {
+                    
+                    if (StartPoint.Equals(Vector3.zero))
                     {
-                        UIController.Instance.StartDikingPhase();
-                        buildFirstDyke = true;
+                        StartPoint = raycastHit.point;
+                        DisplayFutureDike = true;
+                        Debug.Log("Display future dike is true when selecting a point");
+                        MouseObj.SetActive(false);
+                    }
+                    else
+                    {
+                        EndPoint = raycastHit.point;
+                        DisplayFutureDike = false;
+                        if (FutureDike != null)
+                        {
+                            FutureDike.SetActive(false);
+                            GameObject.DestroyImmediate(FutureDike);
+                            FutureDike = null;
+                        }
+
+                        DrawDykeWithParams(StartPoint, EndPoint);
+                        if (!buildFirstDyke)
+                        {
+                            UIController.Instance.StartDikingPhase();
+                            buildFirstDyke = true;
+                        }
+                        StartPoint = Vector3.zero;
+                    }
+
+                } else {
+                    if (StartPoint.Equals(Vector3.zero))
+                    {
+                        MouseObj.SetActive(true);
+                        MouseObj.transform.position = raycastHit.point;
+
+                    }
+                    else
+                    {
+                        GenerateFutureDike(raycastHit.point);
+                    }
+                }
+            }
+
+        }
+
+              
+        else
+        {
+            if (rightHandTriggerButton != null && rightHandTriggerButton.action.triggered)
+            {
+                if (!_inTriggerPress)
+                {
+                    _inTriggerPress = true;
+                    if (rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit))
+                    {
+                        StartPoint = raycastHit.point;
+                        startPoint.transform.position = StartPoint;
+                        DisplayFutureDike = true;
+                        Debug.Log("Display future dike is true when selecting a point");
+                    }
+                }
+            }
+
+            if (rightHandTriggerButton != null && !rightHandTriggerButton.action.inProgress)
+            {
+                if (_inTriggerPress)
+                {
+                    _inTriggerPress = false;
+                    if (rightXRRayInteractor.TryGetCurrent3DRaycastHit(out RaycastHit raycastHit))
+                    {
+                        EndPoint = raycastHit.point;
+                        endPoint.transform.position = EndPoint;
+                        // endPoint.active = true;
+                        DisplayFutureDike = false;
+                        Debug.Log("Display future dike is false when release the right hand");
+                        if (FutureDike != null)
+                        {
+                            FutureDike.SetActive(false);
+                            GameObject.DestroyImmediate(FutureDike);
+
+                            FutureDike = null;
+                        }
+
+                        DrawDykeWithParams(StartPoint, EndPoint);
+                        if (!buildFirstDyke)
+                        {
+                            UIController.Instance.StartDikingPhase();
+                            buildFirstDyke = true;
+                        }
                     }
                 }
             }
