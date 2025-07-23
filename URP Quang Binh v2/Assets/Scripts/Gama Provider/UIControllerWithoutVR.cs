@@ -144,6 +144,7 @@ public class UIControllerWithoutVR : UIController
     public override void StartDikingPhase()
     {
         DikingStart = true;
+        if (round >= 3) UI_Hint.SetActive(true);
         Debug.Log("StartDikingPhase");
         if (InVietnamese)
             UI_DykingPhase_viet.SetActive(false);
@@ -178,8 +179,6 @@ public class UIControllerWithoutVR : UIController
         people_safe_on.SetActive(true);
         people_safe_off.SetActive(false);
         DikingStart = false;
-        damLength.enabled = false;
-        dykeLength.enabled = false;
         SimulationManager.Instance.DisplayFutureDike = false;
         if (SimulationManager.Instance.FutureDike != null)
         {
@@ -242,18 +241,18 @@ public class UIControllerWithoutVR : UIController
        // UI_FinalScore.SetActive(false);
 
         UI_ChoiceOfLanguage.SetActive(true);
-        score.text = "Last Score: 0";
-        dykeLength.text = "Dyke Length: 0m";
-        damLength.text = "Dam Length: 0m";
-        roundTxt.text = "Round: 1/3";
+        score.text = "Dernier score: 0";
+        dykeLength.text = "Longueur de digues: 0m";
+        damLength.text = "Longueur de barrages: 0m";
+        roundTxt.text = "Tour: 1/3";
     }
 
     public override void UpdateScore(int scor)
     {
-        this.score.text = "Last Score:" + scor.ToString();
+        this.score.text = "Dernier score: " + scor.ToString();
         if (scor > bestScoreV)
         {
-            bestScore.text = "Best Score:" + scor.ToString();
+            bestScore.text = "Meilleur score: " + scor.ToString();
             bestScoreV = scor;
         }
         if(round >= 3) EndGame();
@@ -262,9 +261,9 @@ public class UIControllerWithoutVR : UIController
     public override void UpdateRound(int round)
     {
     
-        roundTxt.text = "Round: " + round + "/3";
+        roundTxt.text = "Tour: " + round + "/3";
         this.round = round;
-        if(round >= 3) UI_Hint.SetActive(true);
+       
     }  
 
  
@@ -272,13 +271,13 @@ public class UIControllerWithoutVR : UIController
     {
         if (is_dyke)
         {
-            dykeLength.text = "Dyke Length: " + ((int)length).ToString() + "m";
+            dykeLength.text = "Longueur de digues: " + ((int)length).ToString() + "m";
 
 
         }
         else
         {
-            damLength.text = "Dam Length: " + ((int)length).ToString() + "m";
+            damLength.text = "Longueur de barrages: " + ((int)length).ToString() + "m";
         }
     }
 }

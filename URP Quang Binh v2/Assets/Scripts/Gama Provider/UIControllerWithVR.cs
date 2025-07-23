@@ -12,7 +12,7 @@ public class UIControllerWithVR : UIController
    
     public GameObject UI_FinalScore;
     public GameObject UI_HUD;
-    public GameObject UI_Hint, UI_Hint_viet, UI_Hint_eng;
+    public GameObject UI_Hint;//, UI_Hint_viet, UI_Hint_eng; 
     public GameObject UI_ScoreRound_viet, UI_ScoreRound_eng;
     public GameObject UI_Length_viet, UI_Length_eng;
     public TextMeshProUGUI score, finalScore, bestScore;
@@ -110,14 +110,14 @@ public class UIControllerWithVR : UIController
         if (InVietnamese)
         {
             UI_FloodingPhase_viet.SetActive(true);
-            UI_Hint_viet.SetActive(true);
+          //  UI_Hint_viet.SetActive(true);
             UI_ScoreRound_viet.SetActive(true);
             UI_Length_viet.SetActive(true);
         }
         else
         {
             UI_FloodingPhase_eng.SetActive(true);
-            UI_Hint_eng.SetActive(true);
+           // UI_Hint_eng.SetActive(true);
             UI_ScoreRound_eng.SetActive(true);
             UI_Length_eng.SetActive(true);
         }
@@ -224,8 +224,8 @@ public class UIControllerWithVR : UIController
 
         UI_HUD.SetActive(false);
         UI_Hint.SetActive(false);
-        UI_Hint_viet.SetActive(false);
-        UI_Hint_eng.SetActive(false);
+        //UI_Hint_viet.SetActive(false);
+       // UI_Hint_eng.SetActive(false);
         UI_ScoreRound_viet.SetActive(false);
         UI_ScoreRound_eng.SetActive(false);
         UI_Length_viet.SetActive(false);

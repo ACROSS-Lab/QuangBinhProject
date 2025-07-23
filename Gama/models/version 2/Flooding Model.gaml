@@ -17,10 +17,10 @@ global control: fsm {
 		
  	bool save_results <- false;
  	
- 	int num_step <- 50;//350;
+ 	int num_step <- 350;
  	int num_step_add <- num_step;// 50;
  	
- 	float diking_duration <- 30.0;//60.0;
+ 	float diking_duration <- 60.0;
  	
  	float max_distance_to_be_saved <- 50 #m;
 	
@@ -191,8 +191,8 @@ global control: fsm {
 	file shape_file_roads <- file("../../includes/gis/road.shp");
 	
 	//Data elevation file : small, medium and large definition files are availables
-	//file dem_file <- file("../../includes/dem/dem_small.tif");
-	file dem_file <- file("../../includes/dem/terrain_small.tif");
+	file dem_file <- file("../../includes/dem/dem.tif");
+	//file dem_file <- file("../../includes/dem/terrain_small.tif");
 	
 	
 	shape_file drain_shape_file <- shape_file("../../includes/gis/drain.shp");

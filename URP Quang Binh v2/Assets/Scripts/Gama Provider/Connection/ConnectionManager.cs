@@ -8,7 +8,7 @@ using System.Text.Json;
 
 public class ConnectionManager : WebSocketConnector
 {
-    private ConnectionState currentState;
+    private ConnectionState currentState; 
     private bool connectionRequested;
 
     // called when the connection state is manually changed

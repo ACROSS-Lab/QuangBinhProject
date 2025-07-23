@@ -124,7 +124,7 @@ global {
 		
 		//write "enter_diking";
 		ask unity_linker {
-			do send_static_geometries();
+			//do send_static_geometries();
 			do send_message players: unity_player as list mes: ["round":: current_round];
 		}
 		flooding_requested_from_gama <- false;
@@ -295,7 +295,7 @@ species unity_linker parent: abstract_unity_linker {
 		//write sample(world.state) + " " + sample(playback_finished);
 	} 
 	list<point> define_init_locations {
-		return [world.location + {0,0,1000}];
+		return [world.location + {0,0,1500}];
 	} 
 
 	list<float> convert_string_to_array_of_float(string my_string) {
@@ -377,12 +377,13 @@ species unity_linker parent: abstract_unity_linker {
 	 * What are the agents to send to Unity, and what are the agents that remain unchanged ? 
 	 */
 	reflex send_agents when: not empty(unity_player) {
+		write sample(state);
 		if (state = "s_init") {
 			do add_people;
 			// We send the river (supposed to change every step)
 			do add_geometries_to_send(river collect each.shape_to_export,up_water);
 			
-		} else if (state = "s_diking") {
+		} else if (state in ["wait_flooding", "s_diking"]) {
 			list<dyke> dykes_ <- (dyke where !each.is_dam);
 			list<float> dykes_length <- dykes_ collect each.length;
 			list<float> dykes_rotation <- dykes_ collect each.rotation; 
@@ -400,8 +401,9 @@ species unity_linker parent: abstract_unity_linker {
 			// The river is not changed so we keep it unchanged
 //			if (river_already_sent_in_diking_phase) {do add_geometries_to_keep(river);} 
 //			else {do add_geometries_to_send(river collect each.shape_to_export, up_water); river_already_sent_in_diking_phase <- true;}
-			
-		} else	if (state = "s_flooding") {
+			//	do add_geometries_to_send(river collect each.shape_to_export,up_water);
+		
+		} else	if (state in ["s_flooding"] ) {
 			// We only send the people who are evacuating 
 			do add_people;
 			// We send the river (supposed to change every step)

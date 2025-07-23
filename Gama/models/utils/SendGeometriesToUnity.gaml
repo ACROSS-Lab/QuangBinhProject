@@ -11,11 +11,12 @@ global {
 	//unity properties that will be used for sending geometries/agents to Unity
 	unity_property up_road ;
 	unity_property up_building;
-	unity_property up_river;
+	unity_property up_water;
 	file river_shapefile <- file("../../includes/gis/river_clean.shp");
 	file shape_file_roads <- file("../../includes/gis/road.shp");
 	file buildings_shapefile <- file("../../includes/gis/buildings.shp");
 	file shape_file_evacuation <- file("../../includes/gis/evacuation_point.shp");
+	float simplification_river_dist <- 30.0;
 	
 	shape_file bounds_shape_file <- shape_file("../../includes/gis/QBBB.shp");
 	
@@ -32,6 +33,8 @@ global {
 }
 
 species river {
+	geometry shape_to_export;
+	
 	aspect default{ 
 		draw shape color: #blue;
 	}
@@ -67,10 +70,15 @@ species unity_linker parent: abstract_unity_linker {
 	init {
 		//define the unity properties
 		do define_properties;
-		
-		do add_background_geometries(road collect (each.shape + 5.0),up_road);
-		do add_background_geometries(building,up_building);
-		do add_background_geometries(river,up_river);
+		ask river parallel: true {
+			shape_to_export <- shape simplification simplification_river_dist;
+			shape_to_export.attributes["name"] <- name;
+		}
+		//do add_background_geometries(road collect (each.shape + 5.0),up_road);
+		//do add_background_geometries(building,up_building);
+	//	do add_background_geometries(river,up_river);
+		do add_background_geometries(river collect each.shape_to_export,up_water);
+			
 	}
 	
 	
@@ -95,14 +103,14 @@ species unity_linker parent: abstract_unity_linker {
 		// add the up_geom unity_property to the list of unity_properties
 		unity_properties << up_building;
 		
-		unity_aspect river_aspect <- geometry_aspect(0.1, #blue, precision);
+		unity_aspect water_aspect <- geometry_aspect(5.0, "Materials/Water2/WaterVoronoi",precision);
 		
 		//define the up_geom unity property, with the name "polygon", no specific layer, no interaction, and the agents location are not sent back 
 		//to GAMA. 
-		up_river <- geometry_properties("river", string(nil), river_aspect, #no_interaction, false);
+		up_water <- geometry_properties("water", string(nil), water_aspect, #no_interaction,false);
 		
 		// add the up_geom unity_property to the list of unity_properties
-		unity_properties << up_river;
+		unity_properties << up_water;
 	}
 }
 
