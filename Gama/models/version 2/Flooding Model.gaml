@@ -138,17 +138,17 @@ global control: fsm {
 	float speed_of_people <- 20 #m / #h;
 	
 	// The maximum water input
-	float max_water_input <- 0.4 const: true;
+	float max_water_input <- 0.6 const: true;
 
 	
 	// The height of water in the river at the beginning
-	float initial_water_height <- 2.0 const: true;
+	float initial_water_height <- 2.5 const: true;
 	
 	//Diffusion rate
 	float diffusion_rate <- 0.4 const: true;
 	
 	//Height of the dykes 
-	float dyke_height <- 60.0 const: true;
+	float dyke_height <- 100.0 const: true;
 	
 	//Width of the dyke (15 m by default)
 	float dyke_width <- 15.0 const: true;
@@ -371,16 +371,22 @@ global control: fsm {
 					geometry gD <- l - init_river;
 					if gI != nil {
 						loop ggI over: gI.geometries {
-							create dyke with:(is_dam: true, shape:ggI);
+							create dyke with:(is_dam: true, shape:ggI) {
+								do initialize;
+							}
 						}
 						if (gD != nil) {
 							loop ggD over: gD.geometries {
-								create dyke with:(shape:ggD);
+								create dyke with:(shape:ggD) {
+									do initialize;
+								}
 							}
 						}
 					}
 				} else {
-					create dyke with:(shape:l);
+					create dyke with:(shape:l) {
+						do initialize;
+					}
 					return true;
 				}	
 			} else {
@@ -748,7 +754,7 @@ species dyke parent: obstacle schedules: []{
 	float rotation;
 	int init_cells;
 	float cell_percentage;
-	init {
+	action initialize {
 		length <- shape.perimeter;
 		if (is_dam) {
 			dam_length <- dam_length + length;
@@ -783,11 +789,28 @@ species dyke parent: obstacle schedules: []{
 			}
 			do die;
 		}
+		/*if length(shape.geometries) > 1 {
+			loop i from: 1 to: length(shape.geometries) - 1 {
+				create dyke with: (shape:shape.geometries[i], is_dam:is_dam,cell_percentage :1.0) {
+						init_cells <- length(cells_under);
+						  list<point> points <- shape.points;
+				        point start_point <- first(points);
+				        point end_point <- points[length(points) - 2];
+				        float dx <- end_point.x - start_point.x;
+				        float dy <- end_point.y - start_point.y;
+				        rotation <- dy = 0 ?  (dx > 0 ? 180 / 2 : -180 / 2) : atan(dx/dy);
+				}
+			}
+			shape <- first(shape.geometries);
+		} */
+	
 		/*if (drowned) {
 			do break();
 		}*/
 		
 		cell_percentage <- length(cells_under)/init_cells;
+		
+		
 	}
 	
 	//The height of the dyke is dyke_height minus the average height of the cells it overlaps
@@ -972,7 +995,7 @@ species people skills: [moving] control: fsm {
 	float speed <- speed_of_people;
 	
 	point init_loc <- nil;
-	int evacuation_time <- -1;
+	int evacuation_time <- 60;
 	
 	init {
 		if (evacuation_time = -1) {

@@ -529,7 +529,7 @@ experiment Launch  autorun: true type: unity {
 			}
 			
 			species unity_player {
-				draw circle(30) at: location + {0, 0, 50} color: rgb(color, 0.5) ;
+			//	draw circle(30) at: location + {0, 0, 50} color: rgb(color, 0.5) ;
 			}
 
 			//mesh cell above: 0 triangulation: true smooth: false color: cell collect each.color visible: river_in_3D transparency: 0.5;
