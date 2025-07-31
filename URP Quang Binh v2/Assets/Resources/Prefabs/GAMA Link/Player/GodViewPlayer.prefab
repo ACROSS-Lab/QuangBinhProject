@@ -464,6 +464,8 @@ MonoBehaviour:
   minY: 0
   maxY: 150
   player: {fileID: 0}
+  scrollSensitivity: 200
+  damping: 5
 --- !u!114 &2610731287024547879
 MonoBehaviour:
   m_ObjectHideFlags: 0

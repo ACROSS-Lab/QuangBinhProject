@@ -14,7 +14,7 @@ public class UIControllerWithVR : UIController
     public GameObject UI_HUD;
     public GameObject UI_Hint;//, UI_Hint_viet, UI_Hint_eng; 
     public GameObject UI_ScoreRound_viet, UI_ScoreRound_eng;
-    public GameObject UI_Length_viet, UI_Length_eng;
+    public GameObject UI_Length_viet, UI_Length_eng, UI_Length_data, UI_scoreRound_data;
     public TextMeshProUGUI score, finalScore, bestScore;
     public TextMeshProUGUI roundTxt;
     public TextMeshProUGUI dykeLength, damLength;
@@ -122,6 +122,8 @@ public class UIControllerWithVR : UIController
             UI_Length_eng.SetActive(true);
         }
 
+        UI_Length_data.SetActive(true);
+        UI_scoreRound_data.SetActive(true);
         FloodingPhase = true;
         LogosUI.SetActive(true);
         Timer_on.SetActive(false);
@@ -231,6 +233,9 @@ public class UIControllerWithVR : UIController
         UI_Length_viet.SetActive(false);
         UI_Length_eng.SetActive(false);
         UI_FinalScore.SetActive(false);
+        UI_Length_data.SetActive(false);
+        UI_scoreRound_data.SetActive(false);
+
 
         UI_ChoiceOfLanguage.SetActive(true);
         score.text = "0";

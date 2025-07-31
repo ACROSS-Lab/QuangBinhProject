@@ -50,10 +50,10 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/Code Examples/Receive Water Data.unity
     guid: e432add6f06a341039153cf5e865ad9d
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/Main Scene - Flood.unity
     guid: fb69449e6dd6949199d93ff7faa54a9b
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Main Scene - Without VR.unity
     guid: cc3ab1e7c260a49e4919826e5b69b1c4
   m_configObjects:
