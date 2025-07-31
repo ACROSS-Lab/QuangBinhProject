@@ -14,8 +14,10 @@
 model Flooding
 
 global control: fsm {
+	
+	bool vr_player <- false;
 		
- 	bool save_results <- false;
+ 	bool save_results <- true;
  	
  	int num_step <- 350;
  	int num_step_add <- num_step;// 50;
@@ -402,8 +404,8 @@ global control: fsm {
 	 
 	 action reset_game {
 	 	if (save_results) {
-	 		id_sim <- "Game_" + (#now).year +"_" + (#now).month+"_"+(#now).day+ "_"+(#now).hour+ "_"+(#now).minute;
-	 		save "round,dyke_length,dam_length,evacuated,casualties" to:id_sim+"/evacuated_casualties.csv" rewrite: true format:"text";
+	 		id_sim <- (vr_player ? "VR_": "Desktop_") + "Game_" + (#now).year +"_" + (#now).month+"_"+(#now).day+ "_"+(#now).hour+ "_"+(#now).minute;
+	 		save "round,dyke_length,dam_length,evacuated,casualties,score" to:id_sim+"/evacuated_casualties.csv" rewrite: true format:"text";
 		}
 	 	current_round <- 1;
 	 	if (use_tell) {
@@ -421,7 +423,7 @@ global control: fsm {
 	}
 	action exit_flooding_base {
 		if (save_results) {
-			save ""+current_round+","+ dyke_length+ ","+ dam_length +","+evacuated+"," +casualties to:id_sim+"/evacuated_casualties.csv" rewrite: false format:"text";
+			save ""+current_round+","+ dyke_length+ ","+ dam_length +","+evacuated+"," +casualties +','+score to:id_sim+"/evacuated_casualties.csv" rewrite: false format:"text";
 		}
 		current_round <- current_round +1;
 		if (current_round > num_rounds) {

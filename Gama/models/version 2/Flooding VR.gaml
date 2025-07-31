@@ -108,7 +108,7 @@ global {
 	action body_flooding {
 		
 		do enter_flooding_base;
-
+ 
 	} 
 	
 	action body_diking {
