@@ -1,16 +1,23 @@
 /**
 * Name: FloodingUI
 * A simple UI experiment to demonstrate the flooding in Quang Binh province 
-* Author: Alexis Drogoul
+* Author: Alexis Drogoul (with SpreadingSkill backend integration)
 * Tags:   
 */
-
 
 model FloodingUI 
   
 import "Flooding Model.gaml"
 
 global {   
+	
+	/*************************************************************
+	 * UI Variables (from original UI)
+	 *************************************************************/
+	
+	bool button_selected;
+	bool check_selected;
+	bool is_ok_dyke_construction <- false;
 	   
 
 	/************************************************************* 
@@ -24,8 +31,8 @@ global {
 		ask buildings {
 			color <- one_of(building_colors); 
 		} 
-		button_frame <- nil;
-		check_frame <- nil; 
+		// button_frame <- nil;
+		// check_frame <- nil; 
 		button_image_unselected <- nil;
 		button_image_selected <- nil; 
 		check_image_unselected <- nil;
@@ -107,7 +114,7 @@ global {
 	 * Reflex to update the color of the cells depending on their water height 
 	 *************************************************************/
 
-	reflex update_cell_colors when: river_in_3D {
+	reflex update_cell_colors {
 		float max_water_height <- max(cell collect each.water_height);
 		ask cell {
 			if (water_height <= 0.01) { 
@@ -121,9 +128,7 @@ global {
 	}
 	
 	
-} 
- 
-
+}
 
 experiment Run  type:gui autorun: true{
 	float minimum_cycle_duration <- cycle_duration;
@@ -137,16 +142,24 @@ experiment Run  type:gui autorun: true{
 		layout #none controls: false toolbars: false editors: false parameters: false consoles: false tabs: false;
 		display map type: 3d axes: false background: background_color antialias: false{
 			camera 'default' location: {1441.2246,3297.5234,8595.6544} target: {1441.2246,3297.3733,0.0};
+			
+			// NEW: Add mesh visualization for terrain (DEM)
+			mesh dem_file scale: 20 triangulation: true grayscale: true transparency: 0.1 refresh: false;
+			
+			// NEW: Add mesh visualization for water field (from SpreadingSkill)
+			mesh display_water_field scale: 20 triangulation: true color: rgb(0, 100, 255, 180) refresh: true;
+			
+			// NEW: Add mesh visualization for dyke field (from SpreadingSkill)  
+			mesh display_dyke_field scale: 20 triangulation: true color: rgb(139, 69, 19, 255) refresh: true;
+				
 			//	grid cell border: #black;
-		 	species river visible:!river_in_3D{
-				draw shape_to_export border: brighter(brighter(river_color)) width: 5 color: river_color;
-			}	 
+	
 
 			species road {
-				draw drowned ? shape : shape + 10 color: drowned ? darker(river_color) : road_color ;
+				draw drowned ? shape : shape + 10 color: drowned ? darker(river_color) : road_color at:{location.x, location.y, elevation_map[location] + 20} ;
 			}
 		 	species buildings {
-		 		draw shape color: drowned ? river_color : color border: drowned ? darker(river_color):color;	
+		 		draw shape color: drowned ? river_color : color border: drowned ? darker(river_color):color at:{location.x, location.y, elevation_map[location] + 20};	
 		 	} 
 		 	graphics "end_of_world" {
 				loop d over: water_limit_danger {
@@ -159,16 +172,11 @@ experiment Run  type:gui autorun: true{
 					draw d + 20 color: #green;
 				}
 			}   
-		 	species dyke {
-		 		if (!is_dam) {
-		 			draw shape + 5 color: drowned ? river_color : dyke_color border: drowned ? darker(river_color):#black;	
-		 		} else {
-		 			draw shape + 5 color: drowned ? river_color : dam_color border: drowned ? darker(river_color):#black;	
-		 		}
-		 		
-			}  
-			species people {
-				draw circle(20)  color: (state = "s_drowned" ? people_drowned_color : (state = "s_evacuated" ?  people_evacuated_color : people_color)); 
+		 	// Note: dyke species visualization removed since SpreadingSkill handles dykes internally
+		 	// Dykes are now visualized through the dyke_field in the backend
+		 	
+			species people  {
+				draw circle(20)  color: (state = "s_drowned" ? people_drowned_color : (state = "s_evacuated" ?  people_evacuated_color : people_color)) at:{location.x, location.y, elevation_map[location] + 20}; 
 			 	
 			}
 			species evacuation_point {
@@ -185,30 +193,12 @@ experiment Run  type:gui autorun: true{
 					line <- nil;
 				} else { 
 					ask world {
-						geometry g <- circle(10) at_location #user_location;
-				 		list<dyke> dykes <- dyke overlapping g;
-				 		if (not empty(dykes)) {
-				 			bool recompute_river <- false;
-				 			ask dykes closest_to #user_location {
-				 				if (is_dam) {
-				 					dam_length <- dam_length - length; 
-				 				} else {
-				 					dyke_length <- dyke_length - length; 
-				 				}
-				 				loop c over: cells_under {
-				 					c.obstacles >> self;
-				 					if (c in bed_cells) {
-				 						recompute_river <- true;
-				 						c.water_height <- initial_water_height;
-				 					}
-				 				}
-				 				do die;
-				 			}
-				 			if (recompute_river) {
-				 				do compute_river_shape;
-				 			}
-				 			
-				 		}
+						// Note: Dyke removal now handled differently with SpreadingSkill
+						// For now, use clear_all_dykes as approximation
+						if (get_active_dyke_count() > 0) {
+							do clear_all_dykes();
+							write "All dykes cleared (SpreadingSkill)";
+						}
 					}
 					 
 				}
@@ -228,7 +218,13 @@ experiment Run  type:gui autorun: true{
 					line <- line([start_point, #user_location]);
 				} else {
 					ask simulation {
-						do create_dyke(myself.start_point, #user_location);
+						// UPDATED: Use SpreadingSkill's build_dyke method instead of create_dyke
+						bool success <- build_dyke(myself.start_point, #user_location);
+						if (success) {
+							write "Dyke built using SpreadingSkill";
+						} else {
+							write "Failed to build dyke";
+						}
 					}
 					start_point <- nil;
 				 	end_point <- nil;
@@ -342,12 +338,13 @@ experiment Run  type:gui autorun: true{
 					}
 					match "s_diking" { 
 						stage <-  "Build dykes/dams";
-						indicators <- "Meters of dyke built: "+ round(dyke_length) + "m" + "\n\nMeters of dam built: "+ round(dam_length) + "m";
+						// UPDATED: Use SpreadingSkill dyke count instead of length
+						indicators <- "Active dykes: "+ get_active_dyke_count() + " cells" + "\n\nWater cells: "+ get_active_water_count();
 					
 						//text <- "Build dykes/dams with the mouse.\n\n\tMeters of dyke built: "+ round(dyke_length) + "m" + "\n\n\tMeters of dam built: "+ round(dam_length) + "m";
 						float left <- current_timeout - gama.machine_time;
 						timer <- button_selected ? "Start flooding now.": "Flooding in " + max(0,int(left / 1000)) + " seconds.";
-						hint <- "Press 'r' to remove a dyke/dam\nPress 'f' for skipping.";
+						hint <- "Press 'r' to remove all dykes\nPress 'f' for skipping.";
 						
 						//\nPress 'f' to start immediately.";
 					}	
@@ -417,14 +414,7 @@ experiment Run  type:gui autorun: true{
 					line <- nil;
 				}
 			}
-			
-			 
-			
-			graphics ll {
-				if (line != nil) {
-					draw line + dyke_width + 5 color: is_ok_dyke_construction ? dyke_color : #red border: #black;
-				}
-			}
+		
 		}
 
 	}

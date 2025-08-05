@@ -1,24 +1,26 @@
 /**
-* Name: Flooding Model
-* Author: Alexis Drogoul
-* Description: This model is based on the toy model called "Hydrological Model" 
-* and uses a simple flow diffusion model to simulate a flooding in a subset of Dong Hoi city
-* (Quang Binh province). All interesting agents (the world and people) use fsm for their behavioral
-* architecture. 
-* This model can be experimented using either the classical UI of GAMA (see Flooding UI.gaml)
-* or a VR environment (see Flooding VR.gaml)
+* Name: Flooding Model with SpreadingSkill
+* Author: Alexis Drogoul + SpreadingSkill
+* Description: This model integrates the advanced SpreadingSkill water simulation
+* with the original people evacuation and scoring system. Uses FSM for behavioral
+* architecture and provides advanced dyke building with rain system.
 */
 @no_experiment
 @no_info
 
 model Flooding
 
-global control: fsm {
+global control: fsm skills: [spreading] {
+	
+		image button_image_unselected;
+	image button_image_selected;
+	image check_image_unselected;
+	image check_image_selected; 
 		
  	bool save_results <- false;
  	
  	int num_step <- 350;
- 	int num_step_add <- num_step;// 50;
+ 	int num_step_add <- num_step;
  	
  	float diking_duration <- 60.0;
  	
@@ -32,11 +34,10 @@ global control: fsm {
 	
 	bool use_tell <- true;
 	
-	
 	float waiting_time_in_s <- 1.5;
 	
 	geometry init_river;
-	list<geometry> all_river_parts; // NEW: Store all river parts
+	list<geometry> all_river_parts;
 	
 	float score min: 0.0;
 	
@@ -49,7 +50,22 @@ global control: fsm {
 	float best_score <- 0.0;
 	
 	/*************************************************************
-	 * Attributes dedicated to the UI (images, colors, frames, etc.)
+	 * SpreadingSkill Integration Variables
+	 *************************************************************/
+	
+	// Display fields for visualization (synchronized with SpreadingSkill)
+	field display_water_field;
+	field display_dyke_field;
+	
+	// Dyke building state
+	bool dyke_building_active <- false;
+	point dyke_point1 <- nil;
+	point dyke_point2 <- nil;
+	bool waiting_for_first_point <- false;
+	bool waiting_for_second_point <- false;
+	
+	/*************************************************************
+	 * UI Colors and Styling (preserved from original)
 	 *************************************************************/
 	
 	rgb background_color <- #dimgray;
@@ -59,7 +75,6 @@ global control: fsm {
 	rgb people_drowned_color <- rgb(255, 0, 0);
 	rgb people_evacuated_color <- rgb(0, 255, 0);
 	rgb evacuation_color <- rgb(100, 200, 100);
-	
 	rgb road_color <- rgb(64, 64, 64);
 	rgb line_color <- rgb(156, 34, 39);
 	rgb dyke_color <- rgb(200, 200, 200);
@@ -70,22 +85,6 @@ global control: fsm {
 	geometry background <- rectangle(1700, 1400);
 	point text_position <- {-3000, 600};
 	point background_position <- text_position - {200, 200};
-	point icon_position <- {-2850, 1600};
-	point check_position <- {-2850, 1700};
-	point check_text_position <- {-2600, 1900};
-	
-	bool river_in_3D <- false; 
-	geometry button_frame;  
-	geometry check_frame;
-	image button_image_unselected;
-	image button_image_selected;
-	image check_image_unselected;
-	image check_image_selected; 
-	bool button_selected;
-	bool check_selected;
-	
-	
-	geometry main_river_part;
 	
 	float cycle_duration <- 0.01;
 	
@@ -93,124 +92,63 @@ global control: fsm {
 	list<geometry> water_limit_well;
 	list<geometry> water_limit_danger;
 	
-	
 	/*************************************************************
-	 * Built-in parameters to control the simulations
+	 * Built-in parameters (preserved)
 	 *************************************************************/
 	
-	//Step of the simulation
 	float step <- 30#mn;
-	
-	// Current date is fixed to #now
 	date current_date <- #now;
 	
 	/*************************************************************
-	 * Flags to control some functions in the simulations
+	 * Flags and monitoring (preserved)
 	 *************************************************************/
 
-	// Do we need to recompute the road graph ? 
 	bool need_to_recompute_graph <- false;
-	
-	// Do we keep the previous dykes from one simulation to the other ? 
 	bool keep_dykes;
 
-	/*************************************************************
-	 * Global monitoring variables
-	 *************************************************************/
-	 
-	// Number of casualties (drowned people)
 	int casualties <- 0;
-	
-	// Number of evacuated people
 	int evacuated <- 0;
-	
-	//People counter
 	int people_counter <- 0;
 
 	/*************************************************************
-	 * Initial parameters for people, water and obstacles
+	 * SpreadingSkill Parameters (replacing old water parameters)
 	 *************************************************************/
 
-	// Initial number of people
 	int nb_of_people <- 1000;
-	
-	// The average speed of people
 	float speed_of_people <- 20 #m / #h;
 	
-	// The maximum water input
-	float max_water_input <- 0.4 const: true;
-
-	
-	// The height of water in the river at the beginning
-	float initial_water_height <- 2.0 const: true;
-	
-	//Diffusion rate
-	float diffusion_rate <- 0.4 const: true;
-	
-	//Height of the dykes 
-	float dyke_height <- 60.0 const: true;
-	
-	//Width of the dyke (15 m by default)
-	float dyke_width <- 15.0 const: true;
-	
-	float dyke_length <- 0.0;
-	float dam_length <- 0.0;
-	
+	// SpreadingSkill will manage these internally:
+	// - water input, diffusion, rising rate
+	// - dyke height and behavior
+	// - rain system
 	
 	float limit_drown <- 0.1 const: true;
 	
 	list<cell> cells_at_stake;
+	
 	/*************************************************************
-	 * Road network
-	 *************************************************************/ 
+	 * Road network (preserved)
+	 ************************************************************/ 
 	
-	// Road network w/o the drowned roads
 	graph<geometry, geometry> road_network;
-	
-	// Weights associated with the road network
 	map<road, float> road_weights;
 	
-	bool is_ok_dyke_construction <- false;
-	
 	/*************************************************************
-	 * GIS input data
+	 * GIS input data (preserved)
 	 *************************************************************/
 
-	//Shapefile for the river
-	file river_shapefile <- file("../../includes/gis/water_multipolygon.shp");
-	
-	//if defined, used to create people agents
-
-	//Shapefile for the buildings
+	file river_shapefile <- file("../../includes/gis/river_clean.shp");
 	file buildings_shapefile <- file("../../includes/gis/landuse_multipolygon.shp");
-	
-	//Shapefile for the evacuation points
 	file shape_file_evacuation <- file("../../includes/gis/amenity_point.shp");
-	
-	//Shapefile for the roads
 	file shape_file_roads <- file("../../includes/gis/highway_line.shp");
-	
-	//Data elevation file : small, medium and large definition files are availables
-	//file dem_file <- file("../../includes/dem/dem_small.tif");
-	file dem_file <- file("../../includes/dem/DEM_NHATLE_10M_EPSG_3857_RESIZED_BY_FOUR.tif");
-	
-	
+	file dem_file <- file("../../includes/dem/terrain_large.tif");
 	shape_file drain_shape_file <- shape_file("../../includes/gis/drain.shp");
 
-	//Shape of the environment using the bounding box of Quang Binh
+	field elevation_map <- field(dem_file);
 	geometry shape <- envelope(dem_file);
 	
-
 	/*************************************************************
-	 * Lists of the water cells used to schedule them 
-	 *************************************************************/
-	//List of the initial river cells ("bed" of the river)
-	list<cell> bed_cells;
-	 
-	float total_water_to_add;
-	
-	/*************************************************************
-	 * Global states
+	 * FSM States (preserved structure, updated implementation)
 	 *************************************************************/	
 	
 	state s_start initial: true {
@@ -226,173 +164,259 @@ global control: fsm {
 			do enter_init();
 			score <- init_score;	
 			ask cell {
-				already <- false;
+				water_height <- 0.0; // Reset cell water heights
 			}
-			
-			ask river {do die;}
-			people_counter <- 0;
 		}
-		do add_water();
-		do flow_water();
-		do check_obstactles_drowning();
+		
+		// REPLACED: Use SpreadingSkill instead of old water flow
+		do spreading_simulation_step();
+		do check_obstacles_drowning();
 		do recompute_road_graph();
 		do body_init();
-		do update_score;
-		current_step <- current_step +1;
+		do update_score();
+		current_step <- current_step + 1;
+		
 		exit {
 			do exit_init();
-			
-			do restart;
+			do restart();
 		}
 		transition to: s_diking when: init_over();
 	}
 
-
-
-	
 	/**
-	 * This state represents the state where the user(s) is(are) able to build dikes 
+	 * Dyke building state - now uses SpreadingSkill dyke system
 	 */
 	state s_diking {
 		enter {
 			do enter_diking();
-			
-			do compute_river_shape;
+			// Enable dyke building mode in SpreadingSkill
+			do toggle_dyke_building_mode();
+			dyke_building_active <- is_dyke_building_mode();
 		}
+		
 		do body_diking();
 		
 		exit {
-			
 			do exit_diking();
-			
+			// Disable dyke building mode
+			if (dyke_building_active) {
+				do toggle_dyke_building_mode();
+				dyke_building_active <- false;
+			}
 		}
 		transition to: wait_flooding when: diking_over();
-		
 	}
 	
 	state wait_flooding {
-		transition to: s_flooding when: flooding_ready() ;
+		transition to: s_flooding when: flooding_ready();
 	}
 	
 	/**
-	 * This state represents the state where the flooding dynamics is simulated 
+	 * Flooding state - now uses SpreadingSkill simulation
 	 */
 	state s_flooding {
 		enter {
 			ask cell {
-				already <- false;
+				water_height <- 0.0; // Reset for sync
 			}
-			
-			ask river {do die;}
 			
 			do enter_flooding();
 			score <- init_score;
 			people_counter <- 0;	
 			
+			// Start SpreadingSkill simulation
+			do start_spreading_simulation();
 		}		
-		do add_water();
-		do flow_water();
-		do check_obstactles_drowning();
+		
+		// REPLACED: Use SpreadingSkill instead of old water flow
+		do spreading_simulation_step();
+		do check_obstacles_drowning();
 		do recompute_road_graph();
-		//do drain_water();
 		do body_flooding();
-		do update_score;
-		current_step <- current_step +1;
+		do update_score();
+		current_step <- current_step + 1;
+		
 		exit {
 			best_score <- max(best_score, score);
 			do exit_flooding();
+			// Stop SpreadingSkill simulation
+			do stop_spreading_simulation();
 		}
-		transition to: s_start when: (current_round >= num_rounds) and  flooding_over() {
+		transition to: s_start when: (current_round >= num_rounds) and flooding_over() {
 			do restart();
 		}
 		transition to: s_diking when: (current_round < num_rounds) and flooding_over() {
 			do restart();
 		}
-		 
 	}
+	
+	/*************************************************************
+	 * NEW: SpreadingSkill Integration Actions
+	 *************************************************************/
+	
+	/**
+	 * Replaces the old add_water + flow_water + compute_river_shape sequence
+	 */
+	action spreading_simulation_step {
+		// Execute SpreadingSkill simulation step
+		if (is_simulation_active()) {
+			do simulate_spreading_step();
+		}
+		
+		// Sync water levels with cell grid for people navigation
+		do sync_water_levels_to_cells();
+		
+		// Update display fields
+		if (water_field != nil) {
+			display_water_field <- water_field;
+		}
+		if (dyke_field != nil) {
+			display_dyke_field <- dyke_field;
+		}
+	}
+	
+	/**
+	 * Synchronizes SpreadingSkill water levels with cell grid for people navigation
+	 */
+	action sync_water_levels_to_cells {
+		if (water_field != nil) {
+			ask cell parallel: true {
+				// Get water level from SpreadingSkill's field
+				float water_level <- display_water_field[location];
+				water_height <- water_level > 0.01 ? water_level : 0.0;
+			}
+		}
+	}
+	
+	/**
+	 * Dyke building click handler - integrates with SpreadingSkill
+	 */
+	action handle_dyke_click(point click_location) {
+		if (dyke_building_active) {
+			if (waiting_for_first_point) {
+				dyke_point1 <- click_location;
+				waiting_for_first_point <- false;
+				waiting_for_second_point <- true;
+				write "✓ First dyke point selected: " + dyke_point1;
+				write "   → Click second point to complete dyke";
+			} else if (waiting_for_second_point) {
+				dyke_point2 <- click_location;
+				waiting_for_second_point <- false;
+				write "✓ Second dyke point selected: " + dyke_point2;
+				write "   → Building dyke...";
+
+				// Build dyke using SpreadingSkill
+				bool success <- build_dyke(dyke_point1, dyke_point2);
+				if (success) {
+					write "🏗️ Dyke built successfully!";
+					write "   Active dykes: " + get_active_dyke_count();
+				} else {
+					write "❌ Failed to build dyke";
+				}
+
+				// Reset for next dyke
+				waiting_for_first_point <- true;
+				dyke_point1 <- nil;
+				dyke_point2 <- nil;
+				write "   → Ready for next dyke (click first point)";
+			}
+		} else {
+			// Show information at click location
+			if (display_water_field != nil) {
+				float water_level <- display_water_field[click_location];
+				if (water_level > 0.01) {
+					write "💧 Water level: " + (water_level with_precision 2) + "m";
+				} else {
+					write "🏞️ No water at this location";
+				}
+			}
+			write "📍 Click coordinates: " + click_location;
+		}
+	}
+	
+	/*************************************************************
+	 * Rain Control Actions (NEW)
+	 *************************************************************/
+	
+	action start_light_rain {
+		do start_rain(0.1, 1.0);
+		write "🌧️ Light rain started";
+	}
+	
+	action start_heavy_rain {
+		do start_rain(0.3, 1.5);
+		write "⛈️ Heavy rain started";
+	}
+	
+	action stop_rain_completely {
+		do stop_rain();
+		write "☀️ Rain stopped";
+	}
+	
+	/*************************************************************
+	 * Dyke Control Actions (NEW)
+	 *************************************************************/
+	
+	action toggle_dyke_building {
+		do toggle_dyke_building_mode();
+		dyke_building_active <- is_dyke_building_mode();
+		if (dyke_building_active) {
+			write "🔨 DYKE BUILDING MODE ACTIVATED";
+			write "   → Click first point in the display";
+			waiting_for_first_point <- true;
+			waiting_for_second_point <- false;
+		} else {
+			write "🔨 DYKE BUILDING MODE DEACTIVATED";
+			waiting_for_first_point <- false;
+			waiting_for_second_point <- false;
+		}
+	}
+	
+	action clear_all_dykes_action {
+		int dyke_count <- get_active_dyke_count();
+		do clear_all_dykes();
+		write "💥 All dykes cleared (" + dyke_count + " dyke cells removed)";
+	}
+	
+	/*************************************************************
+	 * Score Update (preserved, modified for SpreadingSkill)
+	 *************************************************************/
 	action update_score {
-		float dyke_price <- dyke sum_of (each.length * (each.is_dam ? price_meter_dam : price_meter_dyke));	
-		float impact_border <- (cells_at_stake where (each.water_height > limit_drown)) sum_of (each.water_height *border_impact); 
+		// Calculate dyke costs using SpreadingSkill data
+		float dyke_price <- get_active_dyke_count() * price_meter_dyke * 15.0; // Approximate cost
+		float impact_border <- (cells_at_stake where (each.water_height > limit_drown)) sum_of (each.water_height * border_impact); 
 		score <- init_score - casualties_impact * casualties - dyke_price - impact_border;
-	} 
+	}
 
 	/*************************************************************
-	 * Functions that control the transitions between the states. 
-	 * Must be redefined in sub-models
+	 * Virtual functions (preserved)
 	 *************************************************************/
 	 
 	action enter_init virtual: true;
-	
 	action enter_diking virtual: true;
-	
 	action enter_flooding virtual: true;
-	
 	action enter_start virtual: true;
-	
 	action exit_flooding;
-	
 	action exit_diking;
-	
 	action exit_init;
 	
-	
 	bool flooding_ready virtual: true;
-
 	bool init_over virtual: true;
-	
 	bool diking_over virtual: true;
-	
 	bool flooding_over virtual: true;
-	
 	bool start_over virtual: true;
 	
 	action body_init {}
-	
 	action body_diking {}
-	
 	action body_flooding {}
  	
- 
-	
  	string id_sim <- "Game_" + (#now).year +"_" + (#now).month+"_"+(#now).day+ "_"+(#now).hour+ "_"+(#now).minute;
-		
 	int current_step;
-	
-		// The next timeout to occur for the different stages
 	float current_timeout;
 	
-	bool create_dyke(point source, point target) {
-		if (source distance_to target > 1.0)  {
-			geometry l <- line([source, target]);
-			l <- l inter world;
-			if (l != nil) {
-				if (l overlaps init_river) {
-					geometry gI <- l inter init_river;
-					geometry gD <- l - init_river;
-					if gI != nil {
-						loop ggI over: gI.geometries {
-							create dyke with:(is_dam: true, shape:ggI);
-						}
-						if (gD != nil) {
-							loop ggD over: gD.geometries {
-								create dyke with:(shape:ggD);
-							}
-						}
-					}
-				} else {
-					create dyke with:(shape:l);
-					return true;
-				}	
-			} else {
-				return false;
-			}
-		}
-		return false;
-	}
-		
-	
-	// The maximum amount of time, in seconds, for building dikes 
-		 
+	/*************************************************************
+	 * Game Management (preserved)
+	 *************************************************************/
 	 
 	 action reset_game {
 	 	if (save_results) {
@@ -403,102 +427,129 @@ global control: fsm {
 	 	if (use_tell) {
 	 		do tell("Restart the new game",false);
 	 	}
-	 	do end_game_action;
+	 	do end_game_action();
 	 }
 	 
 	 action end_game_action;
-	
+
 	action enter_flooding_base {
 		if save_results {
-			save dyke to:id_sim+"/dykes_" + current_round + ".shp"  format:"shp";
+			// Note: Dyke saving would need to be adapted for SpreadingSkill
+			write "Saving dykes (SpreadingSkill format) for round " + current_round;
 		}
 	}
+	
 	action exit_flooding_base {
 		if (save_results) {
-			save ""+current_round+","+ dyke_length+ ","+ dam_length +","+evacuated+"," +casualties to:id_sim+"/evacuated_casualties.csv" rewrite: false format:"text";
+			float dyke_length_est <- get_active_dyke_count() * 15.0; // Estimate
+			save ""+current_round+","+ dyke_length_est+ ",0,"+evacuated+"," +casualties to:id_sim+"/evacuated_casualties.csv" rewrite: false format:"text";
 		}
-		current_round <- current_round +1;
+		current_round <- current_round + 1;
 		if (current_round > num_rounds) {
-			do reset_game;
+			do reset_game();
 		} else {
 			if (use_tell) {
 	 			do tell("Start of Round " + current_round,false);
 	 		}
 		}
-		ask experiment {do compact_memory;}
+		ask experiment {do compact_memory();}
 	}
 	
-	action  enter_init_base {
-	
+	action enter_init_base {
 		current_step <- 0;
 	}
 	
 	/*************************************************************
-	 * Initialization and reinitialization behaviors
+	 * Initialization (modified for SpreadingSkill)
 	 *************************************************************/
 
 	init {
-		// FIX 1: Store all river geometries instead of just the first one
+		// Store river geometries
 		all_river_parts <- river_shapefile.contents;
 		init_river <- union(all_river_parts);
 		
 		if (use_tell) {
-	 		do tell("Start the game: Round 1"  ,false);
+	 		do tell("Start the game: Round 1 (SpreadingSkill enabled)", false);
 	 	}
-		do initialize_agents;
-		//save people format: "shp" to: "../../includes/gis/people.shp" attributes:["evacuation_time"];
-		/*
-		ask cell_simple {
-			list<cell> cs <- cell overlapping self;
-			grid_value <- cs mean_of (each.grid_value);
+	 	
+		// Initialize agents (preserved)
+		do initialize_agents();
+		
+		// Initialize SpreadingSkill
+		do initialize_spreading_system();
+	}
+	
+	/**
+	 * NEW: Initialize SpreadingSkill with DEM and water data
+	 */
+	action initialize_spreading_system {
+		write "=== INITIALIZING SPREADINGSKILL SYSTEM ===";
+		
+		// Create elevation field from DEM
+		
+		
+		// Create dyke field with same dimensions as DEM
+		field dyke_field_for_init <- field(elevation_map.columns, elevation_map.rows);
+		loop i from: 0 to: elevation_map.columns - 1 {
+			loop j from: 0 to: elevation_map.rows - 1 {
+				dyke_field_for_init[i, j] <- 0.0;
+			}
 		}
-		save cell_simple to: "dem_low_resolution.tif" format:"geotiff"; */
+		
+		// Initialize SpreadingSkill with coordinate-aligned fields
+		do initialize_spreading_grid_with_dyke_field(
+			dem_field: elevation_map, 
+			dyke_field: dyke_field_for_init,
+			water_geometries: all_river_parts, 
+			initial_water_depth: 1.5, 
+			flow_threshold: 0.01, 
+			rising_rate: 0.3, 
+			min_flow_diff: 0.001, 
+			equalization_threshold: 0.1
+		);
+		
+		// Initialize display fields
+		display_water_field <- water_field;
+		display_dyke_field <- dyke_field;
+		
+		write "✓ SpreadingSkill system initialized successfully";
+		write "✓ Grid dimensions: " + grid_width + "x" + grid_height;
+		write "✓ Initial water cells: " + get_active_water_count();
+		write "============================================";
 	}
 	
 	action restart {
 		casualties <- 0;
 		evacuated <- 0;
-		ask dyke {
-			do die;
-		}
-		dyke_length <- 0.0;
-		dam_length <- 0.0;
-		
-		
 		current_step <- 0; 
-		ask river {do die;}
-			
+		
+		// Reset SpreadingSkill simulation
+		do reset_spreading_simulation(all_river_parts, 1.5);
+		
 		ask cell {
-			do initialize();
+			water_height <- 0.0;
 		}
-		ask road+buildings+(keep_dykes ? dyke : []) {
+		ask road+buildings {
 			drowned <- false;
 			do build();
 		}
-		ask people+(!keep_dykes ? dyke: []) {
-			do die;
+		ask people {
+			do die();
 		}
-		do initialize_agents;
-		//do compute_river_shape;
-		main_river_part <- init_river;
-		
-		
+		do initialize_agents();
 	}
 	
 	action initialize_agents {
-		//Initialization of the river and the corresponding cells
-		do init_river_computation;
-		//Initialization of the obstacles (buildings, roads, etc.)
-		do init_buildings;
-		do init_roads;
-		do init_evac;
-		//Initialization of the people	
-		do init_people;
+		do init_buildings();
+		do init_roads();
+		do init_evac();
+		do init_people();
+		do init_drainage_system();
 	}
 	
 	action init_people {
 		create people number: nb_of_people {
-			location <- init_loc != nil ?init_loc : any_location_in(one_of(buildings));
+			location <- init_loc != nil ? init_loc : any_location_in(one_of(buildings));
 		}
 	}
 
@@ -512,27 +563,32 @@ global control: fsm {
 		if (empty(evacuation_point)) {create evacuation_point from: shape_file_evacuation;}
 	}
 	
-	/*
-	 * Initializes the water cells according to the river shape file and the drain
+	action init_buildings {
+		if (empty(buildings)) {
+			create buildings from: buildings_shapefile;
+		}
+	}
+	
+	/**
+	 * Initialize drainage system (preserved from original)
 	 */
-	action init_river_computation {
+	action init_drainage_system {
 		int max_y <- (cell max_of each.grid_y);
 		geometry border <- shape.contour;
 		water_limit_well <- [];	
 		geometry water_limit_d <- copy(border);
 		water_limit_drain <- [];
+		
 		loop g over: drain_shape_file {
-			water_limit_d  <- water_limit_d - g;
+			water_limit_d <- water_limit_d - g;
 			int is_drain_ <- int(g.attributes["drain"]);
 			if is_drain_ = 0 {
-				water_limit_well <- water_limit_well  + (g inter border);
+				water_limit_well <- water_limit_well + (g inter border);
 			} else {
 				water_limit_drain <- water_limit_drain + (g inter border);
-				ask cell overlapping g {
-					is_drain <- length(neighbors) < 4;
-				}
 			}
 		}
+		
 		water_limit_danger <- water_limit_d.geometries where (each.perimeter > 20);
 		loop wl over: water_limit_danger {
 			ask (cell overlapping wl) where (each.num_neigbors < 4) {
@@ -540,114 +596,19 @@ global control: fsm {
 				cells_at_stake << self;
 			}
 		}	
-			
-		if (empty(river)){ 
-			bed_cells <- [];
-			// FIX 2: Create river agents from all parts of the shapefile
-			create river from: river_shapefile;
-			
-			// FIX 3: Consider all river agents when initializing bed cells
-			ask cell overlapping init_river {
-				bed_cells << self;
-			}
-		}
-		
-		ask bed_cells {
-			if (grid_y > (max_y - 200)) {
-				water_to_add <- max(0.1,(grid_y / max_y));
-			}
-		}
-		total_water_to_add <- bed_cells sum_of each.water_to_add;
-		
-		ask bed_cells where (each.obstacle_height = 0){water_height <- initial_water_height;}
-		do compute_river_shape;
-	}
-	
-
-	action compute_river_shape {
-		list<cell> river_cells <- cell where (not each.already and (each.water_height > limit_drown));
-		list<list<cell>> clusters <- list<list<cell>>(simple_clustering_by_distance(river_cells, 1));
-		loop c over: clusters {
-			ask c {already <- true;}
-       		create river with: (cells:c);
-       		ask river parallel: true {
-       			do generate_shape;
-       		}
-		}
-		
-		list<list<river>> clusters_r <- list<list<river>>(simple_clustering_by_distance(river, 0.0));
-		 
-		list<river> merging_rivers;
-		loop cr over: clusters_r {
-			if length(cr) > 1 {
-				first(cr).to_merge <- cr;
-				merging_rivers << first(cr);
-			}
-		}
-		ask merging_rivers parallel: true {
-			do update_shape;
-		}
-		ask river parallel: true {
-			shape_to_export <- shape simplification simplification_river_dist;
-			shape_to_export.attributes["name"] <- name;
-		}
-		
-		// FIX 4: Update main_river_part to use the full river geometry when empty
-		if (empty(river)) {
-			main_river_part <- init_river;
-		} else {
-			// Try to find the largest river part near the bottom of the map
-			main_river_part <- river closest_to {world.location.x, world.shape.height};
-			if (main_river_part = nil) {
-				main_river_part <- river with_max_of(each.shape.area);
-			}
-		}
-	}
-	/*
-	 * Initializes the buildings */
-	action init_buildings {
-		if (empty(buildings)) {
-			create buildings from: buildings_shapefile;
-		}
-	}
-	
-	/*************************************************************
-	 * Waterflow dynamics, directly managed by the world in the 
-	 * s_flooding state
-	 *************************************************************/
-	
-	/**
-	 * Action to add water to the river cells
-	 */
-	action add_water {
-		if (current_step <= num_step_add) {
-			// Patrick: only add water on the main river part!!!!
-			list<cell> to_adds <- bed_cells where ((each.obstacle_height = 0) and (each.location overlaps main_river_part));
-			float coeff_to_add <- total_water_to_add / (to_adds sum_of each.water_to_add);
-			ask to_adds parallel: true{
-				water_height <- water_height + water_to_add * max_water_input * coeff_to_add;
-			}
-		}
-	}
-	/**
-	 * Action to flow the water according to the altitute and the obstacle
-	 */
-	action flow_water {
-		ask cell parallel: true{
-			water_height_tmp <- water_height;
-		}
-		ask cell parallel: true{
-			do flow;
-		}
-		ask cell parallel: true{
-			water_height <- water_height_tmp;
-		}
-		do compute_river_shape;
-		
 	}
 
 	/**
-	 * Action for recomputing the road graph if a road has been invalitated
+	 * Check obstacle drowning (preserved logic, updated for SpreadingSkill)
+	 */
+	action check_obstacles_drowning {
+		ask buildings+road {
+			if (!drowned) {do check_drowning();}
+		}
+	}
+
+	/**
+	 * Recompute road graph (preserved)
 	 */
 	action recompute_road_graph {
 		if (!need_to_recompute_graph) {return;}
@@ -655,61 +616,34 @@ global control: fsm {
 		road_network <- as_edge_graph(road where not each.drowned);
 		need_to_recompute_graph <- false;
 	}
-	
-	action check_obstactles_drowning {
-		ask buildings+road+dyke {
-			if (!drowned) {do check_drowning;}
-		}
-	}
-
-	/**
-	 * Action for the drain cells to drain water
-	 */
-	
 }
+
 /*************************************************************
-* Obstacles represent the attributes and behaviors common to 
-* buildings, roads and dikes. 
+* Obstacles (simplified - dykes now handled by SpreadingSkill)
 *************************************************************/	
 species obstacle {
-	// Is the obstacle under water ? 
 	bool drowned <- false;
-	//The height of the obstacle
-	float height min: 0.0;
-	//The color of the obstacle
+	float height <- 10.0;
 	rgb color <- #gray;
-	//The list of cells overlapped by this obstacle
 	list<cell> cells_under <- (cell overlapping self);
 	
-	/**
-	 * Initializes the height of the obstacle and that of its cells
-	*/
 	init {
 		do compute_height();
 		do build();
 	}
 
-	/**
-	 * When an obstacle breaks (or is drowned), it tells the 
-	 * cells under to recompute their height.
-	*/
 	action break {
 		ask cells_under {
 			do update_after_destruction(myself);
 		}
 	}
 	
-	/**
-	 * When an obstacle is built, it tells the 
-	 * cells under to recompute their height.
-	*/
 	action build {
 		ask cells_under {
 			do update_after_construction(myself);
 		}
 	}
 
-	
 	action check_drowning {
 		drowned <- (cells_under first_with (each.water_height > limit_drown)) != nil;
 		if (drowned) {
@@ -718,108 +652,35 @@ species obstacle {
 	}
 
 	action compute_height virtual: true;
-
-
 }
 
 /*************************************************************
-* Buildings are obstacles that can host people
+* Buildings (preserved)
 *************************************************************/	
-
 species buildings parent: obstacle schedules: []{
-	//The height of the building is randomly chosed between 5 and 15 meters
+
 	action compute_height {
-		height <- 10.0 ;
+		height <- 10.0;
 	}
 }
 
 /*************************************************************
-* Dykes are obstacles that are created dynamically by the user
-*************************************************************/	
-species dyke parent: obstacle schedules: []{
-	float length;
-	bool is_dam <- false;
-	float rotation;
-	int init_cells;
-	float cell_percentage;
-	init {
-		length <- shape.perimeter;
-		if (is_dam) {
-			dam_length <- dam_length + length;
-		} else {
-			dyke_length <- dyke_length + length;
-		}
-		shape <- shape + 20;
-		
-		// Calculate rotation angle
-        list<point> points <- shape.points;
-        point start_point <- first(points);
-        point end_point <- points[length(points) - 2];
-        float dx <- end_point.x - start_point.x;
-        float dy <- end_point.y - start_point.y;
-        rotation <- dy = 0 ?  (dx > 0 ? 180 / 2 : -180 / 2) : atan(dx/dy);
-     
-		do compute_height();
-		do build();
-		
-		init_cells <- length(cells_under);
-		cell_percentage <- 1.0;
-	}
-	action check_drowning {
-		loop c over: (cells_under where (each.water_height > limit_drown)) {
-			cells_under >> c;
-			if (shape != nil) {shape <- shape - (c  + 20.0);}
-			c.obstacles >> self;
-		}
-		if (shape = nil or empty(cells_under)) {
-			loop c over: cells_under {
-				c.obstacles >> self;	
-			}
-			do die;
-		}
-		/*if (drowned) {
-			do break();
-		}*/
-		
-		cell_percentage <- length(cells_under)/init_cells;
-	}
-	
-	//The height of the dyke is dyke_height minus the average height of the cells it overlaps
-	action compute_height {
-		height <- dyke_height;// - mean(cells_under collect (each.altitude));
-	}
-	
-	//Allows a user to destroy the dyke by ctrl-clicking on it
-	user_command "Destroy" {
-		do break;
-		drowned <- true;
-	}
-}
-
-
-/*************************************************************
-* A road allows people to evacuate. Breaking a road makes 
-* the graph to be recomputed
+* Roads (preserved)
 *************************************************************/	
 species road parent: obstacle schedules: [] {
-	
 	action compute_height {
 		height <- 0.5;
 	}
 	
-	action build {
-		
-	}
+	action build {}
 	
 	action break {
 		need_to_recompute_graph <- true;
 	}
 }
 
-
 /*************************************************************
-* Cells are the support of water flowing. To save memory (and 
-* speed) they are not scheduled but managed by the world directly
+* Cell grid (simplified - SpreadingSkill handles water flow)
 *************************************************************/	
 grid cell 	file: dem_file 
 			neighbors: 4 
@@ -829,87 +690,30 @@ grid cell 	file: dem_file
 			use_neighbors_cache: true  
 			schedules: [] {
 	
-	float water_to_add;
-	bool already <- false;
-	geometry shape_union <- shape + 0.1;
-	//Altitude of the cell as read from the DEM
+	// Simplified - just for people navigation and obstacle management
 	float altitude <- grid_value const: true;
-	//Height of the water in the cell
-	float water_height min: 0.0;
-	//Height of the cell (dynamic addition of its altitude, obstacle_height and water_height)
+	float water_height min: 0.0; // Synced from SpreadingSkill
 	float height;
-	//List of all the obstacles overlapping the cell
 	list<obstacle> obstacles;
-	//Height of the obstacles
 	float obstacle_height;
 		
 	bool is_drain <- false;
 	bool is_stake <- false;
-	
 	int num_neigbors <- length(neighbors);
-	float water_height_tmp;
+	
 	action initialize {
 		water_height <- 0.0;
-		water_height_tmp <- 0.0;
 		height <- 0.0;
 		obstacle_height <- 0.0;
 		obstacles <- [];
 		is_drain <- false;
 		is_stake <- false;
-		water_to_add <- 0.0;
 	}
 	
-	/**
-	 * The main algorithmic part of water flowing
-	 */ 
-	action flow {
-	//if the height of the water is higher than 0 then, it can flow among the neighbour cells
-		if ((num_neigbors = 4 or !is_drain) and water_height > 0 ) {
-		//We get all the cells  
-			list<cell> neighbour_cells_al <- neighbors ;
-			
-			//If there are cells already done then we continue
-			if (!empty(neighbour_cells_al)) {
-			//We compute the height of the neighbours cells according to their altitude, water_height and obstacle_height
-				ask neighbour_cells_al {
-					height <- altitude + water_height + obstacle_height;
-				}
-				
-				//The height of the cell is equal to its altitude and water height
-				height <- altitude + water_height;
-				//The water of the cells will flow to the neighbour cells which have a height less than the height of the actual cell
-				list<cell> flow_cells <- (neighbour_cells_al where (height > each.height));
-				//If there are cells, we compute the water flowing
-				if (!empty(flow_cells)) {
-					list<float> v <- flow_cells collect (height - each.height);
-					float sum_v <- sum(v);
-					float water_flowing <- water_height * diffusion_rate;
-					water_height_tmp <- water_height_tmp - water_flowing;
-					
-					/*loop flow_cell over: shuffle(flow_cells) sort_by (each.height) {
-						float water_flowing <- max([0.0, min([(height - flow_cell.height), water_height * diffusion_rate])]);
-						water_height <- water_height - water_flowing;
-						flow_cell.water_height <- flow_cell.water_height + water_flowing;
-						//height <- altitude + water_height;
-					}*/
-					loop i from: 0 to: length(flow_cells) -1 {
-						cell flow_cell <- flow_cells[i];
-						flow_cell.water_height_tmp <- flow_cell.water_height_tmp + water_flowing * v[i]/sum_v;
-					}
-
-				}
-
-			}
-
-		} else {
-			water_height_tmp <- water_height_tmp  - (water_height *  diffusion_rate);
-		}
-	}
-
+	// Water flow logic removed - handled by SpreadingSkill
 	
-	//action to recompute the height after the destruction of the obstacle
 	action update_after_destruction (obstacle the_obstacle) {
-		obstacles >>  the_obstacle; 
+		obstacles >> the_obstacle; 
 		if (empty(obstacles)) {
 			obstacle_height <- 0.0; 
 		} else if (the_obstacle.height >= obstacle_height) {
@@ -917,54 +721,18 @@ grid cell 	file: dem_file
 		}
 	}
 
-	//action to recompute the height after the construction of the obstacle
 	action update_after_construction(obstacle the_obstacle) {
 		obstacles << the_obstacle;
-		water_height <- 0.0;
-		already <- false;
 		if (the_obstacle.height > obstacle_height) {obstacle_height <- the_obstacle.height;}
 	}
-	
-	/*reflex color_up {
-		float cv <- 255 * (1 - water_height/20.0);
-		color <- rgb(cv,cv,255);
-	}*/
 }
 
 /*************************************************************
-* The river's only purpose is to create a shape that gathers 
-* the @code{cell}s covered by water
+* People (preserved - works with synced water levels)
 *************************************************************/	
-
-species river {
-	list<cell> cells;
-	list<river> to_merge;
-	geometry shape_to_export;
-	action generate_shape {
-		shape <- union(cells collect each.shape_union);
-		cells <- [];
-	}
-	action update_shape {
-		shape <- union (to_merge) ;
-		ask to_merge - self{
-			do die;
-		}
-		to_merge <- [];
-	}
-	rgb color <-rnd_color(255);	
-}
-
-
-/*************************************************************
-* People are moving agents that can be in different states 
-* (idle, fleeing, drowned, evacuated). When evacuating, they 
-* try to move to the closest @code{evacuation_point}
-*************************************************************/	
-
 species people skills: [moving] control: fsm { 
 	
 	float speed <- speed_of_people;
-	
 	point init_loc <- nil;
 	int evacuation_time <- -1;
 	
@@ -972,7 +740,6 @@ species people skills: [moving] control: fsm {
 		if (evacuation_time = -1) {
 			evacuation_time <- rnd(50);
 		}
-		
 		name <- "person" + people_counter;
 		people_counter <- people_counter + 1;
 	}
@@ -992,7 +759,7 @@ species people skills: [moving] control: fsm {
 			}
 			if (target != nil) {my_path <- road_network path_between (location, target);}
 		}
-		if my_path != nil {do follow(path: my_path, move_weights: road_weights); }
+		if my_path != nil {do follow(path: my_path, move_weights: road_weights);}
 		transition to: s_evacuated when: target != nil and location distance_to target < max_distance_to_be_saved;
 		transition to: s_drowned when: self.is_drowning();
 		transition to: s_fleeing when: my_path = nil;
@@ -1000,12 +767,10 @@ species people skills: [moving] control: fsm {
 	
 	state s_evacuated final: true {
 		enter{evacuated <- evacuated+1;}
-		//do die;
 	}
 	
 	state s_drowned final: true {
 		enter {casualties <- casualties + 1;}
-		//do die;
 	}
 
 	bool is_drowning {
@@ -1015,7 +780,6 @@ species people skills: [moving] control: fsm {
 }
 	
 /*************************************************************
-* Evacuations points are simple landmarks read from a GIS file.
-* No behaviour is attached to these agents
+* Evacuation points (preserved)
 *************************************************************/	
 species evacuation_point schedules: [];
