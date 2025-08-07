@@ -340,7 +340,7 @@ experiment Run  type:gui autorun: true{
 						//\nPress 'r' to restart immediately.";
 						//keep <- "Keep the dykes."; 
 					}
-					match "s_diking" { 
+					match "s_diking" {  
 						stage <-  "Build dykes/dams";
 						indicators <- "Meters of dyke built: "+ round(dyke_length) + "m" + "\n\nMeters of dam built: "+ round(dam_length) + "m";
 					

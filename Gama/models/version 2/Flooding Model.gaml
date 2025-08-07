@@ -34,6 +34,7 @@ global control: fsm {
 	
 	bool use_tell <- true;
 	
+	int G_evacuation_time <- 60;
 	
 	float waiting_time_in_s <- 1.5;
 	
@@ -129,6 +130,9 @@ global control: fsm {
 	//People counter
 	int people_counter <- 0;
 
+
+	float dam_length;
+	float dyke_length;
 	/*************************************************************
 	 * Initial parameters for people, water and obstacles
 	 *************************************************************/
@@ -150,13 +154,10 @@ global control: fsm {
 	float diffusion_rate <- 0.4 const: true;
 	
 	//Height of the dykes 
-	float dyke_height <- 100.0 const: true;
+	float dyke_height <- 150.0 const: true;
 	
 	//Width of the dyke (15 m by default)
 	float dyke_width <- 15.0 const: true;
-	
-	float dyke_length <- 0.0;
-	float dam_length <- 0.0;
 	
 	
 	float limit_drown <- 0.1 const: true;
@@ -313,7 +314,7 @@ global control: fsm {
 		 
 	}
 	action update_score {
-		float dyke_price <- dyke sum_of (each.length * (each.is_dam ? price_meter_dam : price_meter_dyke));	
+		float dyke_price <- dyke_length * price_meter_dyke + dam_length * price_meter_dam ;	
 		float impact_border <- (cells_at_stake where (each.water_height > limit_drown)) sum_of (each.water_height *border_impact); 
 		score <- init_score - casualties_impact * casualties - dyke_price - impact_border;
 	} 
@@ -356,8 +357,8 @@ global control: fsm {
  	
  
 	
- 	string id_sim <- "Game_" + (#now).year +"_" + (#now).month+"_"+(#now).day+ "_"+(#now).hour+ "_"+(#now).minute;
-		
+ 	string id_sim <- (vr_player ? "VR_": "Desktop_") + "Game_" + (#now).year +"_" + (#now).month+"_"+(#now).day+ "_"+(#now).hour+ "_"+(#now).minute;
+	 		
 	int current_step;
 	
 		// The next timeout to occur for the different stages
@@ -507,6 +508,13 @@ global control: fsm {
 	action init_people {
 		create people number: nb_of_people {
 			location <- init_loc != nil ?init_loc : any_location_in(one_of(buildings));
+		}
+		int cpt <- 0;
+		ask people {
+			cpt <- cpt + 1;
+			evacuation_time <- round(G_evacuation_time * (1 - cpt/nb_of_people));
+			speed <- speed_of_people * (1.2 - 0.4 * cpt/nb_of_people);
+			
 		}
 	}
 
@@ -994,23 +1002,21 @@ species river {
 
 species people skills: [moving] control: fsm { 
 	
-	float speed <- speed_of_people;
+	float speed ;
 	
 	point init_loc <- nil;
-	int evacuation_time <- 60;
+	int evacuation_time ;
 	
 	init {
-		if (evacuation_time = -1) {
-			evacuation_time <- rnd(50);
-		}
-		
 		name <- "person" + people_counter;
 		people_counter <- people_counter + 1;
+		
 	}
 
 	state s_idle initial: true {
 		transition to: s_fleeing when: world.state in ["s_flooding", "s_init"] and (evacuation_time = current_step);
 		transition to: s_drowned when: self.is_drowning();
+		
 	}
 	
 	state s_fleeing {

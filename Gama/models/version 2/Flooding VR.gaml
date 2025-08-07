@@ -228,7 +228,7 @@ species unity_linker parent: abstract_unity_linker {
 		up_water <- geometry_properties("water", string(nil), water_aspect, #no_interaction,false);
 		up_shelter <- geometry_properties("shelter", string(nil), shelter_aspect,#ray_interactable,false);
 		
-		unity_aspect frontier_green_aspect <- geometry_aspect(50.0, #green,  precision);
+		unity_aspect frontier_green_aspect <- geometry_aspect(15.0, rgb(#green,0.1),  precision);
 		unity_aspect frontier_orange_aspect <- geometry_aspect(50.0, #orange,  precision);
 		unity_aspect frontier_red_aspect <- geometry_aspect(50.0, #red,  precision);
 	
@@ -262,6 +262,7 @@ species unity_linker parent: abstract_unity_linker {
 		}
 		do add_background_geometries(water_limit_well_ts collect (each + 20),up_frontier_orange);
 		do add_background_geometries(water_limit_danger collect (each + 20),up_frontier_red);
+		do add_background_geometries(water_limit_drain collect (each + 20),up_frontier_green);
 	
 		
 	}
@@ -275,7 +276,7 @@ species unity_linker parent: abstract_unity_linker {
 		
 		do send_message players: unity_player as list mes: ["score":: int(100* (1 - casualties/nb_of_people)), "round":: current_round, "endgame"::current_round >= num_rounds];
 	}
-	
+	 
 	action sendLengthData {
 		do send_message players: unity_player as list mes: ["dykeLength":: round(world.dyke_length)];
 		do send_message players: unity_player as list mes: ["damLength":: round(world.dam_length)];
