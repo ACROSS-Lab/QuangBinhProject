@@ -1,9 +1,9 @@
 /**
-* Name: Flooding Model with SpreadingSkill
-* Author: Alexis Drogoul + SpreadingSkill
+* Name: Flooding Model with SpreadingSkill - VR Compatible
+* Author: Alexis Drogoul + SpreadingSkill + Backward Compatibility
 * Description: This model integrates the advanced SpreadingSkill water simulation
-* with the original people evacuation and scoring system. Uses FSM for behavioral
-* architecture and provides advanced dyke building with rain system.
+* with the original people evacuation and scoring system, while maintaining
+* full backward compatibility with the VR model and original species.
 */
 @no_experiment
 @no_info
@@ -12,14 +12,14 @@ model Flooding
 
 global control: fsm skills: [spreading] {
 	
-		image button_image_unselected;
+	image button_image_unselected;
 	image button_image_selected;
 	image check_image_unselected;
 	image check_image_selected; 
 		
  	bool save_results <- false;
  	
- 	int num_step <- 350;
+ 	int num_step <- 50;
  	int num_step_add <- num_step;
  	
  	float diking_duration <- 60.0;
@@ -64,6 +64,25 @@ global control: fsm skills: [spreading] {
 	bool waiting_for_first_point <- false;
 	bool waiting_for_second_point <- false;
 	
+	// Compatibility mode toggle
+	bool use_spreading_skill <- true; // Set to false to use original water system
+	
+	/*************************************************************
+	 * BACKWARD COMPATIBILITY: Original water variables
+	 *************************************************************/
+	
+	geometry main_river_part;
+	float max_water_input <- 0.4 const: true;
+	float initial_water_height <- 2.0 const: true;
+	float diffusion_rate <- 0.4 const: true;
+	float dyke_height <- 60.0 const: true;
+	float dyke_width <- 15.0 const: true;
+	float dyke_length <- 0.0;
+	float dam_length <- 0.0;
+	float limit_drown <- 0.1 const: true;
+	list<cell> bed_cells;
+	float total_water_to_add;
+	
 	/*************************************************************
 	 * UI Colors and Styling (preserved from original)
 	 *************************************************************/
@@ -85,6 +104,15 @@ global control: fsm skills: [spreading] {
 	geometry background <- rectangle(1700, 1400);
 	point text_position <- {-3000, 600};
 	point background_position <- text_position - {200, 200};
+	point icon_position <- {-2850, 1600};
+	point check_position <- {-2850, 1700};
+	point check_text_position <- {-2600, 1900};
+	
+	bool river_in_3D <- false; 
+	geometry button_frame;  
+	geometry check_frame;
+	bool button_selected;
+	bool check_selected;
 	
 	float cycle_duration <- 0.01;
 	
@@ -111,20 +139,14 @@ global control: fsm skills: [spreading] {
 	int people_counter <- 0;
 
 	/*************************************************************
-	 * SpreadingSkill Parameters (replacing old water parameters)
+	 * SpreadingSkill Parameters
 	 *************************************************************/
 
 	int nb_of_people <- 1000;
 	float speed_of_people <- 20 #m / #h;
 	
-	// SpreadingSkill will manage these internally:
-	// - water input, diffusion, rising rate
-	// - dyke height and behavior
-	// - rain system
-	
-	float limit_drown <- 0.1 const: true;
-	
 	list<cell> cells_at_stake;
+	bool is_ok_dyke_construction <- false;
 	
 	/*************************************************************
 	 * Road network (preserved)
@@ -148,7 +170,7 @@ global control: fsm skills: [spreading] {
 	geometry shape <- envelope(dem_file);
 	
 	/*************************************************************
-	 * FSM States (preserved structure, updated implementation)
+	 * FSM States (backward compatible implementation)
 	 *************************************************************/	
 	
 	state s_start initial: true {
@@ -164,13 +186,21 @@ global control: fsm skills: [spreading] {
 			do enter_init();
 			score <- init_score;	
 			ask cell {
-				water_height <- 0.0; // Reset cell water heights
+				already <- false;
 			}
+			
+			ask river {do die;}
+			people_counter <- 0;
 		}
 		
-		// REPLACED: Use SpreadingSkill instead of old water flow
-		do spreading_simulation_step();
-		do check_obstacles_drowning();
+		// Adaptive water simulation
+		if (use_spreading_skill) {
+			do spreading_simulation_step();
+		} else {
+			do add_water();
+			do flow_water();
+			do check_obstactles_drowning();
+		}
 		do recompute_road_graph();
 		do body_init();
 		do update_score();
@@ -184,22 +214,25 @@ global control: fsm skills: [spreading] {
 	}
 
 	/**
-	 * Dyke building state - now uses SpreadingSkill dyke system
+	 * Dyke building state - supports both systems
 	 */
 	state s_diking {
 		enter {
 			do enter_diking();
-			// Enable dyke building mode in SpreadingSkill
-			do toggle_dyke_building_mode();
-			dyke_building_active <- is_dyke_building_mode();
+			
+			if (use_spreading_skill) {
+				do toggle_dyke_building_mode();
+				dyke_building_active <- is_dyke_building_mode();
+			} else {
+				do compute_river_shape();
+			}
 		}
 		
 		do body_diking();
 		
 		exit {
 			do exit_diking();
-			// Disable dyke building mode
-			if (dyke_building_active) {
+			if (use_spreading_skill and dyke_building_active) {
 				do toggle_dyke_building_mode();
 				dyke_building_active <- false;
 			}
@@ -212,25 +245,33 @@ global control: fsm skills: [spreading] {
 	}
 	
 	/**
-	 * Flooding state - now uses SpreadingSkill simulation
+	 * Flooding state - supports both systems
 	 */
 	state s_flooding {
 		enter {
 			ask cell {
-				water_height <- 0.0; // Reset for sync
+				already <- false;
 			}
+			
+			ask river {do die;}
 			
 			do enter_flooding();
 			score <- init_score;
 			people_counter <- 0;	
 			
-			// Start SpreadingSkill simulation
-			do start_spreading_simulation();
+			if (use_spreading_skill) {
+				do start_spreading_simulation();
+			}
 		}		
 		
-		// REPLACED: Use SpreadingSkill instead of old water flow
-		do spreading_simulation_step();
-		do check_obstacles_drowning();
+		// Adaptive water simulation
+		if (use_spreading_skill) {
+			do spreading_simulation_step();
+		} else {
+			do add_water();
+			do flow_water();
+			do check_obstactles_drowning();
+		}
 		do recompute_road_graph();
 		do body_flooding();
 		do update_score();
@@ -239,14 +280,136 @@ global control: fsm skills: [spreading] {
 		exit {
 			best_score <- max(best_score, score);
 			do exit_flooding();
-			// Stop SpreadingSkill simulation
-			do stop_spreading_simulation();
+			if (use_spreading_skill) {
+				do stop_spreading_simulation();
+			}
 		}
 		transition to: s_start when: (current_round >= num_rounds) and flooding_over() {
 			do restart();
 		}
 		transition to: s_diking when: (current_round < num_rounds) and flooding_over() {
 			do restart();
+		}
+	}
+	
+	/*************************************************************
+	 * BACKWARD COMPATIBILITY: Original water flow actions
+	 *************************************************************/
+	
+	/**
+	 * Original add_water action - for VR compatibility
+	 */
+	action add_water {
+		if (current_step <= num_step_add) {
+			list<cell> to_adds <- bed_cells where ((each.obstacle_height = 0) and (each.location overlaps main_river_part));
+			float coeff_to_add <- total_water_to_add / (to_adds sum_of each.water_to_add);
+			ask to_adds parallel: true{
+				water_height <- water_height + water_to_add * max_water_input * coeff_to_add;
+			}
+		}
+	}
+	
+	/**
+	 * Original flow_water action - for VR compatibility
+	 */
+	action flow_water {
+		ask cell parallel: true{
+			water_height_tmp <- water_height;
+		}
+		ask cell parallel: true{
+			do flow();
+		}
+		ask cell parallel: true{
+			water_height <- water_height_tmp;
+		}
+		do compute_river_shape();
+	}
+	
+	/**
+	 * Original compute_river_shape action - for VR compatibility
+	 */
+	action compute_river_shape {
+		list<cell> river_cells <- cell where (not each.already and (each.water_height > limit_drown));
+		list<list<cell>> clusters <- list<list<cell>>(simple_clustering_by_distance(river_cells, 1));
+		loop c over: clusters {
+			ask c {already <- true;}
+       		create river with: (cells:c);
+       		ask river parallel: true {
+       			do generate_shape();
+       		}
+		}
+		
+		list<list<river>> clusters_r <- list<list<river>>(simple_clustering_by_distance(river, 0.0));
+		 
+		list<river> merging_rivers;
+		loop cr over: clusters_r {
+			if length(cr) > 1 {
+				first(cr).to_merge <- cr;
+				merging_rivers << first(cr);
+			}
+		}
+		ask merging_rivers parallel: true {
+			do update_shape();
+		}
+		ask river parallel: true {
+			shape_to_export <- shape simplification simplification_river_dist;
+			shape_to_export.attributes["name"] <- name;
+		}
+		
+		if (empty(river)) {
+			main_river_part <- init_river;
+		} else {
+			main_river_part <- river closest_to {world.location.x, world.shape.height};
+			if (main_river_part = nil) {
+				main_river_part <- river with_max_of(each.shape.area);
+			}
+		}
+	}
+	
+	/**
+	 * Original create_dyke action - for VR compatibility
+	 */
+	bool create_dyke(point source, point target) {
+		if (use_spreading_skill) {
+			// Use SpreadingSkill for dyke creation
+			return build_dyke(source, target);
+		} else {
+			// Use original dyke creation logic
+			if (source distance_to target > 1.0)  {
+				geometry l <- line([source, target]);
+				l <- l inter world;
+				if (l != nil) {
+					if (l overlaps init_river) {
+						geometry gI <- l inter init_river;
+						geometry gD <- l - init_river;
+						if gI != nil {
+							loop ggI over: gI.geometries {
+								create dyke with:(is_dam: true, shape:ggI);
+							}
+							if (gD != nil) {
+								loop ggD over: gD.geometries {
+									create dyke with:(shape:ggD);
+								}
+							}
+						}
+					} else {
+						create dyke with:(shape:l);
+						return true;
+					}	
+				} else {
+					return false;
+				}
+			}
+			return false;
+		}
+	}
+	
+	/**
+	 * Original check_obstactles_drowning action - for VR compatibility
+	 */
+	action check_obstactles_drowning {
+		ask buildings+road+dyke {
+			if (!drowned) {do check_drowning();}
 		}
 	}
 	
@@ -273,15 +436,17 @@ global control: fsm skills: [spreading] {
 		if (dyke_field != nil) {
 			display_dyke_field <- dyke_field;
 		}
+		
+		// Update river representation for compatibility
+		do update_rivers_from_spreading_skill();
 	}
 	
 	/**
-	 * Synchronizes SpreadingSkill water levels with cell grid for people navigation
+	 * Synchronizes SpreadingSkill water levels with cell grid
 	 */
 	action sync_water_levels_to_cells {
 		if (water_field != nil) {
 			ask cell parallel: true {
-				// Get water level from SpreadingSkill's field
 				float water_level <- display_water_field[location];
 				water_height <- water_level > 0.01 ? water_level : 0.0;
 			}
@@ -289,48 +454,32 @@ global control: fsm skills: [spreading] {
 	}
 	
 	/**
-	 * Dyke building click handler - integrates with SpreadingSkill
+	 * Creates river agents from SpreadingSkill water field for VR compatibility
 	 */
-	action handle_dyke_click(point click_location) {
-		if (dyke_building_active) {
-			if (waiting_for_first_point) {
-				dyke_point1 <- click_location;
-				waiting_for_first_point <- false;
-				waiting_for_second_point <- true;
-				write "✓ First dyke point selected: " + dyke_point1;
-				write "   → Click second point to complete dyke";
-			} else if (waiting_for_second_point) {
-				dyke_point2 <- click_location;
-				waiting_for_second_point <- false;
-				write "✓ Second dyke point selected: " + dyke_point2;
-				write "   → Building dyke...";
-
-				// Build dyke using SpreadingSkill
-				bool success <- build_dyke(dyke_point1, dyke_point2);
-				if (success) {
-					write "🏗️ Dyke built successfully!";
-					write "   Active dykes: " + get_active_dyke_count();
-				} else {
-					write "❌ Failed to build dyke";
-				}
-
-				// Reset for next dyke
-				waiting_for_first_point <- true;
-				dyke_point1 <- nil;
-				dyke_point2 <- nil;
-				write "   → Ready for next dyke (click first point)";
+	action update_rivers_from_spreading_skill {
+		ask river {do die;}
+		
+		list<cell> river_cells <- cell where (each.water_height > limit_drown);
+		if (!empty(river_cells)) {
+			list<list<cell>> clusters <- list<list<cell>>(simple_clustering_by_distance(river_cells, 1));
+			loop c over: clusters {
+	       		create river with: (cells:c);
 			}
+			ask river parallel: true {
+	       		do generate_shape();
+	       		shape_to_export <- shape simplification simplification_river_dist;
+				shape_to_export.attributes["name"] <- name;
+	       	}
+		}
+		
+		// Update main river part
+		if (empty(river)) {
+			main_river_part <- init_river;
 		} else {
-			// Show information at click location
-			if (display_water_field != nil) {
-				float water_level <- display_water_field[click_location];
-				if (water_level > 0.01) {
-					write "💧 Water level: " + (water_level with_precision 2) + "m";
-				} else {
-					write "🏞️ No water at this location";
-				}
+			main_river_part <- river closest_to {world.location.x, world.shape.height};
+			if (main_river_part = nil) {
+				main_river_part <- river with_max_of(each.shape.area);
 			}
-			write "📍 Click coordinates: " + click_location;
 		}
 	}
 	
@@ -339,51 +488,36 @@ global control: fsm skills: [spreading] {
 	 *************************************************************/
 	
 	action start_light_rain {
-		do start_rain(0.1, 1.0);
-		write "🌧️ Light rain started";
-	}
-	
-	action start_heavy_rain {
-		do start_rain(0.3, 1.5);
-		write "⛈️ Heavy rain started";
-	}
-	
-	action stop_rain_completely {
-		do stop_rain();
-		write "☀️ Rain stopped";
-	}
-	
-	/*************************************************************
-	 * Dyke Control Actions (NEW)
-	 *************************************************************/
-	
-	action toggle_dyke_building {
-		do toggle_dyke_building_mode();
-		dyke_building_active <- is_dyke_building_mode();
-		if (dyke_building_active) {
-			write "🔨 DYKE BUILDING MODE ACTIVATED";
-			write "   → Click first point in the display";
-			waiting_for_first_point <- true;
-			waiting_for_second_point <- false;
-		} else {
-			write "🔨 DYKE BUILDING MODE DEACTIVATED";
-			waiting_for_first_point <- false;
-			waiting_for_second_point <- false;
+		if (use_spreading_skill) {
+			do start_rain(0.1, 1.0);
+			write "🌧️ Light rain started";
 		}
 	}
 	
-	action clear_all_dykes_action {
-		int dyke_count <- get_active_dyke_count();
-		do clear_all_dykes();
-		write "💥 All dykes cleared (" + dyke_count + " dyke cells removed)";
+	action start_heavy_rain {
+		if (use_spreading_skill) {
+			do start_rain(0.3, 1.5);
+			write "⛈️ Heavy rain started";
+		}
+	}
+	
+	action stop_rain_completely {
+		if (use_spreading_skill) {
+			do stop_rain();
+			write "☀️ Rain stopped";
+		}
 	}
 	
 	/*************************************************************
-	 * Score Update (preserved, modified for SpreadingSkill)
+	 * Score Update (backward compatible)
 	 *************************************************************/
 	action update_score {
-		// Calculate dyke costs using SpreadingSkill data
-		float dyke_price <- get_active_dyke_count() * price_meter_dyke * 15.0; // Approximate cost
+		float dyke_price;
+		if (use_spreading_skill) {
+			dyke_price <- get_active_dyke_count() * price_meter_dyke * 15.0; // Estimate
+		} else {
+			dyke_price <- dyke sum_of (each.length * (each.is_dam ? price_meter_dam : price_meter_dyke));
+		}
 		float impact_border <- (cells_at_stake where (each.water_height > limit_drown)) sum_of (each.water_height * border_impact); 
 		score <- init_score - casualties_impact * casualties - dyke_price - impact_border;
 	}
@@ -434,15 +568,26 @@ global control: fsm skills: [spreading] {
 
 	action enter_flooding_base {
 		if save_results {
-			// Note: Dyke saving would need to be adapted for SpreadingSkill
-			write "Saving dykes (SpreadingSkill format) for round " + current_round;
+			if (use_spreading_skill) {
+				write "Saving dykes (SpreadingSkill format) for round " + current_round;
+			} else {
+				save dyke to:id_sim+"/dykes_" + current_round + ".shp"  format:"shp";
+			}
 		}
 	}
 	
 	action exit_flooding_base {
 		if (save_results) {
-			float dyke_length_est <- get_active_dyke_count() * 15.0; // Estimate
-			save ""+current_round+","+ dyke_length_est+ ",0,"+evacuated+"," +casualties to:id_sim+"/evacuated_casualties.csv" rewrite: false format:"text";
+			float dyke_length_val;
+			float dam_length_val;
+			if (use_spreading_skill) {
+				dyke_length_val <- get_active_dyke_count() * 15.0; // Estimate
+				dam_length_val <- 0.0;
+			} else {
+				dyke_length_val <- dyke_length;
+				dam_length_val <- dam_length;
+			}
+			save ""+current_round+","+ dyke_length_val+ ","+ dam_length_val +","+evacuated+"," +casualties to:id_sim+"/evacuated_casualties.csv" rewrite: false format:"text";
 		}
 		current_round <- current_round + 1;
 		if (current_round > num_rounds) {
@@ -460,7 +605,7 @@ global control: fsm skills: [spreading] {
 	}
 	
 	/*************************************************************
-	 * Initialization (modified for SpreadingSkill)
+	 * Initialization (backward compatible)
 	 *************************************************************/
 
 	init {
@@ -469,24 +614,24 @@ global control: fsm skills: [spreading] {
 		init_river <- union(all_river_parts);
 		
 		if (use_tell) {
-	 		do tell("Start the game: Round 1 (SpreadingSkill enabled)", false);
+			string system_name <- use_spreading_skill ? "SpreadingSkill enabled" : "Original system";
+	 		do tell("Start the game: Round 1 (" + system_name + ")", false);
 	 	}
 	 	
-		// Initialize agents (preserved)
+		// Initialize agents
 		do initialize_agents();
 		
-		// Initialize SpreadingSkill
-		do initialize_spreading_system();
+		// Initialize water system
+		if (use_spreading_skill) {
+			do initialize_spreading_system();
+		}
 	}
 	
 	/**
-	 * NEW: Initialize SpreadingSkill with DEM and water data
+	 * Initialize SpreadingSkill with DEM and water data
 	 */
 	action initialize_spreading_system {
 		write "=== INITIALIZING SPREADINGSKILL SYSTEM ===";
-		
-		// Create elevation field from DEM
-		
 		
 		// Create dyke field with same dimensions as DEM
 		field dyke_field_for_init <- field(elevation_map.columns, elevation_map.rows);
@@ -496,7 +641,7 @@ global control: fsm skills: [spreading] {
 			}
 		}
 		
-		// Initialize SpreadingSkill with coordinate-aligned fields
+		// Initialize SpreadingSkill
 		do initialize_spreading_grid_with_dyke_field(
 			dem_field: elevation_map, 
 			dyke_field: dyke_field_for_init,
@@ -521,30 +666,47 @@ global control: fsm skills: [spreading] {
 	action restart {
 		casualties <- 0;
 		evacuated <- 0;
-		current_step <- 0; 
+		current_step <- 0;
 		
-		// Reset SpreadingSkill simulation
-		do reset_spreading_simulation(all_river_parts, 1.5);
-		
-		ask cell {
-			water_height <- 0.0;
+		if (use_spreading_skill) {
+			// Reset SpreadingSkill simulation
+			do reset_spreading_simulation(all_river_parts, 1.5);
+		} else {
+			// Reset original system
+			ask dyke {
+				do die();
+			}
+			dyke_length <- 0.0;
+			dam_length <- 0.0;
 		}
-		ask road+buildings {
+		
+		ask river {do die();}
+		ask cell {
+			do initialize();
+		}
+		ask road+buildings+(keep_dykes ? dyke : []) {
 			drowned <- false;
 			do build();
 		}
-		ask people {
+		ask people+(!keep_dykes ? dyke: []) {
 			do die();
 		}
 		do initialize_agents();
+		
+		if (!use_spreading_skill) {
+			main_river_part <- init_river;
+		}
 	}
 	
 	action initialize_agents {
+		//Initialization of the river and the corresponding cells
+		do init_river_computation();
+		//Initialization of the obstacles (buildings, roads, etc.)
 		do init_buildings();
 		do init_roads();
 		do init_evac();
+		//Initialization of the people	
 		do init_people();
-		do init_drainage_system();
 	}
 	
 	action init_people {
@@ -569,26 +731,27 @@ global control: fsm skills: [spreading] {
 		}
 	}
 	
-	/**
-	 * Initialize drainage system (preserved from original)
+	/*
+	 * Initializes the water cells according to the river shape file and the drain
 	 */
-	action init_drainage_system {
+	action init_river_computation {
 		int max_y <- (cell max_of each.grid_y);
 		geometry border <- shape.contour;
 		water_limit_well <- [];	
 		geometry water_limit_d <- copy(border);
 		water_limit_drain <- [];
-		
 		loop g over: drain_shape_file {
-			water_limit_d <- water_limit_d - g;
+			water_limit_d  <- water_limit_d - g;
 			int is_drain_ <- int(g.attributes["drain"]);
 			if is_drain_ = 0 {
-				water_limit_well <- water_limit_well + (g inter border);
+				water_limit_well <- water_limit_well  + (g inter border);
 			} else {
 				water_limit_drain <- water_limit_drain + (g inter border);
+				ask cell overlapping g {
+					is_drain <- length(neighbors) < 4;
+				}
 			}
 		}
-		
 		water_limit_danger <- water_limit_d.geometries where (each.perimeter > 20);
 		loop wl over: water_limit_danger {
 			ask (cell overlapping wl) where (each.num_neigbors < 4) {
@@ -596,15 +759,25 @@ global control: fsm skills: [spreading] {
 				cells_at_stake << self;
 			}
 		}	
-	}
-
-	/**
-	 * Check obstacle drowning (preserved logic, updated for SpreadingSkill)
-	 */
-	action check_obstacles_drowning {
-		ask buildings+road {
-			if (!drowned) {do check_drowning();}
+			
+		if (empty(river)){ 
+			bed_cells <- [];
+			create river from: river_shapefile;
+			
+			ask cell overlapping init_river {
+				bed_cells << self;
+			}
 		}
+		
+		ask bed_cells {
+			if (grid_y > (max_y - 200)) {
+				water_to_add <- max(0.1,(grid_y / max_y));
+			}
+		}
+		total_water_to_add <- bed_cells sum_of each.water_to_add;
+		
+		ask bed_cells where (each.obstacle_height = 0){water_height <- initial_water_height;}
+		do compute_river_shape();
 	}
 
 	/**
@@ -619,11 +792,11 @@ global control: fsm skills: [spreading] {
 }
 
 /*************************************************************
-* Obstacles (simplified - dykes now handled by SpreadingSkill)
+* BACKWARD COMPATIBILITY: Original obstacle species
 *************************************************************/	
 species obstacle {
 	bool drowned <- false;
-	float height <- 10.0;
+	float height min: 0.0;
 	rgb color <- #gray;
 	list<cell> cells_under <- (cell overlapping self);
 	
@@ -655,24 +828,86 @@ species obstacle {
 }
 
 /*************************************************************
-* Buildings (preserved)
+* BACKWARD COMPATIBILITY: Original buildings species
 *************************************************************/	
 species buildings parent: obstacle schedules: []{
-
 	action compute_height {
 		height <- 10.0;
 	}
 }
 
 /*************************************************************
-* Roads (preserved)
+* BACKWARD COMPATIBILITY: Original dyke species
+*************************************************************/	
+species dyke parent: obstacle schedules: []{
+	float length;
+	bool is_dam <- false;
+	float rotation;
+	int init_cells;
+	float cell_percentage;
+	
+	init {
+		length <- shape.perimeter;
+		if (is_dam) {
+			dam_length <- dam_length + length;
+		} else {
+			dyke_length <- dyke_length + length;
+		}
+		shape <- shape + 20;
+		
+		// Calculate rotation angle
+        list<point> points <- shape.points;
+        point start_point <- first(points);
+        point end_point <- points[length(points) - 2];
+        float dx <- end_point.x - start_point.x;
+        float dy <- end_point.y - start_point.y;
+        rotation <- dy = 0 ? (dx > 0 ? 180 / 2 : -180 / 2) : atan(dx/dy);
+     
+		do compute_height();
+		do build();
+		
+		init_cells <- length(cells_under);
+		cell_percentage <- 1.0;
+	}
+	
+	action check_drowning {
+		loop c over: (cells_under where (each.water_height > limit_drown)) {
+			cells_under >> c;
+			if (shape != nil) {shape <- shape - (c + 20.0);}
+			c.obstacles >> self;
+		}
+		if (shape = nil or empty(cells_under)) {
+			loop c over: cells_under {
+				c.obstacles >> self;	
+			}
+			do die();
+		}
+		
+		cell_percentage <- length(cells_under)/init_cells;
+	}
+	
+	action compute_height {
+		height <- dyke_height;
+	}
+	
+	user_command "Destroy" {
+		do break();
+		drowned <- true;
+	}
+}
+
+/*************************************************************
+* BACKWARD COMPATIBILITY: Original road species
 *************************************************************/	
 species road parent: obstacle schedules: [] {
+	
 	action compute_height {
 		height <- 0.5;
 	}
 	
-	action build {}
+	action build {
+		
+	}
 	
 	action break {
 		need_to_recompute_graph <- true;
@@ -680,7 +915,7 @@ species road parent: obstacle schedules: [] {
 }
 
 /*************************************************************
-* Cell grid (simplified - SpreadingSkill handles water flow)
+* BACKWARD COMPATIBILITY: Original cell grid
 *************************************************************/	
 grid cell 	file: dem_file 
 			neighbors: 4 
@@ -690,27 +925,62 @@ grid cell 	file: dem_file
 			use_neighbors_cache: true  
 			schedules: [] {
 	
-	// Simplified - just for people navigation and obstacle management
+	float water_to_add;
+	bool already <- false;
+	geometry shape_union <- shape + 0.1;
 	float altitude <- grid_value const: true;
-	float water_height min: 0.0; // Synced from SpreadingSkill
+	float water_height min: 0.0;
 	float height;
 	list<obstacle> obstacles;
 	float obstacle_height;
 		
 	bool is_drain <- false;
 	bool is_stake <- false;
+	
 	int num_neigbors <- length(neighbors);
+	float water_height_tmp;
 	
 	action initialize {
 		water_height <- 0.0;
+		water_height_tmp <- 0.0;
 		height <- 0.0;
 		obstacle_height <- 0.0;
 		obstacles <- [];
 		is_drain <- false;
 		is_stake <- false;
+		water_to_add <- 0.0;
 	}
 	
-	// Water flow logic removed - handled by SpreadingSkill
+	/**
+	 * BACKWARD COMPATIBILITY: Original water flow algorithm
+	 */ 
+	action flow {
+		if ((num_neigbors = 4 or !is_drain) and water_height > 0 ) {
+			list<cell> neighbour_cells_al <- neighbors ;
+			
+			if (!empty(neighbour_cells_al)) {
+				ask neighbour_cells_al {
+					height <- altitude + water_height + obstacle_height;
+				}
+				
+				height <- altitude + water_height;
+				list<cell> flow_cells <- (neighbour_cells_al where (height > each.height));
+				if (!empty(flow_cells)) {
+					list<float> v <- flow_cells collect (height - each.height);
+					float sum_v <- sum(v);
+					float water_flowing <- water_height * diffusion_rate;
+					water_height_tmp <- water_height_tmp - water_flowing;
+					
+					loop i from: 0 to: length(flow_cells) -1 {
+						cell flow_cell <- flow_cells[i];
+						flow_cell.water_height_tmp <- flow_cell.water_height_tmp + water_flowing * v[i]/sum_v;
+					}
+				}
+			}
+		} else {
+			water_height_tmp <- water_height_tmp - (water_height * diffusion_rate);
+		}
+	}
 	
 	action update_after_destruction (obstacle the_obstacle) {
 		obstacles >> the_obstacle; 
@@ -723,12 +993,38 @@ grid cell 	file: dem_file
 
 	action update_after_construction(obstacle the_obstacle) {
 		obstacles << the_obstacle;
+		water_height <- 0.0;
+		already <- false;
 		if (the_obstacle.height > obstacle_height) {obstacle_height <- the_obstacle.height;}
 	}
 }
 
 /*************************************************************
-* People (preserved - works with synced water levels)
+* BACKWARD COMPATIBILITY: Original river species
+*************************************************************/	
+species river {
+	list<cell> cells;
+	list<river> to_merge;
+	geometry shape_to_export;
+	
+	action generate_shape {
+		shape <- union(cells collect each.shape_union);
+		cells <- [];
+	}
+	
+	action update_shape {
+		shape <- union (to_merge) ;
+		ask to_merge - self{
+			do die();
+		}
+		to_merge <- [];
+	}
+	
+	rgb color <-rnd_color(255);	
+}
+
+/*************************************************************
+* BACKWARD COMPATIBILITY: Original people species
 *************************************************************/	
 species people skills: [moving] control: fsm { 
 	
@@ -780,6 +1076,6 @@ species people skills: [moving] control: fsm {
 }
 	
 /*************************************************************
-* Evacuation points (preserved)
+* BACKWARD COMPATIBILITY: Original evacuation_point species
 *************************************************************/	
 species evacuation_point schedules: [];
