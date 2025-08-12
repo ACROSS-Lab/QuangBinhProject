@@ -469,7 +469,6 @@ experiment Launch  autorun: true type: unity {
 	action create_player(string id) {
 		ask unity_linker {
 			do create_player(id);
-			do add_background_geometries(player_agents, up_player);
 		}
 	}
 
