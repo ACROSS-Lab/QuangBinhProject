@@ -24,7 +24,7 @@ global control: fsm {
  	
  	float max_distance_to_be_saved <- 50 #m;
 	
-	int num_rounds <- 3;
+	int num_rounds <- 99;
 	
 	int current_round <- 1;
 	
@@ -135,7 +135,7 @@ global control: fsm {
 	int nb_of_people <- 1000;
 	
 	// The average speed of people
-	float speed_of_people <- 20 #m / #h;
+	float speed_of_people <- 10 #m / #h;
 	
 	// The maximum water input
 	float max_water_input <- 0.4 const: true;
@@ -218,7 +218,7 @@ global control: fsm {
 			do enter_start();
 		}
 		
-		transition to: s_init when: start_over();
+		transition to: s_diking when: start_over();
 	}
 	
 	state s_init {
@@ -770,7 +770,7 @@ species dyke parent: obstacle schedules: []{
 		
 		init_cells <- length(cells_under);
 		cell_percentage <- 1.0;
-	}
+			}
 	action check_drowning {
 		loop c over: (cells_under where (each.water_height > limit_drown)) {
 			cells_under >> c;

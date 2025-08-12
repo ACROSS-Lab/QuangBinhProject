@@ -30,6 +30,8 @@ public class UIController : MonoBehaviour
     public GameObject UI_Hint, UI_Hint_viet, UI_Hint_eng;
     public GameObject UI_ScoreRound_viet, UI_ScoreRound_eng;
     public GameObject UI_Length_viet, UI_Length_eng;
+    public GameObject buttonDyke_viet, buttonDyke_eng;
+    public GameObject textWait_viet, textWait_eng;
     public TextMeshProUGUI score, finalScore, bestScore;
     public TextMeshProUGUI roundTxt;
     public TextMeshProUGUI dykeLength, damLength;
@@ -76,14 +78,14 @@ public class UIController : MonoBehaviour
 
         if (FloodingPhase)
         {
-            if (TimerForDisplayingFloodUI > 0)
+            if (TimerForDisplayingFloodUI > 0 && !FloodingInitPhase)
             {
                 TimerForDisplayingFloodUI -= Time.deltaTime;
             }
             else
             {
                 if (InVietnamese)
-                { 
+                {
                     UI_FloodingPhase_viet.SetActive(false);
                 }
                 else
@@ -97,30 +99,29 @@ public class UIController : MonoBehaviour
                 {
                     FloodingInitPhase = false;
                     SimulationManager.Instance.SetStartPressed();
+                    SimulationManager.Instance.isInit = true;
                 }
                 else
                 {
                     SimulationManager.Instance.SetInFlood();
                 }
             }
-            
 
-            
+
+
         }
         else
         {
-           // globalVolume.SetActive(false);
+            // globalVolume.SetActive(false);
         }
     }
-
-   
-
 
     public void SetInVietnamese(bool value)
     {
         InVietnamese = value;
         UI_ChoiceOfLanguage.SetActive(false);
         TimerForDisplayingFloodUI = TimeForDisplayingFloodUI;
+        if(!UI_HUD.activeInHierarchy) UI_HUD.SetActive(true);
         FloodingInitPhase = true;
         if (InVietnamese)
         {
@@ -160,21 +161,49 @@ public class UIController : MonoBehaviour
 
     public void StartDikingPhase()
     {
-        DikingStart = true;
+        // DikingStart = true;
         Debug.Log("StartDikingPhase");
         if (InVietnamese)
-            UI_DykingPhase_viet.SetActive(false);
-        else UI_DykingPhase_eng.SetActive(false);
+        {
+            // UI_DykingPhase_viet.SetActive(false);
+            buttonDyke_viet.SetActive(false);
+            textWait_viet.SetActive(true);
+        }
+        else
+        {
+            // UI_DykingPhase_eng.SetActive(false);
+            buttonDyke_eng.SetActive(false);
+            textWait_eng.SetActive(true);
+        }    
         SimulationManager.Instance.SetInDykeBuilding();
 
-        LogosUI.SetActive(true);
-        Timer_on.SetActive(true);
-        Timer_off.SetActive(false);
-        build_time.SetActive(true);
-        flood_time.SetActive(false);
-        people_safe_on.SetActive(false); 
-        people_safe_off.SetActive(true);
-        Timer_on.GetComponent<StatusEffectManager>().StartEnergizedEffect(SimulationManager.Instance.GetLastTime());
+        
+    }
+
+    public void StartToBuildDyke()
+    {
+        if (!DikingStart)
+        {
+            if (InVietnamese)
+            {
+                UI_DykingPhase_viet.SetActive(false);
+            }
+            else
+            {
+                UI_DykingPhase_eng.SetActive(false);
+            }
+
+            LogosUI.SetActive(true);
+            Timer_on.SetActive(true);
+            Timer_off.SetActive(false);
+            build_time.SetActive(true);
+            flood_time.SetActive(false);
+            people_safe_on.SetActive(false);
+            people_safe_off.SetActive(true);
+            Timer_on.GetComponent<StatusEffectManager>().StartEnergizedEffect(SimulationManager.Instance.GetLastTime());
+            
+            DikingStart = true;
+        }
     }
 
     public void StartFloodingPhase()
@@ -202,10 +231,14 @@ public class UIController : MonoBehaviour
         if (InVietnamese)
         {
             UI_FloodingPhase_viet.SetActive(true);
+            buttonDyke_viet.SetActive(true);
+            textWait_viet.SetActive(false);
         }
         else
         {
             UI_FloodingPhase_eng.SetActive(true);
+            buttonDyke_eng.SetActive(true);
+            textWait_eng.SetActive(false);
         }
 
         flood_time.GetComponent<StatusEffectManager>().StartEnergizedEffect(SimulationManager.Instance.GetNumStep());
@@ -234,7 +267,7 @@ public class UIController : MonoBehaviour
     {
         if (InVietnamese)
             UI_EndingPhase_viet.SetActive(false);
-        else 
+        else
             UI_EndingPhase_eng.SetActive(false);
 
         UI_HUD.SetActive(false);
@@ -262,7 +295,7 @@ public class UIController : MonoBehaviour
 
     public void UpdateRound(int round)
     {
-        if(!UI_HUD.activeInHierarchy) UI_HUD.SetActive(true);
+        // if(!UI_HUD.activeInHierarchy) UI_HUD.SetActive(true);
         roundTxt.text = "" + round;
         this.round = int.Parse(roundTxt.text);
         if(round >= 3) UI_Hint.SetActive(true);

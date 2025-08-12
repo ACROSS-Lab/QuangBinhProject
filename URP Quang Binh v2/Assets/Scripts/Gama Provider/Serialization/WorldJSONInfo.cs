@@ -30,6 +30,7 @@ public class WorldJSONInfo
 
     public int casualties;
     public int num_step, current_step;
+    public bool ready_to_build_dyke;
 
     public static WorldJSONInfo CreateFromJSON(string jsonString)
     {

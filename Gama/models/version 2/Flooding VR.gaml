@@ -56,7 +56,7 @@ global {
 	
   
 	action enter_init {
-		//write "enter_init";
+		write "enter_init";
 		do enter_init_base;
 		ask unity_player {do set_status(IN_TUTORIAL);}
 		flooding_requested_from_gama <- false;
@@ -93,11 +93,12 @@ global {
 	
 	
 	action exit_diking {
-		//write "exit_diking";
+//		write "exit_diking";
 		ask unity_linker {
 			do send_message players: unity_player as list mes: ["end_diking"::""];
 		}
 		current_timeout <- gama.machine_time + diking_duration * 1000;
+		ready_to_build_dyke <- false;
 		
 	}
 	
@@ -112,8 +113,11 @@ global {
 	} 
 	
 	action body_diking {
-		if !(unity_player all_match each.in_dyke_building) {
+		if (!(unity_player all_match each.in_dyke_building) and !ready_to_build_dyke) {
 			current_timeout <- gama.machine_time + diking_duration * 1000;
+		}
+		else{
+			ready_to_build_dyke <- true;
 		}
 		
 	}
@@ -135,8 +139,7 @@ global {
 	}
 	
 	action enter_flooding {
-		write "enter_flooding";
-		
+//		write "enter_flooding";
 		do enter_flooding_base;
 		
 		
@@ -205,6 +208,8 @@ species unity_linker parent: abstract_unity_linker {
 	unity_property up_dam;
 	unity_property up_water;
 	unity_property up_shelter;
+	unity_property up_building;
+	unity_property up_player;
 //	unity_property up_injuries;
 	
 	
@@ -221,12 +226,16 @@ species unity_linker parent: abstract_unity_linker {
 		unity_aspect dam_aspect <- prefab_aspect("Prefabs/Blocks/DamBlock", 1.5, 0.0, 1.0, 0.0, precision);
 		unity_aspect water_aspect <- geometry_aspect(5.0, "Materials/Water/M_WaterVoronoi",precision);
 		unity_aspect shelter_aspect <- prefab_aspect("Prefabs/Shelter/Shelter",150,0,1.0,0.0, precision);
+		unity_aspect building_aspect <- geometry_aspect(5.0, "Materials/KeyMaterial",precision);
+		unity_aspect player_aspect <- prefab_aspect("Prefabs/Capsule", 20, 0, 1.0, 0.0, precision);
 		
 		up_people<- geometry_properties("people", "people", people_aspect, #no_interaction, false);
 		up_dyke <- geometry_properties("dyke", "dyke", dyke_aspect, #ray_interactable, false);
 		up_dam <- geometry_properties("dam", "dam", dam_aspect, #ray_interactable, false);
 		up_water <- geometry_properties("water", string(nil), water_aspect, #no_interaction,false);
 		up_shelter <- geometry_properties("shelter", string(nil), shelter_aspect,#ray_interactable,false);
+		up_building <- geometry_properties("buidling", string(nil), building_aspect,#no_interaction, false);
+		up_player <- geometry_properties("player", string(nil), player_aspect, #no_interaction, false);
 		
 		unity_aspect frontier_green_aspect <- geometry_aspect(50.0, #green,  precision);
 		unity_aspect frontier_orange_aspect <- geometry_aspect(50.0, #orange,  precision);
@@ -246,6 +255,8 @@ species unity_linker parent: abstract_unity_linker {
 		unity_properties << up_dam;
 		unity_properties << up_water;
 		unity_properties << up_shelter;
+		unity_properties << up_building;
+		unity_properties << up_player;
 		
 		//add the static_geometry agents as static agents/geometries to send to unity with the up_geom unity properties.
 		do add_background_geometries(evacuation_point,up_shelter);
@@ -262,8 +273,9 @@ species unity_linker parent: abstract_unity_linker {
 		}
 		do add_background_geometries(water_limit_well_ts collect (each + 20),up_frontier_orange);
 		do add_background_geometries(water_limit_danger collect (each + 20),up_frontier_red);
+		do add_background_geometries(water_limit_drain collect (each + 20), up_frontier_green);
 	
-		
+//		do add_background_geometries(buildings, up_building );
 	}
 	
 	action end_diking(string player_id) {
@@ -290,11 +302,13 @@ species unity_linker parent: abstract_unity_linker {
 	//	map_to_send["playback_finished"] <- playback_finished;
 		map_to_send["num_step"] <- world.num_step;
 		map_to_send["current_step"] <- world.current_step;
+		map_to_send["ready_to_build_dyke"] <- ready_to_build_dyke;
 		
 		//write sample(world.state) + " " + sample(playback_finished);
 	} 
 	list<point> define_init_locations {
-		return [world.location + {0,0,1000}];
+		return [world.location + {0,0,1000},
+				world.location + {100,0,1000}];
 	} 
 
 	list<float> convert_string_to_array_of_float(string my_string) {
@@ -372,7 +386,7 @@ species unity_linker parent: abstract_unity_linker {
 		map<string, list<int>> people_atts <- ["status"::status];
 		do add_geometries_to_send(affected_p, up_people, people_atts);
 	}
-	/**
+	/**+
 	 * What are the agents to send to Unity, and what are the agents that remain unchanged ? 
 	 */
 	reflex send_agents when: not empty(unity_player) {
@@ -397,8 +411,8 @@ species unity_linker parent: abstract_unity_linker {
 //			do add_geometries_to_keep(dyke);
 			do sendLengthData;
 			// The river is not changed so we keep it unchanged
-//			if (river_already_sent_in_diking_phase) {do add_geometries_to_keep(river);} 
-//			else {do add_geometries_to_send(river collect each.shape_to_export, up_water); river_already_sent_in_diking_phase <- true;}
+			if (river_already_sent_in_diking_phase) {do add_geometries_to_keep(river);} 
+			else {do add_geometries_to_send(river collect each.shape_to_export, up_water); river_already_sent_in_diking_phase <- true;}
 			
 		} else	if (state = "s_flooding") {
 			// We only send the people who are evacuating 
@@ -422,9 +436,9 @@ species unity_linker parent: abstract_unity_linker {
 
 	// Message sent by Unity to inform about the status of a specific player
 	action set_status(string player_id, string status) {
-		//write "NEW STATUS: " + status;
+//		write "NEW STATUS: " + status;
 		unity_player player <- player_agents[player_id];
-		//write "set status: " + sample(player_id) + " " + sample(player) + " " + sample(status);
+//		write "set status: " + sample(player_id) + " " + sample(player) + " " + sample(status);
 		if (player != nil) {
 			ask player {do set_status(status);}
 		}
@@ -470,6 +484,7 @@ experiment Launch  autorun: true type: unity {
 	action create_player(string id) {
 		ask unity_linker {
 			do create_player(id);
+			do add_background_geometries(player_agents, up_player);
 		}
 	}
 

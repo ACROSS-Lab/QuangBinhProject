@@ -48,17 +48,17 @@ public class MoveHorizontal : InputData
         pos.z = Mathf.Clamp(pos.z, minZ, maxZ);
         transform.position = pos;
 
-        if (Strafe)
-        {
-            Vector3 vectR = camTransform.right;
-            vectR.y = 0;
-            vectR = Vector3.Normalize(vectR);
+        // if (Strafe)
+        // {
+        //     Vector3 vectR = camTransform.right;
+        //     vectR.y = 0;
+        //     vectR = Vector3.Normalize(vectR);
 
-            transform.position += vectR * speed * Time.fixedDeltaTime * val.x;
-        }
-        else
-        {
-            transform.Rotate(new Vector3(0, 1, 0), Time.fixedDeltaTime * speedRotation * val.x);
-        }
+        //     transform.position += vectR * speed * Time.fixedDeltaTime * val.x;
+        // }
+        // else
+        // {
+        //     transform.Rotate(new Vector3(0, 1, 0), Time.fixedDeltaTime * speedRotation * val.x);
+        // }
     }
 }

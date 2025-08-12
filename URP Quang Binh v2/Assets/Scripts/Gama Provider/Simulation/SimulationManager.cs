@@ -18,7 +18,8 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] protected XRRayInteractor rightXRRayInteractor;
 
 
-    [Header("Base GameObjects")] [SerializeField]
+    [Header("Base GameObjects")]
+    [SerializeField]
     protected GameObject player;
 
     [SerializeField] protected GameObject Ground;
@@ -33,7 +34,7 @@ public class SimulationManager : MonoBehaviour
     protected float GamaCRSOffsetY = 0.0f;
 
 
-    protected Transform XROrigin;
+    [SerializeField] protected Transform XROrigin;
 
     // Z offset and scale
     protected float GamaCRSOffsetZ = 0.0f;
@@ -105,7 +106,7 @@ public class SimulationManager : MonoBehaviour
     protected float TimeSendInit = 0.5f;
     protected float TimerSendInit;
 
-  //  protected Coroutine activeCoroutine = null;
+    //  protected Coroutine activeCoroutine = null;
 
     protected Vector3 StartPoint;
     protected Vector3 EndPoint;
@@ -147,6 +148,8 @@ public class SimulationManager : MonoBehaviour
 
     protected float LastTime;
     protected float RemainingSeconds;
+    [HideInInspector] public bool isInit = false;
+    private bool readyToBuild;
 
     //Cache
     Dictionary<string, string> connectionID;
@@ -181,7 +184,6 @@ public class SimulationManager : MonoBehaviour
         };
 
 
-        XROrigin = player.transform.Find("XR Origin (XR Rig)");
         connectionID = new Dictionary<string, string>
         {
             {"id", ConnectionManager.Instance.getUseMiddleware()
@@ -204,7 +206,7 @@ public class SimulationManager : MonoBehaviour
 
     public int GetNumStep()
     {
-        if(infoWorld != null) return infoWorld.num_step;
+        if (infoWorld != null) return infoWorld.num_step;
         else return 350; //this is a temporary fix
     }
 
@@ -299,19 +301,23 @@ public class SimulationManager : MonoBehaviour
     {
         if (IsGameState(GameState.GAME) && infoWorld != null)
         {
+            if (!isInit) return;
+
             if (_currentStage != infoWorld.state)
             {
                 Debug.Log("BEGIN OF STAGE : " + infoWorld.state);
                 _currentStage = infoWorld.state;
-                if (_currentStage == "s_diking")
+
+            }
+
+            if (_currentStage == "s_diking")
+            {
+                if (!StartMenuDone)
                 {
-                    if (!StartMenuDone )
-                    {
-                        UIController.Instance.StartMenuDikingPhase();
-                        StartMenuDone = true;
-                        StartFloodingDone = false;
-                        transformToKeep = new List<string>();
-                    }
+                    UIController.Instance.StartMenuDikingPhase();
+                    StartMenuDone = true;
+                    StartFloodingDone = false;
+                    transformToKeep = new List<string>();
                 }
             }
 
@@ -334,6 +340,7 @@ public class SimulationManager : MonoBehaviour
                     Debug.Log("Display future dike is false at wait flooding");
                     transformToKeep = new List<string>();
                     StartFloodingDone = true;
+                    readyToBuild = false;
                 }
             }
 
@@ -342,16 +349,16 @@ public class SimulationManager : MonoBehaviour
                 if (UIController.Instance.people_safe_on.activeSelf)
                 {
                     UIController.Instance.people_safe_on.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(1000 - infoWorld.casualties);
-                } 
+                }
 
-                if(UIController.Instance.flood_time.activeSelf)
+                if (UIController.Instance.flood_time.activeSelf)
                 {
-                   UIController.Instance.flood_time.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(infoWorld.num_step - infoWorld.current_step);
+                    UIController.Instance.flood_time.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(infoWorld.num_step - infoWorld.current_step);
                 }
             }
             // else if (infoWorld.state == "s_diking")
             // {
-                
+
             // } 
             // else if (infoWorld.state == "s_flooding")
             // {
@@ -369,12 +376,12 @@ public class SimulationManager : MonoBehaviour
             if (infoWorld.state != "s_init" && infoWorld.remaining_time > LastTime)
             {
                 //Debug.Log("Remaining time: " + infoWorld.remaining_time);
-               // timer.StartEnergizedEffect(infoWorld.remaining_time);
+                // timer.StartEnergizedEffect(infoWorld.remaining_time);
                 RemainingSeconds = infoWorld.remaining_time;
                 //TimeSpan timeSpan = TimeSpan.FromSeconds(RemainingSeconds);
                 //timerText.text = timeSpan.ToString(@"mm\:ss");
-              //  if (activeCoroutine != null)
-               //     StopCoroutine(activeCoroutine);
+                //  if (activeCoroutine != null)
+                //     StopCoroutine(activeCoroutine);
                 // timerText.gameObject.SetActive(true);
                 //activeCoroutine = StartCoroutine(CountdownCoroutine());
             }
@@ -395,6 +402,12 @@ public class SimulationManager : MonoBehaviour
 
             //TimeSpan timeSpan = TimeSpan.FromSeconds(RemainingSeconds);
             //timerText.text = timeSpan.ToString(@"mm\:ss");
+
+            if (infoWorld.ready_to_build_dyke)
+            {
+                UIController.Instance.StartToBuildDyke();
+                readyToBuild = true;
+            }
         }
     }
 
@@ -474,7 +487,7 @@ public class SimulationManager : MonoBehaviour
         }
 
         // Debug.Log("currentStage: " + currentStage + " IsGameState(GameState.GAME) :" +IsGameState(GameState.GAME));
-        if (IsGameState(GameState.GAME) && _currentStage == "s_diking")
+        if (IsGameState(GameState.GAME) && _currentStage == "s_diking" && readyToBuild)
             ProcessRightHandTrigger();
 
         //UpdateTimeLeftToBuildDykes();
@@ -485,17 +498,17 @@ public class SimulationManager : MonoBehaviour
             UIController.Instance.UpdateScore(scoreM.score);
             scoreM = null;
         }
-        if(roundM != null)
+        if (roundM != null)
         {
             UIController.Instance.UpdateRound(roundM.round);
             roundM = null;
         }
-        if(dykeM != null)
+        if (dykeM != null)
         {
             UIController.Instance.UpdateLength(UIController.Instance.dykeLength, dykeM.dykeLength);
             dykeM = null;
         }
-        if(damM != null)
+        if (damM != null)
         {
             UIController.Instance.UpdateLength(UIController.Instance.damLength, damM.damLength);
             damM = null;
@@ -513,8 +526,8 @@ public class SimulationManager : MonoBehaviour
             TimerSendPosition = TimeSendPositionAfterMoving;
         }
 
-        if(toRemove != null) foreach (string n in infoWorld.keepNames) toRemove.Remove(n);
-    
+        if (toRemove != null) foreach (string n in infoWorld.keepNames) toRemove.Remove(n);
+
         int cptPrefab = 0, cptGeom = 0;
 
 
@@ -529,6 +542,11 @@ public class SimulationManager : MonoBehaviour
                 if (initGame || !geometryMap.ContainsKey(name))
                 {
                     obj = instantiatePrefab(name, prop, initGame);
+
+                    if (obj.name.Contains("Player"))
+                    {
+                        obj.transform.SetParent(XROrigin);
+                    }
                 }
                 else
                 {
@@ -549,20 +567,20 @@ public class SimulationManager : MonoBehaviour
                     }
                 }
 
-                if(obj.CompareTag("people"))
+                if (obj.CompareTag("people"))
                 {
                     UpdateTransform();
                 }
-                else 
+                else
                 {
-                    if(!transformToKeep.Contains(name))
+                    if (!transformToKeep.Contains(name))
                     {
                         transformToKeep.Add(name);
                         UpdateTransform();
                     }
                 }
 
-                if(toRemove != null) toRemove.Remove(name);
+                if (toRemove != null) toRemove.Remove(name);
                 cptPrefab++;
 
                 void UpdateTransform()
@@ -585,13 +603,13 @@ public class SimulationManager : MonoBehaviour
                 int[] pt = infoWorld.pointsGeom[cptGeom].c;
                 float yOffset = (0.0f + infoWorld.offsetYGeom[cptGeom]) / (0.0f + parameters.precision);
 
-                if(initGame || !geometryMap.ContainsKey(name))
+                if (initGame || !geometryMap.ContainsKey(name))
                 {
                     obj = polyGen.GeneratePolygons(false, name, pt, prop, parameters.precision);
                     obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + yOffset, obj.transform.position.z);
                     instantiateGO(obj, name, prop);
-                    if(!initGame) geometryMap.Add(name, new object[] { obj, prop });
-                    if(prop.hasCollider)
+                    if (!initGame) geometryMap.Add(name, new object[] { obj, prop });
+                    if (prop.hasCollider)
                     {
                         MeshCollider mc = obj.AddComponent<MeshCollider>();
                         mc.sharedMesh = obj.GetComponent<MeshFilter>().sharedMesh;
@@ -607,11 +625,11 @@ public class SimulationManager : MonoBehaviour
                     {
                         obj = obj2;
                         polyGen.UpdatePolygon(obj, pt);
-                        if(prop.hasCollider) obj.GetComponent<MeshCollider>().sharedMesh = obj.GetComponent<MeshFilter>().sharedMesh;
+                        if (prop.hasCollider) obj.GetComponent<MeshCollider>().sharedMesh = obj.GetComponent<MeshFilter>().sharedMesh;
                     }
                 }
-                
-                if(toRemove != null) toRemove.Remove(name);
+
+                if (toRemove != null) toRemove.Remove(name);
                 cptGeom++;
             }
         }
@@ -873,7 +891,7 @@ public class SimulationManager : MonoBehaviour
         {
             object[] o = geometryMap[id];
             GameObject obj = (GameObject)o[0];
-            if(obj.CompareTag("people"))
+            if (obj.CompareTag("people"))
             {
                 obj.SetActive(false);
             }
@@ -923,12 +941,12 @@ public class SimulationManager : MonoBehaviour
 
     protected void HoverEnterInteraction(HoverEnterEventArgs ev)
     {
-        if(_currentStage == "s_diking")
+        if (_currentStage == "s_diking")
         {
             GameObject obj = ev.interactableObject.transform.gameObject;
             if (obj.tag.Equals("dyke") || obj.tag.Equals("dam")) ChangeColor(obj, Color.blue);
         }
-        
+
     }
 
     protected void HoverExitInteraction(HoverExitEventArgs ev)
@@ -956,7 +974,7 @@ public class SimulationManager : MonoBehaviour
                          {"id", grabbedObject.name }
                     };
                 ConnectionManager.Instance.SendExecutableAsk("destroy_dyke", args);
-                
+
                 remainingTime = timeWithoutInteraction;
             }
         }
@@ -1020,17 +1038,17 @@ public class SimulationManager : MonoBehaviour
                 // handlePlayerParametersRequested = true;   
                 handleGroundParametersRequested = true;
                 handleGeometriesRequested = true;
-                
+
                 break;
             case "score":
                 scoreM = ScoreMessage.CreateFromJSON(content);
-                
+
                 break;
 
             case "round":
                 roundM = RoundMessage.CreateFromJSON(content);
                 break;
-            
+
             case "dykeLength":
                 dykeM = DykeLengthMessage.CreateFromJSON(content);
                 break;
@@ -1131,7 +1149,7 @@ public class SimulationManager : MonoBehaviour
                     }
 
                     DrawDykeWithParams(StartPoint, EndPoint);
-                    if(!buildFirstDyke)
+                    if (!buildFirstDyke)
                     {
                         UIController.Instance.StartDikingPhase();
                         buildFirstDyke = true;
@@ -1204,8 +1222,8 @@ public class SimulationManager : MonoBehaviour
     {
         return currentState;
     }
-}
 
+}
 
 // ############################################################
 public enum GameState
