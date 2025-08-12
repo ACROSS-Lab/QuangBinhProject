@@ -973,7 +973,7 @@ public class SimulationManager : MonoBehaviour
                 Dictionary<string, string> args = new Dictionary<string, string> {
                          {"id", grabbedObject.name }
                     };
-                ConnectionManager.Instance.SendExecutableAsk("destroy_dyke", args);
+                ConnectionManager.Instance.SendExecutableAsk("destroy_dyke_with_unity", args);
 
                 remainingTime = timeWithoutInteraction;
             }

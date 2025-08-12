@@ -333,25 +333,10 @@ species unity_linker parent: abstract_unity_linker {
 		}
 	}
  
-	action destroy_dyke(string id) {
-		dyke d <- dyke first_with (each.name = id);
-		if (d != nil){
-			
-			ask d {
-				if (is_dam) {
-					dam_length <- dam_length - length; 
-				} else {
-					dyke_length <- dyke_length - length; 
-				}
-				loop c over: cells_under {
-					c.obstacles >> self;
-				 	if (c in bed_cells) {
-				 		c.water_height <- initial_water_height;
-				 	}
-				 }
-				 do die;
-			}
-		} 		
+	action destroy_dyke_with_unity(string id) {
+		ask world {
+			do destroy_dyke(id);
+		}	
 	}
 	
 	action mark_diking_over
