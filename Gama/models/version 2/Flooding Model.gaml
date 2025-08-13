@@ -19,7 +19,7 @@ global control: fsm skills: [spreading] {
 		
  	bool save_results <- false;
  	
- 	int num_step <- 50;
+ 	int num_step <- 7;
  	int num_step_add <- num_step;
  	
  	float diking_duration <- 60.0;
@@ -367,12 +367,19 @@ global control: fsm skills: [spreading] {
 	}
 	
 	/**
-	 * Original create_dyke action - for VR compatibility
+	 * Enhanced create_dyke action - builds in both systems for synchronization
 	 */
 	bool create_dyke(point source, point target) {
 		if (use_spreading_skill) {
-			// Use SpreadingSkill for dyke creation
-			return build_dyke(source, target);
+			// STEP 1: Build dyke using SpreadingSkill (advanced physics)
+			bool spreading_success <- build_dyke(source, target);
+			
+			if (spreading_success) {
+				// STEP 2: Create corresponding dyke species for VR compatibility
+				do create_dyke_species_from_line(source, target);
+				return true;
+			}
+			return false;
 		} else {
 			// Use original dyke creation logic
 			if (source distance_to target > 1.0)  {
@@ -401,6 +408,47 @@ global control: fsm skills: [spreading] {
 				}
 			}
 			return false;
+		}
+	}
+	
+	/**
+	 * Creates traditional dyke species to synchronize with SpreadingSkill dykes
+	 */
+	action create_dyke_species_from_line(point source, point target) {
+		if (source distance_to target > 1.0) {
+			geometry l <- line([source, target]);
+			l <- l inter world;
+			
+			if (l != nil) {
+				if (l overlaps init_river) {
+					// Split into dam and dyke parts like original
+					geometry gI <- l inter init_river;
+					geometry gD <- l - init_river;
+					
+					if (gI != nil) {
+						loop ggI over: gI.geometries {
+							create dyke with:(
+								is_dam: true, 
+								shape: ggI,
+								spreading_skill_synced: true
+							);
+						}
+						if (gD != nil) {
+							loop ggD over: gD.geometries {
+								create dyke with:(
+									shape: ggD,
+									spreading_skill_synced: true
+								);
+							}
+						}
+					}
+				} else {
+					create dyke with:(
+						shape: l,
+						spreading_skill_synced: true
+					);
+				}
+			}
 		}
 	}
 	
@@ -509,17 +557,43 @@ global control: fsm skills: [spreading] {
 	}
 	
 	/*************************************************************
-	 * Score Update (backward compatible)
+	 * Score Update (enhanced with synchronized counting)
 	 *************************************************************/
 	action update_score {
 		float dyke_price;
 		if (use_spreading_skill) {
-			dyke_price <- get_active_dyke_count() * price_meter_dyke * 15.0; // Estimate
+			// Count from dyke species for accurate cost calculation
+			dyke_price <- dyke sum_of (each.length * (each.is_dam ? price_meter_dam : price_meter_dyke));
 		} else {
 			dyke_price <- dyke sum_of (each.length * (each.is_dam ? price_meter_dam : price_meter_dyke));
 		}
 		float impact_border <- (cells_at_stake where (each.water_height > limit_drown)) sum_of (each.water_height * border_impact); 
 		score <- init_score - casualties_impact * casualties - dyke_price - impact_border;
+	}
+	
+	/*************************************************************
+	 * Debug and Status Actions
+	 *************************************************************/
+	
+	action show_dyke_sync_status {
+		if (use_spreading_skill) {
+			int spreading_dykes <- get_active_dyke_count();
+			int species_dykes <- length(dyke);
+			int synced_species <- length(dyke where each.spreading_skill_synced);
+			
+			write "=== DYKE SYNCHRONIZATION STATUS ===";
+			write "SpreadingSkill dykes: " + spreading_dykes;
+			write "Total dyke species: " + species_dykes;
+			write "Synchronized species: " + synced_species;
+			write "Non-synced species: " + (species_dykes - synced_species);
+			write "===================================";
+		} else {
+			write "=== ORIGINAL SYSTEM STATUS ===";
+			write "Total dykes: " + length(dyke);
+			write "Dyke length: " + dyke_length + "m";
+			write "Dam length: " + dam_length + "m";
+			write "==============================";
+		}
 	}
 
 	/*************************************************************
@@ -669,8 +743,11 @@ global control: fsm skills: [spreading] {
 		current_step <- 0;
 		
 		if (use_spreading_skill) {
-			// Reset SpreadingSkill simulation
+			// Reset SpreadingSkill simulation AND clear traditional dyke species
 			do reset_spreading_simulation(all_river_parts, 1.5);
+			ask dyke where each.spreading_skill_synced {
+				do die();
+			}
 		} else {
 			// Reset original system
 			ask dyke {
@@ -837,7 +914,7 @@ species buildings parent: obstacle schedules: []{
 }
 
 /*************************************************************
-* BACKWARD COMPATIBILITY: Original dyke species
+* BACKWARD COMPATIBILITY: Enhanced dyke species with sync support
 *************************************************************/	
 species dyke parent: obstacle schedules: []{
 	float length;
@@ -845,6 +922,7 @@ species dyke parent: obstacle schedules: []{
 	float rotation;
 	int init_cells;
 	float cell_percentage;
+	bool spreading_skill_synced <- false; // NEW: Track if synced with SpreadingSkill
 	
 	init {
 		length <- shape.perimeter;
@@ -871,19 +949,26 @@ species dyke parent: obstacle schedules: []{
 	}
 	
 	action check_drowning {
-		loop c over: (cells_under where (each.water_height > limit_drown)) {
-			cells_under >> c;
-			if (shape != nil) {shape <- shape - (c + 20.0);}
-			c.obstacles >> self;
-		}
-		if (shape = nil or empty(cells_under)) {
-			loop c over: cells_under {
-				c.obstacles >> self;	
+		if (spreading_skill_synced and use_spreading_skill) {
+			// For SpreadingSkill-synced dykes, use simplified drowning check
+			// (SpreadingSkill handles the actual destruction)
+			drowned <- (cells_under first_with (each.water_height > limit_drown)) != nil;
+		} else {
+			// Original drowning logic for non-synced dykes
+			loop c over: (cells_under where (each.water_height > limit_drown)) {
+				cells_under >> c;
+				if (shape != nil) {shape <- shape - (c + 20.0);}
+				c.obstacles >> self;
 			}
-			do die();
+			if (shape = nil or empty(cells_under)) {
+				loop c over: cells_under {
+					c.obstacles >> self;	
+				}
+				do die();
+			}
+			
+			cell_percentage <- length(cells_under)/init_cells;
 		}
-		
-		cell_percentage <- length(cells_under)/init_cells;
 	}
 	
 	action compute_height {
