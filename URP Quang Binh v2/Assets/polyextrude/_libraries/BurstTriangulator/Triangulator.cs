@@ -979,6 +979,122 @@ namespace andywiecko.BurstTriangulator
     public static class Utilities
     {
         /// <summary>
+        /// Returns corresponding bounding box for <paramref name="positions"/>.
+        /// </summary>
+        /// <param name="positions">A collection of positions. Must contain at least one point.</param>
+        /// <returns>A tuple <tt>(min, max)</tt> containing the minimum and maximum corners of the bounding box.</returns>
+        public static (float2 min, float2 max) BoundingBox(ReadOnlySpan<float2> positions)
+        {
+            ThrowCheckBoundingBox(positions.Length);
+            var (min, max) = (positions[0], positions[0]);
+            foreach (var p in positions) (min, max) = (math.min(min, p), math.max(max, p));
+            return (min, max);
+        }
+
+        /// <summary>
+        /// Returns corresponding bounding box for <paramref name="positions"/>.
+        /// </summary>
+        /// <param name="positions">A collection of positions. Must contain at least one point.</param>
+        /// <returns>A tuple <tt>(min, max)</tt> containing the minimum and maximum corners of the bounding box.</returns>
+        public static (double2 min, double2 max) BoundingBox(ReadOnlySpan<double2> positions)
+        {
+            ThrowCheckBoundingBox(positions.Length);
+            var (min, max) = (positions[0], positions[0]);
+            foreach (var p in positions) (min, max) = (math.min(min, p), math.max(max, p));
+            return (min, max);
+        }
+
+        /// <summary>
+        /// Returns corresponding bounding box for <paramref name="positions"/>.
+        /// </summary>
+        /// <param name="positions">A collection of positions. Must contain at least one point.</param>
+        /// <returns>A tuple <tt>(min, max)</tt> containing the minimum and maximum corners of the bounding box.</returns>
+        public static (int2 min, int2 max) BoundingBox(ReadOnlySpan<int2> positions)
+        {
+            ThrowCheckBoundingBox(positions.Length);
+            var (min, max) = (positions[0], positions[0]);
+            foreach (var p in positions) (min, max) = (math.min(min, p), math.max(max, p));
+            return (min, max);
+        }
+
+#if UNITY_MATHEMATICS_FIXEDPOINT
+        /// <summary>
+        /// Returns corresponding bounding box for <paramref name="positions"/>.
+        /// </summary>
+        /// <param name="positions">A collection of positions. Must contain at least one point.</param>
+        /// <returns>A tuple <tt>(min, max)</tt> containing the minimum and maximum corners of the bounding box.</returns>
+        public static (fp2 min, fp2 max) BoundingBox(ReadOnlySpan<fp2> positions)
+        {
+            ThrowCheckBoundingBox(positions.Length);
+            var (min, max) = (positions[0], positions[0]);
+            foreach (var p in positions) (min, max) = (fpmath.min(min, p), fpmath.max(max, p));
+            return (min, max);
+        }
+#endif
+
+        /// <summary>
+        /// Returns corresponding <em>center of mass</em> (COM) for <paramref name="positions"/>.
+        /// Assumes equal weights for all positions.
+        /// </summary>
+        /// <param name="positions">A collection of positions. Must contain at least one point.</param>
+        /// <returns>COM value position.</returns>
+        public static float2 CenterOfMass(ReadOnlySpan<float2> positions)
+        {
+            ThrowCheckCenterOfMass(positions.Length);
+            var com = float2.zero;
+            foreach (var p in positions) com += p;
+            com /= positions.Length;
+            return com;
+        }
+
+        /// <summary>
+        /// Returns corresponding <em>center of mass</em> (COM) for <paramref name="positions"/>.
+        /// Assumes equal weights for all positions.
+        /// </summary>
+        /// <param name="positions">A collection of positions. Must contain at least one point.</param>
+        /// <returns>COM value position.</returns>
+        public static double2 CenterOfMass(ReadOnlySpan<double2> positions)
+        {
+            ThrowCheckCenterOfMass(positions.Length);
+            var com = double2.zero;
+            foreach (var p in positions) com += p;
+            com /= positions.Length;
+            return com;
+        }
+
+        /// <summary>
+        /// Returns corresponding <em>center of mass</em> (COM) for <paramref name="positions"/>.
+        /// Assumes equal weights for all positions.
+        /// </summary>
+        /// <param name="positions">A collection of positions. Must contain at least one point.</param>
+        /// <returns>COM value position.</returns>
+        public static int2 CenterOfMass(ReadOnlySpan<int2> positions)
+        {
+            ThrowCheckCenterOfMass(positions.Length);
+            var com = int2.zero;
+            foreach (var p in positions) com += p;
+            com /= positions.Length;
+            return com;
+        }
+
+#if UNITY_MATHEMATICS_FIXEDPOINT
+        /// <summary>
+        /// Returns corresponding <em>center of mass</em> (COM) for <paramref name="positions"/>.
+        /// Assumes equal weights for all positions.
+        /// </summary>
+        /// <param name="positions">A collection of positions. Must contain at least one point.</param>
+        /// <returns>COM value position.</returns>
+        public static fp2 CenterOfMass(ReadOnlySpan<fp2> positions)
+        {
+            ThrowCheckCenterOfMass(positions.Length);
+            var com = fp2.zero;
+            foreach (var p in positions) com += p;
+            com /= positions.Length;
+            return com;
+        }
+#endif
+
+        /// <summary>
         /// Generates <paramref name="halfedges"/> using the provided <paramref name="triangles"/>.
         /// </summary>
         /// <param name="halfedges">The buffer to be filled with halfedges. It must have the same length as <paramref name="triangles"/>.</param>
@@ -1527,6 +1643,24 @@ namespace andywiecko.BurstTriangulator
         }
 
         [System.Diagnostics.Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
+        private static void ThrowCheckBoundingBox(int positionsLength)
+        {
+            if (positionsLength == 0)
+            {
+                throw new ArgumentException("The provided positions[0] is empty. To calculate a bounding box, at least one point must be provided.");
+            }
+        }
+
+        [System.Diagnostics.Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
+        private static void ThrowCheckCenterOfMass(int positionsLength)
+        {
+            if (positionsLength == 0)
+            {
+                throw new ArgumentException("The provided positions[0] is empty. To calculate a center of mass (COM), at least one point must be provided.");
+            }
+        }
+
+        [System.Diagnostics.Conditional("ENABLE_UNITY_COLLECTIONS_CHECKS")]
         private static void ThrowCheckGenerateHalfedges(ReadOnlySpan<int> halfedges, ReadOnlySpan<int> triangles)
         {
             if (halfedges.Length != triangles.Length)
@@ -1842,17 +1976,37 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="ignoreForPlantingSeeds">
         /// If <see langword="true"/>, the halfedges corresponding to (<paramref name="pi"/>, <paramref name="pj"/>) are ignored during the seed planting step.
         /// </param>
+        /// <param name="sloanMaxIters">Max iteration count during Sloan's algorithm (constraining edges).</param>
+        /// <param name="verbose">If set to <see langword="true"/>, an error will be logged in the Console, when <paramref name="sloanMaxIters"/> is exceeded.</param>
+        public static void ConstrainEdge(this UnsafeTriangulator @this, NativeOutputData<double2> output, int pi, int pj, Allocator allocator, bool ignoreForPlantingSeeds = false, int sloanMaxIters = 1_000_000, bool verbose = true) => new UnsafeTriangulator<double2>().ConstrainEdge(output, pi, pj, allocator, ignoreForPlantingSeeds, sloanMaxIters, verbose);
+        [Obsolete("Use " + nameof(ConstrainEdge) + " overload without args parameter.")]
         public static void ConstrainEdge(this UnsafeTriangulator @this, NativeOutputData<double2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<double2>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
         /// <summary>
-        /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
-        /// within the triangulation data in <paramref name="output"/>, using the settings specified in <paramref name="args"/>.
+        /// Plants hole seeds using either the <paramref name="autoHolesAndBoundary"/> or <paramref name="restoreBoundary"/> option,
+        /// or by using the provided <paramref name="holeSeeds"/> buffer within the triangulation data in <paramref name="output"/>.
         /// </summary>
         /// <remarks>
         /// <b>Note:</b>
         /// This method requires that <paramref name="output"/> contains valid triangulation data.
-        /// The <paramref name="input"/> and <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        /// <param name="autoHolesAndBoundary">
+        /// If set to <see langword="true"/>, holes and boundaries will be created automatically depending on the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="restoreBoundary">
+        /// If <see langword="true"/> the mesh boundary is restored using the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="holeSeeds">Optional buffer containing seeds for holes.</param>
+        /// <param name="mapping">
+        /// Optional buffer that can be provided for the extension to construct a mapping from the initial triangles (<tt>t1</tt>) to the triangles after planting seeds (<tt>t2</tt>).
+        /// The condition <tt>t1[3*i + k] == t2[mapping[3*i + k]]</tt> (for <tt>k</tt> ∈ {0, 1, 2}) should hold for triangles that still exist in <tt>t2</tt>.
+        /// If <tt>mapping[i] == -1</tt>, then the corresponding triangle <tt>i</tt> no longer exists in <tt>t2</tt>.
+        /// </param>
+        public static void PlantHoleSeeds(this UnsafeTriangulator @this, NativeOutputData<double2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<double2> holeSeeds = default, NativeList<int> mapping = default) => new UnsafeTriangulator<double2>().PlantHoleSeeds(output, allocator, autoHolesAndBoundary, restoreBoundary, holeSeeds, mapping);
+        [Obsolete("Use " + nameof(PlantHoleSeeds) + " overload without args and input parameters.")]
         public static void PlantHoleSeeds(this UnsafeTriangulator @this, NativeInputData<double2> input, NativeOutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double2>().PlantHoleSeeds(input, output, args, allocator);
         /// <summary>
         /// Refines the mesh for a valid triangulation in <paramref name="output"/>.
@@ -1967,18 +2121,38 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="ignoreForPlantingSeeds">
         /// If <see langword="true"/>, the halfedges corresponding to (<paramref name="pi"/>, <paramref name="pj"/>) are ignored during the seed planting step.
         /// </param>
-        public static void ConstrainEdge(this UnsafeTriangulator<float2> @this, NativeOutputData<float2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
+        /// <param name="sloanMaxIters">Max iteration count during Sloan's algorithm (constraining edges).</param>
+        /// <param name="verbose">If set to <see langword="true"/>, an error will be logged in the Console, when <paramref name="sloanMaxIters"/> is exceeded.</param>
+        public static void ConstrainEdge(this UnsafeTriangulator<float2> @this, NativeOutputData<float2> output, int pi, int pj, Allocator allocator, bool ignoreForPlantingSeeds = false, int sloanMaxIters = 1_000_000, bool verbose = true) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().ConstrainEdge(output, pi, pj, allocator, ignoreForPlantingSeeds, sloanMaxIters, verbose);
+        [Obsolete("Use " + nameof(ConstrainEdge) + " overload without args parameter.")]
+        public static void ConstrainEdge(this UnsafeTriangulator<float2> @this, NativeOutputData<float2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().ConstrainEdge(output, pi, pj, allocator, ignoreForPlantingSeeds, args.SloanMaxIters, args.Verbose);
         /// <summary>
-        /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
-        /// within the triangulation data in <paramref name="output"/>, using the settings specified in <paramref name="args"/>.
+        /// Plants hole seeds using either the <paramref name="autoHolesAndBoundary"/> or <paramref name="restoreBoundary"/> option,
+        /// or by using the provided <paramref name="holeSeeds"/> buffer within the triangulation data in <paramref name="output"/>.
         /// </summary>
         /// <remarks>
         /// <b>Note:</b>
         /// This method requires that <paramref name="output"/> contains valid triangulation data.
-        /// The <paramref name="input"/> and <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
-        public static void PlantHoleSeeds(this UnsafeTriangulator<float2> @this, NativeInputData<float2> input, NativeOutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().PlantHoleSeeds(input, output, args, allocator);
+        /// <param name="autoHolesAndBoundary">
+        /// If set to <see langword="true"/>, holes and boundaries will be created automatically depending on the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="restoreBoundary">
+        /// If <see langword="true"/> the mesh boundary is restored using the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="holeSeeds">Optional buffer containing seeds for holes.</param>
+        /// <param name="mapping">
+        /// Optional buffer that can be provided for the extension to construct a mapping from the initial triangles (<tt>t1</tt>) to the triangles after planting seeds (<tt>t2</tt>).
+        /// The condition <tt>t1[3*i + k] == t2[mapping[3*i + k]]</tt> (for <tt>k</tt> ∈ {0, 1, 2}) should hold for triangles that still exist in <tt>t2</tt>.
+        /// If <tt>mapping[i] == -1</tt>, then the corresponding triangle <tt>i</tt> no longer exists in <tt>t2</tt>.
+        /// </param>
+        public static void PlantHoleSeeds(this UnsafeTriangulator<float2> @this, NativeOutputData<float2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<float2> holeSeeds = default, NativeList<int> mapping = default) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().PlantHoleSeeds(output, allocator, autoHolesAndBoundary, restoreBoundary, holeSeeds, mapping);
+        [Obsolete("Use " + nameof(PlantHoleSeeds) + " overload without args and input parameters.")]
+        public static void PlantHoleSeeds(this UnsafeTriangulator<float2> @this, NativeInputData<float2> input, NativeOutputData<float2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float, float2, float, TransformFloat, UtilsFloat>().PlantHoleSeeds(output, allocator, args.AutoHolesAndBoundary, args.RestoreBoundary, input.HoleSeeds, mapping: default);
         /// <summary>
         /// Refines the mesh for a valid triangulation in <paramref name="output"/>.
         /// Refinement parameters can be provided with the selected precision type T in generics, which is especially useful for fixed-point arithmetic.
@@ -2098,17 +2272,37 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="ignoreForPlantingSeeds">
         /// If <see langword="true"/>, the halfedges corresponding to (<paramref name="pi"/>, <paramref name="pj"/>) are ignored during the seed planting step.
         /// </param>
+        /// <param name="sloanMaxIters">Max iteration count during Sloan's algorithm (constraining edges).</param>
+        /// <param name="verbose">If set to <see langword="true"/>, an error will be logged in the Console, when <paramref name="sloanMaxIters"/> is exceeded.</param>
+        public static void ConstrainEdge(this UnsafeTriangulator<Vector2> @this, NativeOutputData<Vector2> output, int pi, int pj, Allocator allocator, bool ignoreForPlantingSeeds = false, int sloanMaxIters = 1_000_000, bool verbose = true) => new UnsafeTriangulator<float2>().ConstrainEdge(UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), pi, pj, allocator, ignoreForPlantingSeeds, sloanMaxIters, verbose);
+        [Obsolete("Use " + nameof(ConstrainEdge) + " overload without args parameter.")]
         public static void ConstrainEdge(this UnsafeTriangulator<Vector2> @this, NativeOutputData<Vector2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<float2>().ConstrainEdge(UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), pi, pj, args, allocator, ignoreForPlantingSeeds);
         /// <summary>
-        /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
-        /// within the triangulation data in <paramref name="output"/>, using the settings specified in <paramref name="args"/>.
+        /// Plants hole seeds using either the <paramref name="autoHolesAndBoundary"/> or <paramref name="restoreBoundary"/> option,
+        /// or by using the provided <paramref name="holeSeeds"/> buffer within the triangulation data in <paramref name="output"/>.
         /// </summary>
         /// <remarks>
         /// <b>Note:</b>
         /// This method requires that <paramref name="output"/> contains valid triangulation data.
-        /// The <paramref name="input"/> and <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
+        /// <param name="autoHolesAndBoundary">
+        /// If set to <see langword="true"/>, holes and boundaries will be created automatically depending on the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="restoreBoundary">
+        /// If <see langword="true"/> the mesh boundary is restored using the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="holeSeeds">Optional buffer containing seeds for holes.</param>
+        /// <param name="mapping">
+        /// Optional buffer that can be provided for the extension to construct a mapping from the initial triangles (<tt>t1</tt>) to the triangles after planting seeds (<tt>t2</tt>).
+        /// The condition <tt>t1[3*i + k] == t2[mapping[3*i + k]]</tt> (for <tt>k</tt> ∈ {0, 1, 2}) should hold for triangles that still exist in <tt>t2</tt>.
+        /// If <tt>mapping[i] == -1</tt>, then the corresponding triangle <tt>i</tt> no longer exists in <tt>t2</tt>.
+        /// </param>
+        public static void PlantHoleSeeds(this UnsafeTriangulator<Vector2> @this, NativeOutputData<Vector2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<Vector2> holeSeeds = default, NativeList<int> mapping = default) => new UnsafeTriangulator<float2>().PlantHoleSeeds(UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), allocator, autoHolesAndBoundary, restoreBoundary, UnsafeUtility.As<NativeArray<Vector2>, NativeArray<float2>>(ref holeSeeds), mapping);
+        [Obsolete("Use " + nameof(PlantHoleSeeds) + " overload without args and input parameters.")]
         public static void PlantHoleSeeds(this UnsafeTriangulator<Vector2> @this, NativeInputData<Vector2> input, NativeOutputData<Vector2> output, Args args, Allocator allocator) => new UnsafeTriangulator<float2>().PlantHoleSeeds(UnsafeUtility.As<NativeInputData<Vector2>, NativeInputData<float2>>(ref input), UnsafeUtility.As<NativeOutputData<Vector2>, NativeOutputData<float2>>(ref output), args, allocator);
         /// <summary>
         /// Refines the mesh for a valid triangulation in <paramref name="output"/>.
@@ -2224,18 +2418,38 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="ignoreForPlantingSeeds">
         /// If <see langword="true"/>, the halfedges corresponding to (<paramref name="pi"/>, <paramref name="pj"/>) are ignored during the seed planting step.
         /// </param>
-        public static void ConstrainEdge(this UnsafeTriangulator<double2> @this, NativeOutputData<double2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
+        /// <param name="sloanMaxIters">Max iteration count during Sloan's algorithm (constraining edges).</param>
+        /// <param name="verbose">If set to <see langword="true"/>, an error will be logged in the Console, when <paramref name="sloanMaxIters"/> is exceeded.</param>
+        public static void ConstrainEdge(this UnsafeTriangulator<double2> @this, NativeOutputData<double2> output, int pi, int pj, Allocator allocator, bool ignoreForPlantingSeeds = false, int sloanMaxIters = 1_000_000, bool verbose = true) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().ConstrainEdge(output, pi, pj, allocator, ignoreForPlantingSeeds, sloanMaxIters, verbose);
+        [Obsolete("Use " + nameof(ConstrainEdge) + " overload without args parameter.")]
+        public static void ConstrainEdge(this UnsafeTriangulator<double2> @this, NativeOutputData<double2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().ConstrainEdge(output, pi, pj, allocator, ignoreForPlantingSeeds, args.SloanMaxIters, args.Verbose);
         /// <summary>
-        /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
-        /// within the triangulation data in <paramref name="output"/>, using the settings specified in <paramref name="args"/>.
+        /// Plants hole seeds using either the <paramref name="autoHolesAndBoundary"/> or <paramref name="restoreBoundary"/> option,
+        /// or by using the provided <paramref name="holeSeeds"/> buffer within the triangulation data in <paramref name="output"/>.
         /// </summary>
         /// <remarks>
         /// <b>Note:</b>
         /// This method requires that <paramref name="output"/> contains valid triangulation data.
-        /// The <paramref name="input"/> and <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
-        public static void PlantHoleSeeds(this UnsafeTriangulator<double2> @this, NativeInputData<double2> input, NativeOutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().PlantHoleSeeds(input, output, args, allocator);
+        /// <param name="autoHolesAndBoundary">
+        /// If set to <see langword="true"/>, holes and boundaries will be created automatically depending on the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="restoreBoundary">
+        /// If <see langword="true"/> the mesh boundary is restored using the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="holeSeeds">Optional buffer containing seeds for holes.</param>
+        /// <param name="mapping">
+        /// Optional buffer that can be provided for the extension to construct a mapping from the initial triangles (<tt>t1</tt>) to the triangles after planting seeds (<tt>t2</tt>).
+        /// The condition <tt>t1[3*i + k] == t2[mapping[3*i + k]]</tt> (for <tt>k</tt> ∈ {0, 1, 2}) should hold for triangles that still exist in <tt>t2</tt>.
+        /// If <tt>mapping[i] == -1</tt>, then the corresponding triangle <tt>i</tt> no longer exists in <tt>t2</tt>.
+        /// </param>
+        public static void PlantHoleSeeds(this UnsafeTriangulator<double2> @this, NativeOutputData<double2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<double2> holeSeeds = default, NativeList<int> mapping = default) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().PlantHoleSeeds(output, allocator, autoHolesAndBoundary, restoreBoundary, holeSeeds, mapping);
+        [Obsolete("Use " + nameof(PlantHoleSeeds) + " overload without args and input parameters.")]
+        public static void PlantHoleSeeds(this UnsafeTriangulator<double2> @this, NativeInputData<double2> input, NativeOutputData<double2> output, Args args, Allocator allocator) => new UnsafeTriangulator<double, double2, double, TransformDouble, UtilsDouble>().PlantHoleSeeds(output, allocator, args.AutoHolesAndBoundary, args.RestoreBoundary, input.HoleSeeds, mapping: default);
         /// <summary>
         /// Refines the mesh for a valid triangulation in <paramref name="output"/>.
         /// Refinement parameters can be provided with the selected precision type T in generics, which is especially useful for fixed-point arithmetic.
@@ -2355,18 +2569,38 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="ignoreForPlantingSeeds">
         /// If <see langword="true"/>, the halfedges corresponding to (<paramref name="pi"/>, <paramref name="pj"/>) are ignored during the seed planting step.
         /// </param>
-        public static void ConstrainEdge(this UnsafeTriangulator<int2> @this, NativeOutputData<int2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
+        /// <param name="sloanMaxIters">Max iteration count during Sloan's algorithm (constraining edges).</param>
+        /// <param name="verbose">If set to <see langword="true"/>, an error will be logged in the Console, when <paramref name="sloanMaxIters"/> is exceeded.</param>
+        public static void ConstrainEdge(this UnsafeTriangulator<int2> @this, NativeOutputData<int2> output, int pi, int pj, Allocator allocator, bool ignoreForPlantingSeeds = false, int sloanMaxIters = 1_000_000, bool verbose = true) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().ConstrainEdge(output, pi, pj, allocator, ignoreForPlantingSeeds, sloanMaxIters, verbose);
+        [Obsolete("Use " + nameof(ConstrainEdge) + " overload without args parameter.")]
+        public static void ConstrainEdge(this UnsafeTriangulator<int2> @this, NativeOutputData<int2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().ConstrainEdge(output, pi, pj, allocator, ignoreForPlantingSeeds, args.SloanMaxIters, args.Verbose);
         /// <summary>
-        /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
-        /// within the triangulation data in <paramref name="output"/>, using the settings specified in <paramref name="args"/>.
+        /// Plants hole seeds using either the <paramref name="autoHolesAndBoundary"/> or <paramref name="restoreBoundary"/> option,
+        /// or by using the provided <paramref name="holeSeeds"/> buffer within the triangulation data in <paramref name="output"/>.
         /// </summary>
         /// <remarks>
         /// <b>Note:</b>
         /// This method requires that <paramref name="output"/> contains valid triangulation data.
-        /// The <paramref name="input"/> and <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
-        public static void PlantHoleSeeds(this UnsafeTriangulator<int2> @this, NativeInputData<int2> input, NativeOutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().PlantHoleSeeds(input, output, args, allocator);
+        /// <param name="autoHolesAndBoundary">
+        /// If set to <see langword="true"/>, holes and boundaries will be created automatically depending on the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="restoreBoundary">
+        /// If <see langword="true"/> the mesh boundary is restored using the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="holeSeeds">Optional buffer containing seeds for holes.</param>
+        /// <param name="mapping">
+        /// Optional buffer that can be provided for the extension to construct a mapping from the initial triangles (<tt>t1</tt>) to the triangles after planting seeds (<tt>t2</tt>).
+        /// The condition <tt>t1[3*i + k] == t2[mapping[3*i + k]]</tt> (for <tt>k</tt> ∈ {0, 1, 2}) should hold for triangles that still exist in <tt>t2</tt>.
+        /// If <tt>mapping[i] == -1</tt>, then the corresponding triangle <tt>i</tt> no longer exists in <tt>t2</tt>.
+        /// </param>
+        public static void PlantHoleSeeds(this UnsafeTriangulator<int2> @this, NativeOutputData<int2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<int2> holeSeeds = default, NativeList<int> mapping = default) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().PlantHoleSeeds(output, allocator, autoHolesAndBoundary, restoreBoundary, holeSeeds, mapping);
+        [Obsolete("Use " + nameof(PlantHoleSeeds) + " overload without args and input parameters.")]
+        public static void PlantHoleSeeds(this UnsafeTriangulator<int2> @this, NativeInputData<int2> input, NativeOutputData<int2> output, Args args, Allocator allocator) => new UnsafeTriangulator<int, int2, long, TransformInt, UtilsInt>().PlantHoleSeeds(output, allocator, args.AutoHolesAndBoundary, args.RestoreBoundary, input.HoleSeeds, mapping: default);
         /// <summary>
         /// Applies the α-shape filter to the <paramref name="output"/> data.
         /// The filter removes triangles whose circumradius <em>R</em> satisfies the condition <em>R²</em> ≥ α⁻¹.
@@ -2414,18 +2648,38 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         /// <param name="ignoreForPlantingSeeds">
         /// If <see langword="true"/>, the halfedges corresponding to (<paramref name="pi"/>, <paramref name="pj"/>) are ignored during the seed planting step.
         /// </param>
-        public static void ConstrainEdge(this UnsafeTriangulator<fp2> @this, NativeOutputData<fp2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().ConstrainEdge(output, pi, pj, args, allocator, ignoreForPlantingSeeds);
+        /// <param name="sloanMaxIters">Max iteration count during Sloan's algorithm (constraining edges).</param>
+        /// <param name="verbose">If set to <see langword="true"/>, an error will be logged in the Console, when <paramref name="sloanMaxIters"/> is exceeded.</param>
+        public static void ConstrainEdge(this UnsafeTriangulator<fp2> @this, NativeOutputData<fp2> output, int pi, int pj, Allocator allocator, bool ignoreForPlantingSeeds = false, int sloanMaxIters = 1_000_000, bool verbose = true) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().ConstrainEdge(output, pi, pj, allocator, ignoreForPlantingSeeds, sloanMaxIters, verbose);
+        [Obsolete("Use " + nameof(ConstrainEdge) + " overload without args parameter.")]
+        public static void ConstrainEdge(this UnsafeTriangulator<fp2> @this, NativeOutputData<fp2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds = false) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().ConstrainEdge(output, pi, pj, allocator, ignoreForPlantingSeeds, args.SloanMaxIters, args.Verbose);
         /// <summary>
-        /// Plants hole seeds defined in <paramref name="input"/> (or restores boundaries or auto-holes if specified in <paramref name="args"/>)
-        /// within the triangulation data in <paramref name="output"/>, using the settings specified in <paramref name="args"/>.
+        /// Plants hole seeds using either the <paramref name="autoHolesAndBoundary"/> or <paramref name="restoreBoundary"/> option,
+        /// or by using the provided <paramref name="holeSeeds"/> buffer within the triangulation data in <paramref name="output"/>.
         /// </summary>
         /// <remarks>
         /// <b>Note:</b>
         /// This method requires that <paramref name="output"/> contains valid triangulation data.
-        /// The <paramref name="input"/> and <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
+        /// The <paramref name="output"/> native containers must be allocated by the user. Some buffers are optional; refer to the documentation for more details.
         /// </remarks>
         /// <param name="allocator">The allocator to use. If called from a job, consider using <see cref="Allocator.Temp"/>.</param>
-        public static void PlantHoleSeeds(this UnsafeTriangulator<fp2> @this, NativeInputData<fp2> input, NativeOutputData<fp2> output, Args args, Allocator allocator) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().PlantHoleSeeds(input, output, args, allocator);
+        /// <param name="autoHolesAndBoundary">
+        /// If set to <see langword="true"/>, holes and boundaries will be created automatically depending on the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="restoreBoundary">
+        /// If <see langword="true"/> the mesh boundary is restored using the provided constraints in <paramref name="output"/>
+        /// (see <see cref="NativeOutputData{T2}.ConstrainedHalfedges"/> and <see cref="NativeOutputData{T2}.IgnoredHalfedgesForPlantingSeeds"/>).
+        /// </param>
+        /// <param name="holeSeeds">Optional buffer containing seeds for holes.</param>
+        /// <param name="mapping">
+        /// Optional buffer that can be provided for the extension to construct a mapping from the initial triangles (<tt>t1</tt>) to the triangles after planting seeds (<tt>t2</tt>).
+        /// The condition <tt>t1[3*i + k] == t2[mapping[3*i + k]]</tt> (for <tt>k</tt> ∈ {0, 1, 2}) should hold for triangles that still exist in <tt>t2</tt>.
+        /// If <tt>mapping[i] == -1</tt>, then the corresponding triangle <tt>i</tt> no longer exists in <tt>t2</tt>.
+        /// </param>
+        public static void PlantHoleSeeds(this UnsafeTriangulator<fp2> @this, NativeOutputData<fp2> output, Allocator allocator, bool autoHolesAndBoundary = false, bool restoreBoundary = false, NativeArray<fp2> holeSeeds = default, NativeList<int> mapping = default) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().PlantHoleSeeds(output, allocator, autoHolesAndBoundary, restoreBoundary, holeSeeds, mapping);
+        [Obsolete("Use " + nameof(PlantHoleSeeds) + " overload without args and input parameters.")]
+        public static void PlantHoleSeeds(this UnsafeTriangulator<fp2> @this, NativeInputData<fp2> input, NativeOutputData<fp2> output, Args args, Allocator allocator) => new UnsafeTriangulator<fp, fp2, fp, TransformFp, UtilsFp>().PlantHoleSeeds(output, allocator, args.AutoHolesAndBoundary, args.RestoreBoundary, input.HoleSeeds, mapping: default);
         /// <summary>
         /// Refines the mesh for a valid triangulation in <paramref name="output"/>.
         /// Refinement parameters can be provided with the selected precision type T in generics, which is especially useful for fixed-point arithmetic.
@@ -2708,7 +2962,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             if (tmpIgnoredHalfedgesForPlantingSeeds.IsCreated) tmpIgnoredHalfedgesForPlantingSeeds.Dispose();
         }
 
-        public void ConstrainEdge(NativeOutputData<T2> output, int pi, int pj, Args args, Allocator allocator, bool ignoreForPlantingSeeds)
+        public void ConstrainEdge(NativeOutputData<T2> output, int pi, int pj, Allocator allocator, bool ignoreForPlantingSeeds, int sloanMaxIters, bool verbose)
         {
             using var intersections = new NativeList<int>(allocator);
             using var unresolvedIntersections = new NativeList<int>(allocator);
@@ -2737,13 +2991,14 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 UnresolvedIntersections = unresolvedIntersections,
                 PointToHalfedge = pointToHalfedge,
 
-                Args = args,
+                SloanMaxIters = sloanMaxIters,
+                Verbose = verbose,
             }.TryApplyConstraint(new(pi, pj), ignoreForPlantingSeeds);
         }
 
-        public void PlantHoleSeeds(NativeInputData<T2> input, NativeOutputData<T2> output, Args args, Allocator allocator)
+        public void PlantHoleSeeds(NativeOutputData<T2> output, Allocator allocator, bool autoHolesAndBoundary, bool restoreBoundary, NativeArray<T2> holeSeeds, NativeList<int> mapping)
         {
-            new PlantingSeedStep(input, output, args).Execute(allocator, true);
+            new PlantingSeedStep(output, autoHolesAndBoundary, restoreBoundary, holeSeeds, mapping).Execute(allocator, true);
         }
 
         public void RefineMesh(NativeOutputData<T2> output, Allocator allocator, T area2Threshold, T angleThreshold, T shells, bool constrainBoundary = false)
@@ -3791,7 +4046,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private NativeList<bool> constrainedHalfedges;
             private NativeList<bool> ignoredHalfedgesForPlantingSeeds;
             private NativeArray<bool> ignoreConstraintForPlantingSeeds;
-            private readonly Args args;
+            private readonly int sloanMaxIters;
+            private readonly bool verbose;
 
             public ConstrainEdgesStep(NativeInputData<T2> input, NativeOutputData<T2> output, Args args)
             {
@@ -3803,7 +4059,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 halfedges = output.Halfedges;
                 constrainedHalfedges = output.ConstrainedHalfedges;
                 ignoredHalfedgesForPlantingSeeds = output.IgnoredHalfedgesForPlantingSeeds;
-                this.args = args;
+                sloanMaxIters = args.SloanMaxIters;
+                verbose = args.Verbose;
             }
 
             public void Execute(Allocator allocator)
@@ -3842,7 +4099,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     UnresolvedIntersections = unresolvedIntersections,
                     PointToHalfedge = pointToHalfedge,
 
-                    Args = args,
+                    SloanMaxIters = sloanMaxIters,
+                    Verbose = verbose,
                 };
 
                 for (int index = 0; index < inputConstraintEdges.Length / 2; index++)
@@ -3869,7 +4127,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 public NativeList<int> UnresolvedIntersections;
                 public NativeArray<int> PointToHalfedge;
 
-                public Args Args;
+                public bool Verbose;
+                public int SloanMaxIters;
 
                 public void TryApplyConstraint(int2 c, bool ignoreForPlantingSeeds)
                 {
@@ -3895,7 +4154,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 {
                     for (int i = 0; i < Intersections.Length; i++)
                     {
-                        if (IsMaxItersExceeded(iter++, Args.SloanMaxIters))
+                        if (IsMaxItersExceeded(iter++, SloanMaxIters))
                         {
                             return;
                         }
@@ -4168,7 +4427,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 {
                     if (iter >= maxIters)
                     {
-                        if (Args.Verbose)
+                        if (Verbose)
                         {
                             Debug.LogError(
                                 $"[Triangulator]: Sloan max iterations exceeded! This may suggest that input data is hard to resolve by Sloan's algorithm. " +
@@ -4196,13 +4455,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private NativeArray<bool> visitedTriangles;
             private NativeQueueList<int> trianglesQueue;
             private NativeArray<T2> holes;
+            private NativeList<int> mapping;
 
-            private readonly Args args;
+            private readonly bool autoHolesAndBoundary, restoreBoundary;
             private int tIdMinVisited;
 
-            public PlantingSeedStep(NativeInputData<T2> input, NativeOutputData<T2> output, Args args) : this(output, args, input.HoleSeeds) { }
-
-            public PlantingSeedStep(NativeOutputData<T2> output, Args args, NativeArray<T2> localHoles)
+            public PlantingSeedStep(NativeOutputData<T2> output, bool autoHolesAndBoundary, bool restoreBoundary, NativeArray<T2> holes, NativeList<int> mapping)
             {
                 status = output.Status;
                 triangles = output.Triangles;
@@ -4210,8 +4468,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 constrainedHalfedges = output.ConstrainedHalfedges;
                 halfedges = output.Halfedges;
                 ignoredHalfedges = output.IgnoredHalfedgesForPlantingSeeds;
-                holes = localHoles;
-                this.args = args;
+                this.holes = holes;
+                this.autoHolesAndBoundary = autoHolesAndBoundary;
+                this.restoreBoundary = restoreBoundary;
+                this.mapping = mapping;
 
                 visitedTriangles = default;
                 trianglesQueue = default;
@@ -4219,9 +4479,11 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 tIdMinVisited = -1;
             }
 
+            public PlantingSeedStep(NativeOutputData<T2> output, Args args, NativeArray<T2> localHoles) : this(output, args.AutoHolesAndBoundary, args.RestoreBoundary, localHoles, mapping: default) { }
+
             public void Execute(Allocator allocator, bool constraintsIsCreated)
             {
-                if (!constraintsIsCreated || status.IsCreated && status.Value != Status.OK)
+                if (!constraintsIsCreated || status.IsCreated && status.Value != Status.OK || !autoHolesAndBoundary && !holes.IsCreated && !restoreBoundary)
                 {
                     return;
                 }
@@ -4231,9 +4493,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 using var _visitedTriangles = visitedTriangles = new(triangles.Length / 3, allocator);
                 using var _trianglesQueue = trianglesQueue = new(allocator);
 
-                if (args.AutoHolesAndBoundary) PlantAuto(allocator);
+                if (autoHolesAndBoundary) PlantAuto(allocator);
                 if (holes.IsCreated) PlantHoleSeeds(holes);
-                if (args.RestoreBoundary) PlantBoundarySeeds();
+                if (restoreBoundary) PlantBoundarySeeds();
 
                 RemoveVisitedTriangles();
             }
@@ -4312,6 +4574,16 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         DisableHe(halfedges, 0, rId);
                         DisableHe(halfedges, 1, rId);
                         DisableHe(halfedges, 2, rId);
+                    }
+                }
+
+                if (mapping.IsCreated)
+                {
+                    mapping.Length = triangles3.Length;
+                    var count = 0;
+                    for (int i = 0; i < mapping.Length; i++)
+                    {
+                        mapping[i] = !visitedTriangles[i] ? count++ : -1;
                     }
                 }
 
@@ -5008,7 +5280,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     var (i, j, k) = (triangles[3 * tId + 0], triangles[3 * tId + 1], triangles[3 * tId + 2]);
                     var (xi, xj, xk) = (outputPositions[i], outputPositions[j], outputPositions[k]);
                     var area2 = Area2(xi, xj, xk);
-                    if (utils.greater(area2, maximumArea2)) // TODO split permited
+                    if (utils.greater(area2, maximumArea2)) // TODO: split permitted
                     {
                         foreach (var he in edges.AsReadOnly())
                         {
@@ -5539,12 +5811,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public readonly TransformFloat CalculatePCATransformation(NativeArray<float2> positions)
         {
-            var com = (float2)0;
-            foreach (var p in positions)
-            {
-                com += p;
-            }
-            com /= positions.Length;
+            if (positions.Length == 0) return Identity;
+            var com = CenterOfMass(positions);
 
             var cov = float2x2.zero;
             for (int i = 0; i < positions.Length; i++)
@@ -5574,15 +5842,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public readonly TransformFloat CalculateLocalTransformation(NativeArray<float2> positions)
         {
-            float2 min = float.MaxValue, max = float.MinValue, com = 0;
-            foreach (var p in positions)
-            {
-                min = math.min(p, min);
-                max = math.max(p, max);
-                com += p;
-            }
-
-            com /= positions.Length;
+            if (positions.Length == 0) return Identity;
+            var (min, max) = BoundingBox(positions);
+            var com = CenterOfMass(positions);
             var scale = 1 / math.cmax(math.max(math.abs(max - com), math.abs(min - com)));
             return Scale(scale) * Translate(-com);
         }
@@ -5615,7 +5877,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         }
 
         /// <summary>
-        /// Returns <see href="https://en.wikipedia.org/wiki/Kronecker_product">Kronecer product</see> of <paramref name="a"/> and <paramref name="b"/>.
+        /// Returns <see href="https://en.wikipedia.org/wiki/Kronecker_product">Kronecker product</see> of <paramref name="a"/> and <paramref name="b"/>.
         /// </summary>
         private static float2x2 Kron(float2 a, float2 b) => math.float2x2(a * b[0], a * b[1]);
     }
@@ -5642,12 +5904,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public readonly TransformDouble CalculatePCATransformation(NativeArray<double2> positions)
         {
-            var com = (double2)0;
-            foreach (var p in positions)
-            {
-                com += p;
-            }
-            com /= positions.Length;
+            if (positions.Length == 0) return Identity;
+            var com = CenterOfMass(positions);
 
             var cov = double2x2.zero;
             for (int i = 0; i < positions.Length; i++)
@@ -5677,15 +5935,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public readonly TransformDouble CalculateLocalTransformation(NativeArray<double2> positions)
         {
-            double2 min = double.MaxValue, max = double.MinValue, com = 0;
-            foreach (var p in positions)
-            {
-                min = math.min(p, min);
-                max = math.max(p, max);
-                com += p;
-            }
-
-            com /= positions.Length;
+            if (positions.Length == 0) return Identity;
+            var (min, max) = BoundingBox(positions);
+            var com = CenterOfMass(positions);
             var scale = 1 / math.cmax(math.max(math.abs(max - com), math.abs(min - com)));
             return Scale(scale) * Translate(-com);
         }
@@ -5718,7 +5970,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         }
 
         /// <summary>
-        /// Returns <see href="https://en.wikipedia.org/wiki/Kronecker_product">Kronecer product</see> of <paramref name="a"/> and <paramref name="b"/>.
+        /// Returns <see href="https://en.wikipedia.org/wiki/Kronecker_product">Kronecker product</see> of <paramref name="a"/> and <paramref name="b"/>.
         /// </summary>
         private static double2x2 Kron(double2 a, double2 b) => math.double2x2(a * b[0], a * b[1]);
     }
@@ -5734,22 +5986,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         public TransformInt(int2 translation) => this.translation = translation;
         public TransformInt Inverse() => new(-translation);
         public int2 Transform(int2 point) => point + translation;
-        public readonly TransformInt CalculatePCATransformation(NativeArray<int2> positions) => throw new NotImplementedException(
-            "PCA is not implemented for int2 coordinates!"
-        );
-
-        public readonly TransformInt CalculateLocalTransformation(NativeArray<int2> positions)
-        {
-            int2 min = int.MaxValue, max = int.MinValue, com = 0;
-            foreach (var p in positions)
-            {
-                min = math.min(p, min);
-                max = math.max(p, max);
-                com += p;
-            }
-
-            return new(-com / positions.Length);
-        }
+        public readonly TransformInt CalculatePCATransformation(NativeArray<int2> positions) => throw new NotImplementedException("PCA is not implemented for int2 coordinates!");
+        public readonly TransformInt CalculateLocalTransformation(NativeArray<int2> positions) => positions.Length > 0 ? new(-CenterOfMass(positions)) : Identity;
     }
 
 #if UNITY_MATHEMATICS_FIXEDPOINT
@@ -5778,12 +6016,8 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public readonly TransformFp CalculatePCATransformation(NativeArray<fp2> positions)
         {
-            var com = (fp2)0;
-            foreach (var p in positions)
-            {
-                com += p;
-            }
-            com /= positions.Length;
+            if (positions.Length == 0) return Identity;
+            var com = CenterOfMass(positions);
 
             var cov = fp2x2.zero;
             for (int i = 0; i < positions.Length; i++)
@@ -5813,15 +6047,9 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
 
         public readonly TransformFp CalculateLocalTransformation(NativeArray<fp2> positions)
         {
-            fp2 min = fp.max_value, max = fp.min_value, com = fp2.zero;
-            foreach (var p in positions)
-            {
-                min = fpmath.min(p, min);
-                max = fpmath.max(p, max);
-                com += p;
-            }
-
-            com /= positions.Length;
+            if (positions.Length == 0) return Identity;
+            var (min, max) = BoundingBox(positions);
+            var com = CenterOfMass(positions);
             var scale = 1 / fpmath.cmax(fpmath.max(fpmath.abs(max - com), fpmath.abs(min - com)));
             return Scale(scale) * Translate(-com);
         }
@@ -5854,7 +6082,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         }
 
         /// <summary>
-        /// Returns <see href="https://en.wikipedia.org/wiki/Kronecker_product">Kronecer product</see> of <paramref name="a"/> and <paramref name="b"/>.
+        /// Returns <see href="https://en.wikipedia.org/wiki/Kronecker_product">Kronecker product</see> of <paramref name="a"/> and <paramref name="b"/>.
         /// </summary>
         private static fp2x2 Kron(fp2 a, fp2 b) => fpmath.fp2x2(a * b[0], a * b[1]);
     }
