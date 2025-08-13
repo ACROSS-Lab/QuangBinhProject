@@ -373,17 +373,20 @@ global control: fsm {
 					geometry gD <- l - init_river;
 					if gI != nil {
 						loop ggI over: gI.geometries {
-							create dyke with:(is_dam: true, shape:ggI) returns: ret;
+							
+							create dyke with:(is_dam: true, shape:ggI) returns: current_dykes;
+							ret <- ret + current_dykes;
 						}
 						if (gD != nil) {
 							loop ggD over: gD.geometries {
-								create dyke with:(shape:ggD) returns: ret;
+								create dyke with:(shape:ggD) returns: current_dykes;
+								ret <- ret + current_dykes;
 							}
 						}
 					}
 				} else {
-					create dyke with:(shape:l) returns: ret;
-					return ret;
+					create dyke with:(shape:l) returns: current_dykes;
+					ret <- ret + current_dykes;
 				}	
 			} else {
 				return ret;
