@@ -3,7 +3,8 @@ model Flood_VR
 import "Flooding Model.gaml"
 
 global { 
-	map<string, float> player_resource;
+	map<string, float> player_resources;
+	map<string, list<string>> player_built_dykes;
 	
 	bool use_tell <- false;
 	bool ready_to_build_dyke <- false;
@@ -206,7 +207,7 @@ global {
 		int player_cnt <- length(unity_player);
 		loop each_player over: unity_player {
 			
-			player_resource[each_player.name] <- original_resource / player_cnt;
+			player_resources[each_player.name] <- original_resource / player_cnt;
 		}
 	}
 }
@@ -344,7 +345,8 @@ species unity_linker parent: abstract_unity_linker {
 		do send_message players: unity_player as list mes: ["ok_build_dyke_with_unity " + converted_start_point + "   " + converted_end_point :: is_ok];
 
 		loop each_dyke over: created_dykes {
-			player_resource[player_id] <- player_resource[player_id] - each_dyke.length;
+			player_resources[player_id] <- player_resources[player_id] - each_dyke.length;
+			player_built_dykes[player_id] << each_dyke.name;
 		}
 		ask experiment {
 			do update_outputs(true);  
@@ -352,8 +354,11 @@ species unity_linker parent: abstract_unity_linker {
 	}
  
 	action destroy_dyke_with_unity(string player_id, string id) {
-		float possible_length <- world.destroy_dyke(id);
-		player_resource[player_id] <- player_resource[player_id] + possible_length;
+		if (player_built_dykes[player_id] contains id) {
+			float possible_length <- world.destroy_dyke(id);
+			player_resources[player_id] <- player_resources[player_id] + possible_length;
+			player_built_dykes[player_id] >> id;
+		}
 		
 	}
 	
@@ -756,7 +761,7 @@ experiment Launch  autorun: true type: unity {
 				draw "Current stage: " + stage font: font ("Helvetica", 22, #bold) at: {-3500, 300} anchor: #top_left color: text_color;
 					
 				loop each_player over: unity_player {
-					draw each_player.name + " " + "remaining resouce: " + player_resource[each_player.name] font: font ("Helvetica", 22, #bold) at: {-3500, 300} anchor: #top_left color: text_color;
+					draw each_player.name + " " + "remaining resouce: " + player_resources[each_player.name] font: font ("Helvetica", 22, #bold) at: {-3500, 300} anchor: #top_left color: text_color;
 				}
 				
 				//draw background color: darker(frame_color) width: 5 border: brighter(frame_color) at: background_position + {background.width / 2, background.height/2, -10} lighted: false ;
