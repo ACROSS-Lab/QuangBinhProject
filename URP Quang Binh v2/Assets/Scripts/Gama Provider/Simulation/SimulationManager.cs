@@ -1169,6 +1169,7 @@ public class SimulationManager : MonoBehaviour
                                 "0";
         Dictionary<string, string> args = new Dictionary<string, string>()
         {
+            { "player_id", StaticInformation.getId()},
             { "unity_start_point", startPointStr },
             { "unity_end_point", endPointStr }
         };
