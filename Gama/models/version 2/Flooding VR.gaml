@@ -140,6 +140,7 @@ global {
 		
 		ask world {
 			do divide_resource();
+			do reset_dyke_data();
 		}	
 	}
 	
@@ -210,6 +211,11 @@ global {
 			
 			player_resources[each_player.name] <- original_resource / player_cnt;
 		}
+	}
+	
+	action reset_dyke_data {
+		player_built_dykes <- [];
+		dykes_built_by_players <- [];
 	}
 }
 
