@@ -403,10 +403,10 @@ global control: fsm {
 			ask d {
 				if (is_dam) {
 					dam_length <- dam_length - length; 
-					ret <- dam_length;
+					ret <- length;
 				} else {
 					dyke_length <- dyke_length - length; 
-					ret <- dyke_length;
+					ret <- length;
 				}
 				loop c over: cells_under {
 					c.obstacles >> self;

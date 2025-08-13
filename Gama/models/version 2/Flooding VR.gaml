@@ -357,7 +357,7 @@ species unity_linker parent: abstract_unity_linker {
 	}
  
 	action destroy_dyke_with_unity(string player_id, string id) {
-		if (player_built_dykes[player_id] contains id) {
+		if (player_built_dykes[player_id] != nil and player_built_dykes[player_id] contains id) {
 			float possible_length <- world.destroy_dyke(id);
 			player_resources[player_id] <- player_resources[player_id] + possible_length;
 			player_built_dykes[player_id] >> id;
