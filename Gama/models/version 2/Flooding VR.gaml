@@ -330,7 +330,7 @@ species unity_linker parent: abstract_unity_linker {
 	
 
 	
-	action action_management_with_unity(string unity_start_point, string unity_end_point) {
+	action action_management_with_unity(string player_id, string unity_start_point, string unity_end_point) {
 		list<float> unity_start_point_float <- convert_string_to_array_of_float(unity_start_point);
 		list<float> unity_end_point_float <- convert_string_to_array_of_float(unity_end_point);
 		point converted_start_point <- {unity_start_point_float[0], unity_start_point_float[1], unity_start_point_float[2]};
@@ -339,8 +339,10 @@ species unity_linker parent: abstract_unity_linker {
 		
 		
 		//create dyke with: (shape: line([converted_start_point, converted_end_point])) ;
-		bool is_ok <- world.create_dyke(converted_start_point, converted_end_point);
+		list<dyke> created_dykes <- world.create_dyke(converted_start_point, converted_end_point);
+		bool is_ok <- not empty(created_dykes);
 		do send_message players: unity_player as list mes: ["ok_build_dyke_with_unity " + converted_start_point + "   " + converted_end_point :: is_ok];
+		player_resource[player_id] <- player_resource[player_id] - created_dykes[0].length;
 		ask experiment {
 			do update_outputs(true);  
 		}
@@ -348,7 +350,7 @@ species unity_linker parent: abstract_unity_linker {
  
 	action destroy_dyke_with_unity(string player_id, string id) {
 		float possible_length <- world.destroy_dyke(id);
-		player_resource[player_id] <- player_resource[player_id] - possible_length;
+		player_resource[player_id] <- player_resource[player_id] + possible_length;
 		
 	}
 	
@@ -748,8 +750,11 @@ experiment Launch  autorun: true type: unity {
 				}
  
 				draw rectangle(3500,1600) color: #gray border: #black at: {-1870, 1000,-1.0};
-				draw "Current stage: " + stage font: font ("Helvetica", 22, #bold) at: {-3500, 300} anchor: #top_left color: text_color;	
-			
+				draw "Current stage: " + stage font: font ("Helvetica", 22, #bold) at: {-3500, 300} anchor: #top_left color: text_color;
+					
+				loop each_player over: unity_player {
+					draw each_player.name + " " + "remaining resouce: " + player_resource[each_player.name] font: font ("Helvetica", 22, #bold) at: {-3500, 300} anchor: #top_left color: text_color;
+				}
 				
 				//draw background color: darker(frame_color) width: 5 border: brighter(frame_color) at: background_position + {background.width / 2, background.height/2, -10} lighted: false ;
 				point timer_position_ <- {-3300, 600};

@@ -362,7 +362,8 @@ global control: fsm {
 		// The next timeout to occur for the different stages
 	float current_timeout;
 	
-	bool create_dyke(point source, point target) {
+	list<dyke> create_dyke(point source, point target) {
+		list<dyke> ret;
 		if (source distance_to target > 1.0)  {
 			geometry l <- line([source, target]);
 			l <- l inter world;
@@ -372,23 +373,23 @@ global control: fsm {
 					geometry gD <- l - init_river;
 					if gI != nil {
 						loop ggI over: gI.geometries {
-							create dyke with:(is_dam: true, shape:ggI);
+							create dyke with:(is_dam: true, shape:ggI) returns: ret;
 						}
 						if (gD != nil) {
 							loop ggD over: gD.geometries {
-								create dyke with:(shape:ggD);
+								create dyke with:(shape:ggD) returns: ret;
 							}
 						}
 					}
 				} else {
-					create dyke with:(shape:l);
-					return true;
+					create dyke with:(shape:l) returns: ret;
+					return ret;
 				}	
 			} else {
-				return false;
+				return ret;
 			}
 		}
-		return false;
+		return ret;
 	}
 	
 	float destroy_dyke(string id) {
