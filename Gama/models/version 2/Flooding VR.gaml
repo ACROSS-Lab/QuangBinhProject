@@ -342,7 +342,10 @@ species unity_linker parent: abstract_unity_linker {
 		list<dyke> created_dykes <- world.create_dyke(converted_start_point, converted_end_point);
 		bool is_ok <- not empty(created_dykes);
 		do send_message players: unity_player as list mes: ["ok_build_dyke_with_unity " + converted_start_point + "   " + converted_end_point :: is_ok];
-		player_resource[player_id] <- player_resource[player_id] - created_dykes[0].length;
+
+		loop each_dyke over: created_dykes {
+			player_resource[player_id] <- player_resource[player_id] - each_dyke.length;
+		}
 		ask experiment {
 			do update_outputs(true);  
 		}
