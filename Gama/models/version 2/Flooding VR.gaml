@@ -346,6 +346,9 @@ species unity_linker parent: abstract_unity_linker {
 
 		loop each_dyke over: created_dykes {
 			player_resources[player_id] <- player_resources[player_id] - each_dyke.length;
+			if (player_built_dykes[player_id] = nil) {
+				player_built_dykes[player_id] <- [];
+			}
 			player_built_dykes[player_id] << each_dyke.name;
 		}
 		ask experiment {
