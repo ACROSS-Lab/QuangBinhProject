@@ -5,6 +5,7 @@ import "Flooding Model.gaml"
 global { 
 	map<string, float> player_resources;
 	map<string, list<string>> player_built_dykes;
+	map<string, string> dykes_built_by_players;
 	
 	bool use_tell <- false;
 	bool ready_to_build_dyke <- false;
@@ -350,6 +351,7 @@ species unity_linker parent: abstract_unity_linker {
 				player_built_dykes[player_id] <- [];
 			}
 			player_built_dykes[player_id] << each_dyke.name;
+			dykes_built_by_players[each_dyke.name] <-player_id;
 		}
 		ask experiment {
 			do update_outputs(true);  
@@ -357,11 +359,12 @@ species unity_linker parent: abstract_unity_linker {
 	}
  
 	action destroy_dyke_with_unity(string player_id, string id) {
-		if (player_built_dykes[player_id] != nil and player_built_dykes[player_id] contains id) {
+		//if (player_built_dykes[player_id] != nil and player_built_dykes[player_id] contains id) {
 			float possible_length <- world.destroy_dyke(id);
-			player_resources[player_id] <- player_resources[player_id] + possible_length;
-			player_built_dykes[player_id] >> id;
-		}
+			string builder <- dykes_built_by_players[id];
+			player_resources[builder] <- player_resources[builder] + possible_length;
+			player_built_dykes[builder] >> id;
+		//}
 		
 	}
 	
