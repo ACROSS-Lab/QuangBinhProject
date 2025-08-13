@@ -3,6 +3,7 @@ model Flood_VR
 import "Flooding Model.gaml"
 
 global { 
+	map<string, float> player_resource;
 	
 	bool use_tell <- false;
 	bool ready_to_build_dyke <- false;
@@ -135,7 +136,9 @@ global {
 		diking_requested_from_gama <- false;
 		restart_requested_from_gama <- false;	
 		
-		
+		ask world {
+			do divide_resource();
+		}	
 	}
 	
 	action enter_flooding {
@@ -158,6 +161,10 @@ global {
 	bool start_over {
 		if (init_requested_from_gama) {return true;}
 		if (empty(unity_player)) {return false;}
+		
+
+
+		
 		return unity_player all_match each.start_pressed;
 	}
 	
@@ -195,7 +202,13 @@ global {
 	// Is the diking stage requested by the user ? 
 	bool diking_requested_from_gama; 
 
- 
+	action divide_resource {
+		int player_cnt <- length(unity_player);
+		loop each_player over: unity_player {
+			
+			player_resource[each_player.name] <- original_resource / player_cnt;
+		}
+	}
 }
 
 species unity_linker parent: abstract_unity_linker { 
@@ -333,8 +346,10 @@ species unity_linker parent: abstract_unity_linker {
 		}
 	}
  
-	action destroy_dyke_with_unity(string id) {
+	action destroy_dyke_with_unity(string player_id, string id) {
 		float possible_length <- world.destroy_dyke(id);
+		player_resource[player_id] <- player_resource[player_id] - possible_length;
+		
 	}
 	
 	action mark_diking_over

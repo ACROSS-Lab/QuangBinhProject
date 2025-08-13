@@ -14,6 +14,7 @@
 model Flooding
 
 global control: fsm {
+	float original_resource <- 20000.0;
 		
  	bool save_results <- false;
  	
