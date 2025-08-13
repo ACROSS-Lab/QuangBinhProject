@@ -760,8 +760,10 @@ experiment Launch  autorun: true type: unity {
 				draw rectangle(3500,1600) color: #gray border: #black at: {-1870, 1000,-1.0};
 				draw "Current stage: " + stage font: font ("Helvetica", 22, #bold) at: {-3500, 300} anchor: #top_left color: text_color;
 					
+				int line_offset <- 0;
 				loop each_player over: unity_player {
-					draw each_player.name + " " + "remaining resouce: " + player_resources[each_player.name] font: font ("Helvetica", 22, #bold) at: {-3500, 300} anchor: #top_left color: text_color;
+				    draw each_player.name + " " + "remaining resouce: " + round(player_resources[each_player.name]) font: font ("Helvetica", 18, #bold) at: {-4000, 5000 - line_offset} anchor: #top_left color: text_color;
+				    line_offset <- line_offset + 100;
 				}
 				
 				//draw background color: darker(frame_color) width: 5 border: brighter(frame_color) at: background_position + {background.width / 2, background.height/2, -10} lighted: false ;
