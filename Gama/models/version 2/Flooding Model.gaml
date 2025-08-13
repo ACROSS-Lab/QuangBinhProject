@@ -390,15 +390,18 @@ global control: fsm {
 		return false;
 	}
 	
-	action destroy_dyke(string id) {
+	float destroy_dyke(string id) {
 		dyke d <- dyke first_with (each.name = id);
+		float ret <- 0.0;
 		if (d != nil){
 			
 			ask d {
 				if (is_dam) {
 					dam_length <- dam_length - length; 
+					ret <- dam_length;
 				} else {
 					dyke_length <- dyke_length - length; 
+					ret <- dyke_length;
 				}
 				loop c over: cells_under {
 					c.obstacles >> self;
@@ -408,7 +411,8 @@ global control: fsm {
 				 }
 				 do die;
 			}
-		} 	
+		}
+		return ret; 	
 	}
 		
 	

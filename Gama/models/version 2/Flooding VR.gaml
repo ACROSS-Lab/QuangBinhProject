@@ -1,7 +1,7 @@
 model Flood_VR
 
 import "Flooding Model.gaml"
- 
+
 global { 
 	
 	bool use_tell <- false;
@@ -334,9 +334,7 @@ species unity_linker parent: abstract_unity_linker {
 	}
  
 	action destroy_dyke_with_unity(string id) {
-		ask world {
-			do destroy_dyke(id);
-		}	
+		float possible_length <- world.destroy_dyke(id);
 	}
 	
 	action mark_diking_over
