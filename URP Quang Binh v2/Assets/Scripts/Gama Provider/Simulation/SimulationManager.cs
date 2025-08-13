@@ -971,8 +971,10 @@ public class SimulationManager : MonoBehaviour
             if (("dyke").Equals(grabbedObject.tag) || ("dam").Equals(grabbedObject.tag))
             {
                 Dictionary<string, string> args = new Dictionary<string, string> {
-                         {"id", grabbedObject.name }
+                        {"player_id", StaticInformation.getId()},
+                        {"id", grabbedObject.name }
                     };
+                
                 ConnectionManager.Instance.SendExecutableAsk("destroy_dyke_with_unity", args);
 
                 remainingTime = timeWithoutInteraction;
