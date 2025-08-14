@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 5390db415e1da0d49ac711c41a04e3ff
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 178028
+  packageName: Replace Selected
+  packageVersion: 1.0.2
+  assetPath: Assets/ReplaceSelected/Editor/sc.utilities.replace-selected.editor.asmdef
+  uploadId: 479231

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 44334b385212d6b40adcef54bc075d75
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 178028
+  packageName: Replace Selected
+  packageVersion: 1.0.2
+  assetPath: Assets/ReplaceSelected/readme.md
+  uploadId: 479231

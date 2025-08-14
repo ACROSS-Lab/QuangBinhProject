@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 72cadd418e990474290b8fe4bb31d2eb
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 178028
+  packageName: Replace Selected
+  packageVersion: 1.0.2
+  assetPath: Assets/ReplaceSelected/package.json
+  uploadId: 479231

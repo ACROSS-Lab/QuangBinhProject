@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 88df9139619eeca4d854e5c4898cfbf2
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 178028
+  packageName: Replace Selected
+  packageVersion: 1.0.2
+  assetPath: Assets/ReplaceSelected/Editor/ReplaceSelected.cs
+  uploadId: 479231
