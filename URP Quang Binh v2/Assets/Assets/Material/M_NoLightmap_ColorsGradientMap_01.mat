@@ -48,6 +48,7 @@ Material:
     m_Floats:
     - _Distance: 0
     - _Lightmapping: 0
+    - _Outline: 0
     - _QueueControl: 0
     - _QueueOffset: 0
     - _Texture: 1
