@@ -55,7 +55,7 @@ public class SimulationManager : MonoBehaviour
     // public static event Action<WorldJSONInfo> OnWorldDataReceived;
     // ########################################################################
 
-    protected Dictionary<string, object[]> geometryMap;
+    protected Dictionary<string, object[]> geometryMap = new Dictionary<string, object[]>();
     protected Dictionary<string, PropertiesGAMA> propertyMap = null;
     protected List<GameObject> SelectedObjects;
 
@@ -118,6 +118,7 @@ public class SimulationManager : MonoBehaviour
     protected RoundMessage roundM;
     protected DykeLengthMessage dykeM;
     protected DamLengthMessage damM;
+    protected ResourcesMessage resourceM;
 
     protected Vector3 originalStartPosition;
     protected bool firstPositionStored;
@@ -129,7 +130,7 @@ public class SimulationManager : MonoBehaviour
     private bool _inTriggerPress = false;
 
     public GameObject FutureDike = null;
-    protected PropertiesGAMA propFutureDike;
+    
     public bool DisplayFutureDike = false;
     protected bool StartFloodingDone = false;
 
@@ -151,6 +152,8 @@ public class SimulationManager : MonoBehaviour
     [HideInInspector] public bool isInit = false;
     private bool readyToBuild;
 
+    protected float init_resources, remaining_resources;
+
     //Cache
     Dictionary<string, string> connectionID;
     HashSet<string> toRemove = new HashSet<string>();
@@ -170,19 +173,6 @@ public class SimulationManager : MonoBehaviour
             endPoint.SetActive(false);
         if (startPoint != null)
             startPoint.SetActive(false);
-
-        propFutureDike = new PropertiesGAMA
-        {
-            red = 0,
-            blue = 0,
-            green = 255,
-            hasCollider = false,
-            hasPrefab = false,
-            height = 40 * 10000,
-            is3D = true,
-            visible = true
-        };
-
 
         connectionID = new Dictionary<string, string>
         {
@@ -240,7 +230,6 @@ public class SimulationManager : MonoBehaviour
 
     void Start()
     {
-        geometryMap = new Dictionary<string, object[]>();
         handleGeometriesRequested = false;
         // handlePlayerParametersRequested = false;
         handleGroundParametersRequested = false;
@@ -318,6 +307,8 @@ public class SimulationManager : MonoBehaviour
                     StartMenuDone = true;
                     StartFloodingDone = false;
                     transformToKeep = new List<string>();
+                    init_resources = 0;
+                    remaining_resources = 0;
                 }
             }
 
@@ -513,7 +504,17 @@ public class SimulationManager : MonoBehaviour
             UIController.Instance.UpdateLength(UIController.Instance.damLength, damM.damLength);
             damM = null;
         }
+        if (resourceM != null)
+        {
+            if(resourceM.player_id == StaticInformation.getId())
+            {
+                UpdateResources();
+            }
+            resourceM = null;
+        }
     }
+
+    
 
 
     void GenerateGeometries(bool initGame, HashSet<string> toRemove)
@@ -974,10 +975,11 @@ public class SimulationManager : MonoBehaviour
                         {"player_id", StaticInformation.getId()},
                         {"id", grabbedObject.name }
                     };
-                
+
                 ConnectionManager.Instance.SendExecutableAsk("destroy_dyke_with_unity", args);
 
                 remainingTime = timeWithoutInteraction;
+                GetRemainingResources();
             }
         }
     }
@@ -1051,12 +1053,8 @@ public class SimulationManager : MonoBehaviour
                 roundM = RoundMessage.CreateFromJSON(content);
                 break;
 
-            case "dykeLength":
-                dykeM = DykeLengthMessage.CreateFromJSON(content);
-                break;
-
-            case "damLength":
-                damM = DamLengthMessage.CreateFromJSON(content);
+            case "player_id":
+                resourceM = ResourcesMessage.CreateFromJSON(content);
                 break;
 
             case "properties":
@@ -1149,13 +1147,12 @@ public class SimulationManager : MonoBehaviour
 
                         FutureDike = null;
                     }
-
-                    DrawDykeWithParams(StartPoint, EndPoint);
-                    if (!buildFirstDyke)
+                    if (remaining_resources - Vector3.Distance(StartPoint, EndPoint) >= 0)
                     {
-                        UIController.Instance.StartDikingPhase();
-                        buildFirstDyke = true;
+                        DrawDykeWithParams(StartPoint, EndPoint);
                     }
+                    GetRemainingResources();
+                    
                 }
             }
         }
@@ -1174,6 +1171,27 @@ public class SimulationManager : MonoBehaviour
             { "unity_end_point", endPointStr }
         };
         ConnectionManager.Instance.SendExecutableAsk("action_management_with_unity", args);
+    }
+
+    private void GetRemainingResources()
+    {
+        Dictionary<string, string> args = new Dictionary<string, string>
+        {
+            { "player_id", StaticInformation.getId()},
+        };
+
+        ConnectionManager.Instance.SendExecutableAsk("get_remaining_resources", args);
+    }
+
+    private void UpdateResources()
+    {
+        if (init_resources == 0) init_resources = resourceM.remaining_resources;
+        remaining_resources = resourceM.remaining_resources;
+
+        Debug.Log("UpdateResources: " + remaining_resources);
+        Debug.Log("Resources: " + init_resources);
+        
+        UIController.Instance.resourceSlider.value = remaining_resources/init_resources;
     }
 
     private void HandleConnectionAttempted(bool success)
@@ -1288,6 +1306,18 @@ public class DamLengthMessage
     public static DamLengthMessage CreateFromJSON(string jsonString)
     {
         return JsonUtility.FromJson<DamLengthMessage>(jsonString);
+    }
+}
+
+[Serializable]
+public class ResourcesMessage
+{
+    public string player_id;
+    public float remaining_resources;
+
+    public static ResourcesMessage CreateFromJSON(string jsonString)
+    {
+        return JsonUtility.FromJson<ResourcesMessage>(jsonString);
     }
 }
 

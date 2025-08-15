@@ -141,7 +141,13 @@ global {
 		ask world {
 			do divide_resource();
 			do reset_dyke_data();
-		}	
+		}
+		
+		loop each_player over: unity_player {
+			ask unity_linker{ do get_remaining_resources(each_player.name); }
+		}
+		
+		
 	}
 	
 	action enter_flooding {
@@ -309,9 +315,9 @@ species unity_linker parent: abstract_unity_linker {
 		do send_message players: unity_player as list mes: ["score":: int(100* (1 - casualties/nb_of_people)), "round":: current_round, "endgame"::current_round >= num_rounds];
 	}
 	
-	action sendLengthData {
-		do send_message players: unity_player as list mes: ["dykeLength":: round(world.dyke_length)];
-		do send_message players: unity_player as list mes: ["damLength":: round(world.dam_length)];
+	action get_remaining_resources(string player_id) {
+		float remaining_resources <- player_resources[player_id];
+		do send_message players: unity_player as list mes: ["player_id" :: player_id, "remaining_resources" :: remaining_resources];
 	}
 	
 	action add_to_send_world(map map_to_send) {
@@ -429,7 +435,6 @@ species unity_linker parent: abstract_unity_linker {
 			do add_geometries_to_send(dams_, up_dam, dams_atts);
 			
 //			do add_geometries_to_keep(dyke);
-			do sendLengthData;
 			// The river is not changed so we keep it unchanged
 			if (river_already_sent_in_diking_phase) {do add_geometries_to_keep(river);} 
 			else {do add_geometries_to_send(river collect each.shape_to_export, up_water); river_already_sent_in_diking_phase <- true;}

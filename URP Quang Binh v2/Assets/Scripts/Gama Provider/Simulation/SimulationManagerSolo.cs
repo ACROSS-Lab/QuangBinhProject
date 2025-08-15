@@ -4,6 +4,35 @@ using UnityEngine;
 
 public class SimulationManagerSolo : SimulationManager
 {
+    PropertiesGAMA propFutureDike, propFalseDike;
+
+    void Start()
+    {
+        propFutureDike = new PropertiesGAMA
+        {
+            red = 0,
+            blue = 0,
+            green = 255,
+            hasCollider = false,
+            hasPrefab = false,
+            height = 40 * 10000,
+            is3D = true,
+            visible = true
+        };
+
+        propFalseDike = new PropertiesGAMA
+        {
+            red = 255,
+            blue = 0,
+            green = 0,
+            hasCollider = false,
+            hasPrefab = false,
+            height = 40 * 10000,
+            is3D = true,
+            visible = true
+        };
+    }
+
     protected override void GenerateFutureDike()
     {
         // Debug.Log("Will generate a future dike");
@@ -24,6 +53,7 @@ public class SimulationManagerSolo : SimulationManager
 
             Vector2[] pts = new Vector2[5];
             Vector3 _endPoint = raycastHit.point;
+            float distance = Vector3.Distance(StartPoint, _endPoint);
             Vector2 direction = new Vector2(_endPoint.x - StartPoint.x, _endPoint.z - StartPoint.z).normalized;
             Vector2 Per = Vector2.Perpendicular(direction);
             Per = new Vector2(Per.x * 10.0f, Per.y * 10.0f);
@@ -35,7 +65,7 @@ public class SimulationManagerSolo : SimulationManager
             pts[4] = pts[0];
 
 
-            FutureDike = polyGen.GeneratePolygons(false, "FutureDike", pts, propFutureDike, parameters.precision);
+            FutureDike = polyGen.GeneratePolygons(false, "FutureDike", pts, remaining_resources - distance > 0 ? propFutureDike : propFalseDike, parameters.precision);
         }
     }
 

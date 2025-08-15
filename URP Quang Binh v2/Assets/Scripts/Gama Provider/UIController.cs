@@ -29,12 +29,13 @@ public class UIController : MonoBehaviour
     public GameObject UI_HUD;
     public GameObject UI_Hint, UI_Hint_viet, UI_Hint_eng;
     public GameObject UI_ScoreRound_viet, UI_ScoreRound_eng;
-    public GameObject UI_Length_viet, UI_Length_eng;
+    public GameObject UI_Resources;
     public GameObject buttonDyke_viet, buttonDyke_eng;
     public GameObject textWait_viet, textWait_eng;
     public TextMeshProUGUI score, finalScore, bestScore;
     public TextMeshProUGUI roundTxt;
     public TextMeshProUGUI dykeLength, damLength;
+    public Slider resourceSlider;
 
     int round;
     bool isInit = false;
@@ -49,7 +50,7 @@ public class UIController : MonoBehaviour
     protected bool FloodingInitPhase = false;
 
 
-    public bool DikingStart = false;
+    bool DikingStart = false;
 
     public GameObject globalVolume;
 
@@ -128,14 +129,12 @@ public class UIController : MonoBehaviour
             UI_FloodingPhase_viet.SetActive(true);
             UI_Hint_viet.SetActive(true);
             UI_ScoreRound_viet.SetActive(true);
-            UI_Length_viet.SetActive(true);
         }
         else
         {
             UI_FloodingPhase_eng.SetActive(true);
             UI_Hint_eng.SetActive(true);
             UI_ScoreRound_eng.SetActive(true);
-            UI_Length_eng.SetActive(true);
         }
 
         FloodingPhase = true;
@@ -176,7 +175,7 @@ public class UIController : MonoBehaviour
             textWait_eng.SetActive(true);
         }    
         SimulationManager.Instance.SetInDykeBuilding();
-
+        resourceSlider.value = 1.0f; // Reset resource slider to full
         
     }
 
@@ -276,8 +275,6 @@ public class UIController : MonoBehaviour
         UI_Hint_eng.SetActive(false);
         UI_ScoreRound_viet.SetActive(false);
         UI_ScoreRound_eng.SetActive(false);
-        UI_Length_viet.SetActive(false);
-        UI_Length_eng.SetActive(false);
         UI_FinalScore.SetActive(false);
 
         UI_ChoiceOfLanguage.SetActive(true);
