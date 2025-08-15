@@ -546,7 +546,11 @@ public class SimulationManager : MonoBehaviour
 
                     if (obj.name.Contains("Player"))
                     {
-                        obj.transform.SetParent(XROrigin);
+                        string id = name.Substring(name.Length - 3);
+                        int colorCode = int.Parse(id);
+                        float hue = (colorCode % 256) / 256f;
+                        Color color = Color.HSVToRGB(hue, 1f, 1f);
+                        obj.GetComponent<MeshRenderer>().material.color = color;
                     }
                 }
                 else
@@ -568,7 +572,7 @@ public class SimulationManager : MonoBehaviour
                     }
                 }
 
-                if (obj.CompareTag("people"))
+                if (obj.CompareTag("people") || obj.CompareTag("player"))
                 {
                     UpdateTransform();
                 }

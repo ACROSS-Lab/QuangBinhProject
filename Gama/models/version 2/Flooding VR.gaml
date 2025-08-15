@@ -254,7 +254,7 @@ species unity_linker parent: abstract_unity_linker {
 		unity_aspect water_aspect <- geometry_aspect(5.0, "Materials/Water/M_WaterVoronoi",precision);
 		unity_aspect shelter_aspect <- prefab_aspect("Prefabs/Shelter/Shelter",150,0,1.0,0.0, precision);
 		unity_aspect building_aspect <- geometry_aspect(5.0, "Materials/KeyMaterial",precision);
-		unity_aspect player_aspect <- prefab_aspect("Prefabs/Capsule", 20, 0, 1.0, 0.0, precision);
+		unity_aspect player_aspect <- prefab_aspect("Prefabs/Players/Player", 90, 1000, 1.0, 0.0, precision);
 		
 		up_people<- geometry_properties("people", "people", people_aspect, #no_interaction, false);
 		up_dyke <- geometry_properties("dyke", "dyke", dyke_aspect, #ray_interactable, false);
@@ -262,7 +262,7 @@ species unity_linker parent: abstract_unity_linker {
 		up_water <- geometry_properties("water", string(nil), water_aspect, #no_interaction,false);
 		up_shelter <- geometry_properties("shelter", string(nil), shelter_aspect,#ray_interactable,false);
 		up_building <- geometry_properties("buidling", string(nil), building_aspect,#no_interaction, false);
-		up_player <- geometry_properties("player", string(nil), player_aspect, #no_interaction, false);
+		up_player <- geometry_properties("player", "player", player_aspect, #no_interaction, false);
 		
 		unity_aspect frontier_green_aspect <- geometry_aspect(50.0, #green,  precision);
 		unity_aspect frontier_orange_aspect <- geometry_aspect(50.0, #orange,  precision);
@@ -416,6 +416,9 @@ species unity_linker parent: abstract_unity_linker {
 	 * What are the agents to send to Unity, and what are the agents that remain unchanged ? 
 	 */
 	reflex send_agents when: not empty(unity_player) {
+		
+		do add_geometries_to_send(player_agents, up_player);
+		
 		if (state = "s_init") {
 			do add_people;
 			// We send the river (supposed to change every step)
