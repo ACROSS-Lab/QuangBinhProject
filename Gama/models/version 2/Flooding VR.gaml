@@ -11,6 +11,9 @@ global {
 	bool ready_to_build_dyke <- false;
 	 
 	bool diking_over <- false;
+	
+	list<int> color_ID <- [0, 1, 2, 3];
+	map<string, int> player_assigned_colors;
 	/*************************************************************
 	 * Redefinition of initial parameters for people, water and obstacles
 	 *************************************************************/
@@ -236,7 +239,7 @@ species unity_linker parent: abstract_unity_linker {
 	unity_property up_water;
 	unity_property up_shelter;
 	unity_property up_building;
-	unity_property up_player;
+//	unity_property up_player;
 //	unity_property up_injuries;
 	
 	
@@ -254,7 +257,7 @@ species unity_linker parent: abstract_unity_linker {
 		unity_aspect water_aspect <- geometry_aspect(5.0, "Materials/Water/M_WaterVoronoi",precision);
 		unity_aspect shelter_aspect <- prefab_aspect("Prefabs/Shelter/Shelter",150,0,1.0,0.0, precision);
 		unity_aspect building_aspect <- geometry_aspect(5.0, "Materials/KeyMaterial",precision);
-		unity_aspect player_aspect <- prefab_aspect("Prefabs/Players/Player", 90, 1000, 1.0, 0.0, precision);
+//		unity_aspect player_aspect <- prefab_aspect("Prefabs/Players/Player", 90, 1000, 1.0, 0.0, precision);
 		
 		up_people<- geometry_properties("people", "people", people_aspect, #no_interaction, false);
 		up_dyke <- geometry_properties("dyke", "dyke", dyke_aspect, #ray_interactable, false);
@@ -262,7 +265,7 @@ species unity_linker parent: abstract_unity_linker {
 		up_water <- geometry_properties("water", string(nil), water_aspect, #no_interaction,false);
 		up_shelter <- geometry_properties("shelter", string(nil), shelter_aspect,#ray_interactable,false);
 		up_building <- geometry_properties("buidling", string(nil), building_aspect,#no_interaction, false);
-		up_player <- geometry_properties("player", "player", player_aspect, #no_interaction, false);
+//		up_player <- geometry_properties("player", "player", player_aspect, #no_interaction, false);
 		
 		unity_aspect frontier_green_aspect <- geometry_aspect(50.0, #green,  precision);
 		unity_aspect frontier_orange_aspect <- geometry_aspect(50.0, #orange,  precision);
@@ -283,7 +286,7 @@ species unity_linker parent: abstract_unity_linker {
 		unity_properties << up_water;
 		unity_properties << up_shelter;
 		unity_properties << up_building;
-		unity_properties << up_player;
+//		unity_properties << up_player;
 		
 		//add the static_geometry agents as static agents/geometries to send to unity with the up_geom unity properties.
 		do add_background_geometries(evacuation_point,up_shelter);
@@ -417,7 +420,7 @@ species unity_linker parent: abstract_unity_linker {
 	 */
 	reflex send_agents when: not empty(unity_player) {
 		
-		do add_geometries_to_send(player_agents, up_player);
+//		do add_geometries_to_send(player_agents, up_player);
 		
 		if (state = "s_init") {
 			do add_people;
@@ -428,13 +431,21 @@ species unity_linker parent: abstract_unity_linker {
 			list<dyke> dykes_ <- (dyke where !each.is_dam);
 			list<float> dykes_length <- dykes_ collect each.length;
 			list<float> dykes_rotation <- dykes_ collect each.rotation; 
-			map<string, list<float>> dykes_atts <- ["length" :: dykes_length ,"rotation" :: dykes_rotation];
+			list<int> dyke_colors <- [];
+			loop each_dyke over: dykes_{
+				dyke_colors << player_assigned_colors[dykes_built_by_players[each_dyke.name]];
+			}
+			map<string, list> dykes_atts <- ["length" :: dykes_length ,"rotation" :: dykes_rotation, "color_id" :: dyke_colors];
 			do add_geometries_to_send(dykes_, up_dyke, dykes_atts);
 			
 			list<dyke> dams_ <- (dyke where each.is_dam);
 			list<float> dams_length <- dams_ collect each.length;
 			list<float> dams_rotation <- dams_ collect each.rotation;
-			map<string, list<float>> dams_atts <- ["length" :: dams_length ,"rotation" :: dams_rotation];
+			list<int> dam_colors <- [];
+			loop each_dam over: dams_{
+				dam_colors << player_assigned_colors[dykes_built_by_players[each_dam.name]];
+			}
+			map<string, list> dams_atts <- ["length" :: dams_length ,"rotation" :: dams_rotation, "color_id" :: dam_colors];
 			do add_geometries_to_send(dams_, up_dam, dams_atts);
 			
 //			do add_geometries_to_keep(dyke);
@@ -513,6 +524,11 @@ experiment Launch  autorun: true type: unity {
 		ask unity_linker {
 			do create_player(id);
 		}
+		if (not empty(color_ID)) {
+			int color_to_assign <- first(color_ID);
+			player_assigned_colors[id] <- color_to_assign;
+			color_ID >- color_to_assign;
+		}
 	}
 
 	//action called by the middleware when a plyer is remove from the simulation
@@ -520,6 +536,11 @@ experiment Launch  autorun: true type: unity {
 		if (not empty(unity_player)) {
 			ask first(unity_player where (each.name = id_input)) {
 				do die;
+			}
+			if (player_assigned_colors contains_key id_input) {
+				int color_to_return <- player_assigned_colors[id_input];
+				color_ID << color_to_return;
+				player_assigned_colors >- id_input;
 			}
 		}
 	}

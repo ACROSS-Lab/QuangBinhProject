@@ -90,26 +90,37 @@ public class SimulationManagerSolo : SimulationManager
             float length = attributes[i].length;
             float rotation = attributes[i].rotation;
             int status = attributes[i].status;
+            int color_id = attributes[i].color_id;
 
-            if(length != 0)
+            if (length != 0)
             {
-                obj.transform.localScale = new Vector3(obj.transform.localScale.y, obj.transform.localScale.y, length/36);
-                obj.transform.localEulerAngles = new Vector3(0, -rotation, 0);
+                obj.transform.localScale = new Vector3(obj.transform.localScale.y, obj.transform.localScale.y, length / 36);
+                
+                if(modifiedDykes.ContainsKey(name) && !modifiedDykes[name])
+                {
+                    obj.transform.localEulerAngles = new Vector3(0, -rotation, 0);
+                    
+                    PlayerColor playerColor = playerColors[color_id];
+                    if(obj.CompareTag("dyke")) obj.GetComponent<MeshRenderer>().material = playerColor.dykeMaterial;
+                    else if(obj.CompareTag("dam")) obj.GetComponent<MeshRenderer>().material = playerColor.damMaterial;
+                    
+                    modifiedDykes[name] = true;
+                }
             }
 
-            else if(status != 0)
+            else if (status != 0)
             {
-                if(!obj.activeInHierarchy) obj.SetActive(true);
-                if(status == -1)
+                if (!obj.activeInHierarchy) obj.SetActive(true);
+                if (status == -1)
                 {
                     obj.transform.GetChild(0).gameObject.SetActive(true);
                     obj.transform.GetChild(1).localEulerAngles = new Vector3(90, 90, 0);
                 }
-                else if(status == 1)
+                else if (status == 1)
                 {
                     obj.transform.GetChild(0).gameObject.SetActive(false);
                     obj.transform.GetChild(1).localEulerAngles = new Vector3(0, 90, 0);
-                } 
+                }
             }
             
         }

@@ -57,7 +57,6 @@ public class SimulationManager : MonoBehaviour
 
     protected Dictionary<string, object[]> geometryMap = new Dictionary<string, object[]>();
     protected Dictionary<string, PropertiesGAMA> propertyMap = null;
-    protected List<GameObject> SelectedObjects;
 
     protected bool handleGeometriesRequested;
     protected bool handleGroundParametersRequested;
@@ -82,8 +81,6 @@ public class SimulationManager : MonoBehaviour
 
     protected float maxTimePing = 1.0f;
     protected float currentTimePing = 0.0f;
-
-    protected List<GameObject> toDelete;
 
     protected bool readyToSendPosition = false;
 
@@ -123,7 +120,7 @@ public class SimulationManager : MonoBehaviour
     protected Vector3 originalStartPosition;
     protected bool firstPositionStored;
 
-    protected Boolean StartMenuDone = false;
+    protected bool StartMenuDone = false;
     private string _currentStage = "s_start";
     protected bool buildFirstDyke;
 
@@ -153,6 +150,10 @@ public class SimulationManager : MonoBehaviour
     private bool readyToBuild;
 
     protected float init_resources, remaining_resources;
+    [SerializeField] protected List<PlayerColor> playerColors;
+    protected Dictionary<string, bool> modifiedDykes;
+    Dictionary<GameObject, Material> selectedHoveringDykes = new Dictionary<GameObject, Material>();
+    [SerializeField] Material selectedMaterial;
 
     //Cache
     Dictionary<string, string> connectionID;
@@ -163,8 +164,6 @@ public class SimulationManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
-        SelectedObjects = new List<GameObject>();
-        // toDelete = new List<GameObject>();
 
         startPoint = GameObject.FindGameObjectWithTag("startPoint");
         endPoint = GameObject.FindGameObjectWithTag("endPoint");
@@ -307,6 +306,7 @@ public class SimulationManager : MonoBehaviour
                     StartMenuDone = true;
                     StartFloodingDone = false;
                     transformToKeep = new List<string>();
+                    modifiedDykes = new Dictionary<string, bool>();
                     init_resources = 0;
                     remaining_resources = 0;
                 }
@@ -330,6 +330,7 @@ public class SimulationManager : MonoBehaviour
                     buildFirstDyke = false;
                     Debug.Log("Display future dike is false at wait flooding");
                     transformToKeep = new List<string>();
+                    modifiedDykes = new Dictionary<string, bool>();
                     StartFloodingDone = true;
                     readyToBuild = false;
                 }
@@ -572,7 +573,7 @@ public class SimulationManager : MonoBehaviour
                     }
                 }
 
-                if (obj.CompareTag("people") || obj.CompareTag("player"))
+                if (obj.CompareTag("people"))
                 {
                     UpdateTransform();
                 }
@@ -582,6 +583,13 @@ public class SimulationManager : MonoBehaviour
                     {
                         transformToKeep.Add(name);
                         UpdateTransform();
+                        if(obj.CompareTag("dyke") || obj.CompareTag("dam"))
+                        {
+                            if (!modifiedDykes.ContainsKey(name))
+                            {
+                                modifiedDykes.Add(name, false);
+                            }
+                        }
                     }
                 }
 
@@ -949,21 +957,25 @@ public class SimulationManager : MonoBehaviour
         if (_currentStage == "s_diking")
         {
             GameObject obj = ev.interactableObject.transform.gameObject;
-            if (obj.tag.Equals("dyke") || obj.tag.Equals("dam")) ChangeColor(obj, Color.blue);
-        }
+            if (!selectedHoveringDykes.ContainsKey(obj))
+            {
+                selectedHoveringDykes.Add(obj, obj.GetComponent<MeshRenderer>().material);
+                obj.GetComponent<MeshRenderer>().material = selectedMaterial;
+            }
 
+        }
     }
 
     protected void HoverExitInteraction(HoverExitEventArgs ev)
     {
-        GameObject obj = ev.interactableObject.transform.gameObject;
-        if (obj.tag.Equals("dyke"))
+        if (_currentStage == "s_diking")
         {
-            ChangeColor(obj, Color.gray);
-        }
-        else if (obj.tag.Equals("dam"))
-        {
-            ChangeColor(obj, new Color32(255, 165, 0, 255));
+            GameObject obj = ev.interactableObject.transform.gameObject;
+            if(selectedHoveringDykes.ContainsKey(obj))
+            {
+                obj.GetComponent<MeshRenderer>().material = selectedHoveringDykes[obj];
+                selectedHoveringDykes.Remove(obj);
+            }
         }
     }
 
@@ -1331,6 +1343,13 @@ public static class Extensions
     {
         return (result = obj.GetComponent<T>()) != null;
     }
+}
+
+[Serializable]
+public class PlayerColor
+{
+    public Material dykeMaterial;
+    public Material damMaterial;
 }
 
 
