@@ -421,7 +421,7 @@ MonoBehaviour:
         - 
         - 
         actionEnabled: 0101
-        actionIsOpen: 0000
+        actionIsOpen: 0100
         actionStartIndex: 0000000013000000
         actionHashCodes: 55f9e200b2cf1000
         unityObjectParams: []
@@ -520,7 +520,7 @@ MonoBehaviour:
           tooltip: 
           showInInspector: 0
           networkSync: 0
-          value: {r: 0.2216981, g: 1, b: 0.23597911, a: 1}
+          value: {r: 0, g: 0.6392157, b: 0.909804, a: 1}
         fsmRectParams: []
         fsmQuaternionParams: []
         stringParams:
