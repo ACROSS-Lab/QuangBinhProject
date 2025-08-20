@@ -26,7 +26,7 @@ public class MoveHorizontal : InputData
 
     private void FixedUpdate()
     {
-        if (SimulationManager.Instance.IsGameState(GameState.GAME))
+        // if (SimulationManager.Instance.IsGameState(GameState.GAME))
             MoveHorizontally();
     }
 

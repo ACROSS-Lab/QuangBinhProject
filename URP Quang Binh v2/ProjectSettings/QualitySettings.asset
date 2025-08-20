@@ -85,7 +85,7 @@ QualitySettings:
     realtimeGICPUUsage: 25
     adaptiveVsyncExtraA: 0
     adaptiveVsyncExtraB: 0
-    lodBias: 0.4
+    lodBias: 4
     maximumLODLevel: 0
     enableLODCrossFade: 0
     streamingMipmapsActive: 0
