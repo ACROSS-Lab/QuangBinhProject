@@ -10,14 +10,26 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 512d61c5896f3284b8d9f8a4a7b3688e, type: 3}
-  m_Name: English
+  m_Name: EN
   m_EditorClassIdentifier: 
   localizedStrings:
   - key: 0
-    value: "Protect the city by building dikes\r"
+    value: Protect the city by building dikes
   - key: 1
-    value: "Flood in Quang Binh!\r"
+    value: Flood in Quang Binh!
   - key: 2
-    value: Use the right grip button to destroy a dyke
+    value: Waiting for other players...
   - key: 3
+    value: Casualty
+  - key: 4
+    value: Score
+  - key: 5
+    value: Resource left to build
+  - key: 6
+    value: Ready!
+  - key: 7
+    value: Play again
+  - key: 8
+    value: Use the right grip button to destroy a dyke
+  - key: 9
     value: Use the right grip button to destroy a dyke

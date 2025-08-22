@@ -111,16 +111,14 @@ public class SimulationManager : MonoBehaviour
     protected GameObject startPoint;
     protected GameObject endPoint;
 
-    protected ScoreMessage scoreM;
-    protected RoundMessage roundM;
-    protected DykeLengthMessage dykeM;
-    protected DamLengthMessage damM;
+    protected EndFloodingMessage endFloodingM;
     protected ResourcesMessage resourceM;
 
     protected Vector3 originalStartPosition;
     protected bool firstPositionStored;
 
-    protected bool StartMenuDone = false;
+    [HideInInspector] public bool newPhase = true;
+    private bool showEndFlooding = false;
     private string _currentStage = "s_start";
     protected bool buildFirstDyke;
 
@@ -146,8 +144,8 @@ public class SimulationManager : MonoBehaviour
 
     protected float LastTime;
     protected float RemainingSeconds;
-    [HideInInspector] public bool isInit = false;
-    private bool readyToBuild;
+    private int casualties;
+    private bool readyToBuild, isInit;
 
     protected float init_resources, remaining_resources;
     [SerializeField] protected List<PlayerColor> playerColors;
@@ -289,21 +287,30 @@ public class SimulationManager : MonoBehaviour
     {
         if (IsGameState(GameState.GAME) && infoWorld != null)
         {
-            if (!isInit) return;
+            if (!isInit)
+            {
+                UIController.Instance.SetInGame();
+                isInit = true;
+            }
 
             if (_currentStage != infoWorld.state)
-            {
-                Debug.Log("BEGIN OF STAGE : " + infoWorld.state);
-                _currentStage = infoWorld.state;
+                {
+                    Debug.Log("BEGIN OF STAGE : " + infoWorld.state);
+                    _currentStage = infoWorld.state;
 
-            }
+                }
 
             if (_currentStage == "s_diking")
             {
-                if (!StartMenuDone)
+                if (showEndFlooding)
+                {
+                    UIController.Instance.EndFlooding(infoWorld.score, casualties);
+                    showEndFlooding = false;
+                }
+                else if (newPhase)
                 {
                     UIController.Instance.StartMenuDikingPhase();
-                    StartMenuDone = true;
+                    newPhase = false;
                     StartFloodingDone = false;
                     transformToKeep = new List<string>();
                     modifiedDykes = new Dictionary<string, bool>();
@@ -316,7 +323,6 @@ public class SimulationManager : MonoBehaviour
             {
                 if (!StartFloodingDone)
                 {
-                    StartMenuDone = false;
                     UIController.Instance.StartFloodingPhase();
                     if (FutureDike != null)
                     {
@@ -333,6 +339,7 @@ public class SimulationManager : MonoBehaviour
                     modifiedDykes = new Dictionary<string, bool>();
                     StartFloodingDone = true;
                     readyToBuild = false;
+                    showEndFlooding = true;
                 }
             }
 
@@ -340,7 +347,8 @@ public class SimulationManager : MonoBehaviour
             {
                 if (UIController.Instance.people_safe_on.activeSelf)
                 {
-                    UIController.Instance.people_safe_on.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(1000 - infoWorld.casualties);
+                    casualties = infoWorld.casualties;
+                    UIController.Instance.people_safe_on.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(1000 - casualties);
                 }
 
                 if (UIController.Instance.flood_time.activeSelf)
@@ -348,52 +356,12 @@ public class SimulationManager : MonoBehaviour
                     UIController.Instance.flood_time.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(infoWorld.num_step - infoWorld.current_step);
                 }
             }
-            // else if (infoWorld.state == "s_diking")
-            // {
-
-            // } 
-            // else if (infoWorld.state == "s_flooding")
-            // {
-            //     if (UIController.Instance.people_safe_on.activeSelf)
-            //     {
-            //         UIController.Instance.people_safe_on.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(1000 - infoWorld.casualties);
-            //     }
-
-            //     if(UIController.Instance.flood_time.activeSelf)
-            //     {
-            //         UIController.Instance.flood_time.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(infoWorld.num_step - infoWorld.current_step);
-            //     }
-            // }
-
             if (infoWorld.state != "s_init" && infoWorld.remaining_time > LastTime)
             {
-                //Debug.Log("Remaining time: " + infoWorld.remaining_time);
-                // timer.StartEnergizedEffect(infoWorld.remaining_time);
                 RemainingSeconds = infoWorld.remaining_time;
-                //TimeSpan timeSpan = TimeSpan.FromSeconds(RemainingSeconds);
-                //timerText.text = timeSpan.ToString(@"mm\:ss");
-                //  if (activeCoroutine != null)
-                //     StopCoroutine(activeCoroutine);
-                // timerText.gameObject.SetActive(true);
-                //activeCoroutine = StartCoroutine(CountdownCoroutine());
             }
 
-            // if (infoWorld.state == "s_init" || UIController.Instance.UI_EndingPhase_eng.activeSelf ||
-            //     UIController.Instance.UI_EndingPhase_viet.activeSelf)
-            // {
-            //     // timer.gameObject.SetActive(false);
-            //     // timerText.gameObject.SetActive(false);
-            // }
-
             LastTime = infoWorld.remaining_time;
-
-            //RemainingSeconds -= Time.unscaledDeltaTime;
-            //TimeSpan timeSpan = TimeSpan.FromSeconds(Math.Max(0, RemainingSeconds));
-            // Debug.Log("Remaining time span: " + Math.Max(0, (int)LastTime));
-            //timerText.text = timeSpan.ToString(@"mm\:ss");
-
-            //TimeSpan timeSpan = TimeSpan.FromSeconds(RemainingSeconds);
-            //timerText.text = timeSpan.ToString(@"mm\:ss");
 
             if (infoWorld.ready_to_build_dyke)
             {
@@ -485,25 +453,10 @@ public class SimulationManager : MonoBehaviour
         //UpdateTimeLeftToBuildDykes();
         OtherUpdate();
         UpdateGame();
-        if (scoreM != null)
+        if (endFloodingM != null)
         {
-            UIController.Instance.UpdateScore(scoreM.score);
-            scoreM = null;
-        }
-        if (roundM != null)
-        {
-            UIController.Instance.UpdateRound(roundM.round);
-            roundM = null;
-        }
-        if (dykeM != null)
-        {
-            UIController.Instance.UpdateLength(UIController.Instance.dykeLength, dykeM.dykeLength);
-            dykeM = null;
-        }
-        if (damM != null)
-        {
-            UIController.Instance.UpdateLength(UIController.Instance.damLength, damM.damLength);
-            damM = null;
+            UIController.Instance.EndFlooding(endFloodingM.score, endFloodingM.casualties);
+            endFloodingM = null;
         }
         if (resourceM != null)
         {
@@ -1061,12 +1014,8 @@ public class SimulationManager : MonoBehaviour
 
                 break;
             case "score":
-                scoreM = ScoreMessage.CreateFromJSON(content);
+                endFloodingM = EndFloodingMessage.CreateFromJSON(content);
 
-                break;
-
-            case "round":
-                roundM = RoundMessage.CreateFromJSON(content);
                 break;
 
             case "player_id":
@@ -1282,46 +1231,14 @@ public enum GameState
 
 
 [Serializable]
-public class ScoreMessage
+public class EndFloodingMessage
 {
     public int score;
+    public int casualties;
 
-    public static ScoreMessage CreateFromJSON(string jsonString)
+    public static EndFloodingMessage CreateFromJSON(string jsonString)
     {
-        return JsonUtility.FromJson<ScoreMessage>(jsonString);
-    }
-}
-
-[Serializable]
-public class RoundMessage
-{
-    public int round;
-
-    public static RoundMessage CreateFromJSON(string jsonString)
-    {
-        return JsonUtility.FromJson<RoundMessage>(jsonString);
-    }
-}
-
-[Serializable]
-public class DykeLengthMessage
-{
-    public float dykeLength;
-
-    public static DykeLengthMessage CreateFromJSON(string jsonString)
-    {
-        return JsonUtility.FromJson<DykeLengthMessage>(jsonString);
-    }
-}
-
-[Serializable]
-public class DamLengthMessage
-{
-    public float damLength;
-
-    public static DamLengthMessage CreateFromJSON(string jsonString)
-    {
-        return JsonUtility.FromJson<DamLengthMessage>(jsonString);
+        return JsonUtility.FromJson<EndFloodingMessage>(jsonString);
     }
 }
 

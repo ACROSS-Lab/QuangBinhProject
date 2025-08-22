@@ -25,9 +25,7 @@ public class WorldJSONInfo
     public string state;
     public bool playback_finished;
     public int remaining_time;
-
     public int score;
-
     public int casualties;
     public int num_step, current_step;
     public bool ready_to_build_dyke;

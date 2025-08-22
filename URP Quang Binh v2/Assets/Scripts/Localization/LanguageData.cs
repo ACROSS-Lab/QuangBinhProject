@@ -8,19 +8,47 @@ public class LanguageData : ScriptableObject
 
     void Reset()
     {
-        var allKeyValues = System.Enum.GetValues(typeof(KeyString));
+        SyncWithEnum();
+    }
 
-        if (localizedStrings == null)
+    void OnValidate()
+    {
+        if (localizedStrings != null)
         {
-            localizedStrings = new List<LocalizedString>(allKeyValues.Length);
+            SyncWithEnum();
         }
-        localizedStrings.Clear();
+    }
+
+    void SyncWithEnum()
+    {
+        var allKeyValues = System.Enum.GetValues(typeof(KeyString));
+        var newLocalizedStrings = new List<LocalizedString>();
 
         foreach (object keyObject in allKeyValues)
         {
             KeyString key = (KeyString)keyObject;
-            localizedStrings.Add(new LocalizedString { key = key, value = "" });
+
+            LocalizedString existingEntry = null;
+            foreach (var oldEntry in localizedStrings)
+            {
+                if (oldEntry.key == key)
+                {
+                    existingEntry = oldEntry;
+                    break;
+                }
+            }
+
+            if (existingEntry != null)
+            {
+                newLocalizedStrings.Add(existingEntry);
+            }
+            else
+            {
+                newLocalizedStrings.Add(new LocalizedString { key = key, value = "" });
+            }
         }
+
+        localizedStrings = newLocalizedStrings;
     }
 }
 
@@ -34,8 +62,14 @@ public class LocalizedString
 
 public enum KeyString
 {
-    DykingPhase,
-    FloodingPhase,
+    Dyking_Phase,
+    Flooding_Phase,
+    Waiting_Text,
+    Casualty_Text,
+    Score_Text,
+    Resources_Text,
+    Button_Build_Dyke,
+    Button_Restart,
     Tutorial_Dyke_Destroying,
     Tutorial_Dyke_Building,
 }

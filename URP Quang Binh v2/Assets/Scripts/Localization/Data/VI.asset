@@ -10,17 +10,29 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 512d61c5896f3284b8d9f8a4a7b3688e, type: 3}
-  m_Name: Vietnamese
+  m_Name: VI
   m_EditorClassIdentifier: 
   localizedStrings:
   - key: 0
     value: "B\u1EA3o v\u1EC7 th\xE0nh ph\u1ED1 b\u1EB1ng c\xE1ch x\xE2y d\u1EF1ng
-      \u0111\xEA \u0111i\u1EC1u\r"
+      \u0111\xEA \u0111i\u1EC1u"
   - key: 1
-    value: "L\u0169 t\u1EA1i Qu\u1EA3ng B\xECnh!\r"
+    value: "L\u0169 t\u1EA1i Qu\u1EA3ng B\xECnh!"
   - key: 2
-    value: "S\u1EED d\u1EE5ng n\xFAt h\xF4ng tay ph\u1EA3i \u0111\u1EC3 ph\xE1 hu\u1EF7
-      \u0111\xEA\r"
+    value: "\u0110ang \u0111\u1EE3i c\xE1c ng\u01B0\u1EDDi ch\u01A1i kh\xE1c..."
   - key: 3
+    value: "Th\u01B0\u01A1ng vong:"
+  - key: 4
+    value: "\u0110i\u1EC3m:"
+  - key: 5
+    value: "T\xE0i nguy\xEAn c\xF2n l\u1EA1i \u0111\u1EC3 x\xE2y"
+  - key: 6
+    value: "S\u1EB5n s\xE0ng!"
+  - key: 7
+    value: "Ch\u01A1i l\u1EA1i"
+  - key: 8
+    value: "S\u1EED d\u1EE5ng n\xFAt h\xF4ng tay ph\u1EA3i \u0111\u1EC3 ph\xE1 hu\u1EF7
+      \u0111\xEA"
+  - key: 9
     value: "S\u1EED d\u1EE5ng n\xFAt c\xF2 tay ph\u1EA3i \u0111\u1EC3 x\xE2y d\u1EF1ng
-      \u0111\xEA\r"
+      \u0111\xEA"
