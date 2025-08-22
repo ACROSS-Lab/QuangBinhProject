@@ -56,12 +56,12 @@ Material:
     m_Ints: []
     m_Floats:
     - _Distance: 95.36
-    - _Lightmap: 0
+    - _Lightmap: 1
     - _QueueControl: 0
     - _QueueOffset: 0
     - _WaterSpeed: -15
     m_Colors:
-    - _Color1: {r: 0.51063544, g: 0.8018868, b: 0.7249525, a: 1}
+    - _Color1: {r: 0.3669455, g: 0.5849056, b: 0.5289429, a: 1}
     - _Color2: {r: 0.17021182, g: 0.4245283, b: 0.42171967, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

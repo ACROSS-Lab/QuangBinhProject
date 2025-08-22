@@ -679,10 +679,10 @@
     "m_Guid": {
         "m_GuidSerialized": "caade88a-dc2a-4241-a136-4d53e8598323"
     },
-    "m_Name": "LightDirection",
+    "m_Name": "Light_Direction",
     "m_DefaultRefNameVersion": 1,
-    "m_RefNameGeneratedByDisplayName": "LightDirection",
-    "m_DefaultReferenceName": "_LightDirection",
+    "m_RefNameGeneratedByDisplayName": "Light_Direction",
+    "m_DefaultReferenceName": "_Light_Direction",
     "m_OverrideReferenceName": "",
     "m_GeneratePropertyBlock": true,
     "m_UseCustomSlotLabel": false,
@@ -1849,10 +1849,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": 2673.0,
-            "y": 142.0,
+            "x": 2599.0,
+            "y": 137.0,
             "width": 208.0,
-            "height": 326.0
+            "height": 326.0000305175781
         }
     },
     "m_Slots": [
@@ -2708,8 +2708,8 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": 2362.0,
-            "y": -385.0,
+            "x": 2391.999755859375,
+            "y": -300.9999694824219,
             "width": 137.0,
             "height": 34.0
         }
@@ -2971,10 +2971,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": 2201.0,
-            "y": 176.0,
+            "x": 2141.0,
+            "y": 176.00003051757813,
             "width": 154.0,
-            "height": 34.0
+            "height": 33.999969482421878
         }
     },
     "m_Slots": [
@@ -3000,7 +3000,7 @@
     "m_Type": "UnityEditor.ShaderGraph.Vector3MaterialSlot",
     "m_ObjectId": "eddf776cb3e549b4b3b166a9a5b3caa1",
     "m_Id": 0,
-    "m_DisplayName": "LightDirection",
+    "m_DisplayName": "Light_Direction",
     "m_SlotType": 1,
     "m_Hidden": false,
     "m_ShaderOutputName": "Out",
@@ -3067,9 +3067,9 @@
         "m_Position": {
             "serializedVersion": "2",
             "x": 2342.0,
-            "y": 264.0,
-            "width": 120.0,
-            "height": 149.0
+            "y": 251.0,
+            "width": 120.000244140625,
+            "height": 149.00003051757813
         }
     },
     "m_Slots": [
