@@ -254,7 +254,7 @@ species unity_linker parent: abstract_unity_linker {
 		unity_aspect people_aspect <- prefab_aspect("Prefabs/People/FleeingMan",1,0,1.0,0, precision);
 		unity_aspect dyke_aspect <- prefab_aspect("Prefabs/Blocks/DikeBlock", 1.5, 0.0, 1.0, 0.0, precision);
 		unity_aspect dam_aspect <- prefab_aspect("Prefabs/Blocks/DamBlock", 1.5, 0.0, 1.0, 0.0, precision);
-		unity_aspect water_aspect <- geometry_aspect(5.0, "Materials/Water/M_WaterVoronoi",precision);
+		unity_aspect water_aspect <- geometry_aspect(5.0, "Materials/Water/M_RiverGenerated",precision);
 		unity_aspect shelter_aspect <- prefab_aspect("Prefabs/Shelter/Shelter",150,0,1.0,0.0, precision);
 		unity_aspect building_aspect <- geometry_aspect(5.0, "Materials/KeyMaterial",precision);
 //		unity_aspect player_aspect <- prefab_aspect("Prefabs/Players/Player", 90, 1000, 1.0, 0.0, precision);
@@ -263,7 +263,7 @@ species unity_linker parent: abstract_unity_linker {
 		up_dyke <- geometry_properties("dyke", "dyke", dyke_aspect, #ray_interactable, false);
 		up_dam <- geometry_properties("dam", "dam", dam_aspect, #ray_interactable, false);
 		up_water <- geometry_properties("water", string(nil), water_aspect, #no_interaction,false);
-		up_shelter <- geometry_properties("shelter", string(nil), shelter_aspect,#ray_interactable,false);
+		up_shelter <- geometry_properties("shelter", string(nil), shelter_aspect,#no_interaction,false);
 		up_building <- geometry_properties("buidling", string(nil), building_aspect,#no_interaction, false);
 //		up_player <- geometry_properties("player", "player", player_aspect, #no_interaction, false);
 		
@@ -312,10 +312,8 @@ species unity_linker parent: abstract_unity_linker {
 		diking_over <- true;
 	}
 
-	action sendEndGame { 
-		//write "send_message score : " +  int(100*evacuated/nb_of_people);
-		
-		do send_message players: unity_player as list mes: ["score":: int(100* (1 - casualties/nb_of_people)), "round":: current_round, "endgame"::current_round >= num_rounds];
+	action sendEndGame { 	
+		do send_message players: unity_player as list mes: ["score":: round(score), "endgame"::current_round >= num_rounds];
 	}
 	
 	action get_remaining_resources(string player_id) {

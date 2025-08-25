@@ -22,8 +22,8 @@ public class UIController : MonoBehaviour
     public GameObject people_safe_off;
     
     public TextMeshProUGUI score, casualties;
-    public TextMeshProUGUI roundTxt;
-    public Slider resourceSlider;
+    public GameObject resourceBar;
+    public SlicedFilledImage resourceFill;
 
     protected float TimeForDisplayingFloodUI = 2.0f; // in second
     protected float TimerForDisplayingFloodUI = 0.0f;
@@ -111,11 +111,10 @@ public class UIController : MonoBehaviour
         // DikingStart = true;
         // UI_DykingPhase.SetActive(false);
         buttonDyke.SetActive(false);
-        textWait.SetActive(true); 
+        textWait.SetActive(true);
         SimulationManager.Instance.SetInDykeBuilding();
-        resourceSlider.gameObject.SetActive(true);
-        resourceSlider.value = 1.0f; // Reset resource slider to full
-        
+        resourceBar.SetActive(true);
+        resourceFill.fillAmount = 1.0f;
     }
 
     public void StartToBuildDyke()
@@ -158,7 +157,7 @@ public class UIController : MonoBehaviour
         TimerForDisplayingFloodUI = TimeForDisplayingFloodUI;
         FloodingPhase = true;
         UI_FloodingPhase.SetActive(true);
-        resourceSlider.gameObject.SetActive(false);
+        resourceBar.SetActive(false);
 
         flood_time.GetComponent<StatusEffectManager>().StartEnergizedEffect(SimulationManager.Instance.GetNumStep());
     }
