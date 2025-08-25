@@ -76,6 +76,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: SM_Boat_02
       objectReference: {fileID: 0}
+    - target: {fileID: 3014046058213868494, guid: b21a5fff0d524064aa8d353ce4902566, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
