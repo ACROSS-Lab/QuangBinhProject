@@ -8,6 +8,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -9147258795914097503, guid: 8ae44452d8be541d2b5effa68d65a778, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 8ae44452d8be541d2b5effa68d65a778, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -52,13 +56,25 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: e65a6cdca5a44914786ddc4f2a5ad3b6, type: 2}
+    - target: {fileID: -3738525555314485793, guid: 8ae44452d8be541d2b5effa68d65a778, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
+    - target: {fileID: -301017692805687521, guid: 8ae44452d8be541d2b5effa68d65a778, type: 3}
+      propertyPath: m_StaticShadowCaster
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: -301017692805687521, guid: 8ae44452d8be541d2b5effa68d65a778, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: e65a6cdca5a44914786ddc4f2a5ad3b6, type: 2}
+      objectReference: {fileID: 2100000, guid: c3ad3d105110abb4ea36a285b77c71f3, type: 2}
     - target: {fileID: 919132149155446097, guid: 8ae44452d8be541d2b5effa68d65a778, type: 3}
       propertyPath: m_Name
       value: SM_Building_small_005
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 8ae44452d8be541d2b5effa68d65a778, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

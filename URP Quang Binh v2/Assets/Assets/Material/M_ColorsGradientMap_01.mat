@@ -48,15 +48,20 @@ Material:
     m_Floats:
     - _Distance: 0
     - _Lightmapping: 1
+    - _Outline: 0
     - _QueueControl: 0
     - _QueueOffset: 0
     - _Texture: 1
+    - _Vertexcolor: 0
     - _WaterSpeed: 0
     m_Colors:
     - _Color1: {r: 0.5292568, g: 0.5471698, b: 0.17292629, a: 0}
     - _Color2: {r: 0, g: 0, b: 0, a: 0}
     - _LightDirection: {r: -1.99, g: 0, b: 3.23, a: 0}
+    - _Light_Direction: {r: 0, g: 0, b: 0, a: 0}
     - _ShadowColor: {r: 0.3952029, g: 0.5074056, b: 0.7830189, a: 0}
+    - _UV_Tiling: {r: 1, g: 1, b: 0, a: 0}
+    - _VC_ColorBlend: {r: 1, g: 1, b: 1, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &3922148448784545759
