@@ -17,7 +17,7 @@ MonoBehaviour:
     value: "B\u1EA3o v\u1EC7 th\xE0nh ph\u1ED1 b\u1EB1ng c\xE1ch x\xE2y d\u1EF1ng
       \u0111\xEA \u0111i\u1EC1u"
   - key: 1
-    value: "L\u0169 t\u1EA1i Qu\u1EA3ng B\xECnh!"
+    value: "L\u0168 TR\xCAN S\xD4NG NH\u1EACT L\u1EC6 T\u1EA0I \u0110\u1ED2NG H\u1EDAI"
   - key: 2
     value: "\u0110ang \u0111\u1EE3i c\xE1c ng\u01B0\u1EDDi ch\u01A1i kh\xE1c..."
   - key: 3
@@ -31,8 +31,11 @@ MonoBehaviour:
   - key: 7
     value: "Ch\u01A1i l\u1EA1i"
   - key: 8
-    value: "S\u1EED d\u1EE5ng n\xFAt h\xF4ng tay ph\u1EA3i \u0111\u1EC3 ph\xE1 hu\u1EF7
-      \u0111\xEA"
+    value: "C\xE1i \u0111\xEA n\xE0y \u0111ang ho\u1EA1t \u0111\u1ED9ng t\u1ED1t
+      \u0111\u1EC3 b\u1EA3o v\u1EC7 th\xE0nh ph\u1ED1,\nnh\u1EA5n n\xFAt h\xF4ng
+      tay ph\u1EA3i \u0111\u1EC3 ph\xE1 hu\u1EF7 n\xF3"
   - key: 9
-    value: "S\u1EED d\u1EE5ng n\xFAt c\xF2 tay ph\u1EA3i \u0111\u1EC3 x\xE2y d\u1EF1ng
-      \u0111\xEA"
+    value: "T\u1ED1t l\u1EAFm! Gi\u1EDD ch\xFAng ta c\u1EA7n x\xE2y \u0111\xEA m\u1EDBi,
+      nh\u1EA5n v\xE0 gi\u1EEF n\xFAt c\xF2 tay ph\u1EA3i \u0111\u1EC3 b\u1EAFt \u0111\u1EA7u
+      x\xE2y m\u1ED9t c\xE1i \u0111\xEA, di chuy\u1EC3n tay c\u1EA7m v\xE0 th\u1EA3
+      n\xFAt c\xF2 \u0111\u1EC3 x\xE1c nh\u1EADn v\u1ECB tr\xED x\xE2y \u0111\xEA."

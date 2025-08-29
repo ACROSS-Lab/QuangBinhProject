@@ -3,6 +3,7 @@ using QuickTest;
 using UnityEngine.UI;
 using Gama_Provider.Simulation;
 using TMPro;
+using System.Collections;
 
 public class UIController : MonoBehaviour
 {
@@ -18,14 +19,14 @@ public class UIController : MonoBehaviour
     public GameObject Timer_off;
     public GameObject build_time;
     public GameObject flood_time;
-    public GameObject people_safe_on; 
+    public GameObject people_safe_on;
     public GameObject people_safe_off;
-    
+
     public TextMeshProUGUI score, casualties;
     public GameObject resourceBar;
     public SlicedFilledImage resourceFill;
 
-    protected float TimeForDisplayingFloodUI = 2.0f; // in second
+    protected float TimeForDisplayingFloodUI = 1.0f; // in second
     protected float TimerForDisplayingFloodUI = 0.0f;
 
     protected bool FloodingPhase = false;
@@ -67,9 +68,7 @@ public class UIController : MonoBehaviour
             }
             else
             {
-                UI_FloodingPhase.SetActive(false);
                 people_safe_on.GetComponent<StatusEffectManager>().StartEnergizedEffect(1000);
-
                 FloodingPhase = false;
                 SimulationManager.Instance.SetInFlood();
             }
@@ -131,7 +130,7 @@ public class UIController : MonoBehaviour
             people_safe_on.SetActive(false);
             people_safe_off.SetActive(true);
             Timer_on.GetComponent<StatusEffectManager>().StartEnergizedEffect(SimulationManager.Instance.GetLastTime());
-            
+            StartCoroutine(DisplayFloodZone());
             DikingStart = true;
         }
     }
@@ -165,14 +164,28 @@ public class UIController : MonoBehaviour
     public void EndFlooding(int score, int casualties)
     {
         LogosUI.SetActive(false);
+        UI_FloodingPhase.SetActive(false);
         UI_EndingPhase.SetActive(true);
         this.score.text = score.ToString();
-        this.casualties.text = casualties.ToString(); 
+        this.casualties.text = casualties.ToString();
     }
 
     public void RestartGame()
     {
         UI_EndingPhase.SetActive(false);
         SimulationManager.Instance.newPhase = true;
+    }
+
+    IEnumerator DisplayFloodZone()
+    {
+        GameObject floodZone = SimulationManager.Instance.floodZone;
+        floodZone.SetActive(true);
+        if (!floodZone.GetComponent<Animation>().isPlaying)
+        {
+            floodZone.GetComponent<Animation>().Play();
+        }
+        yield return new WaitForSeconds(3.0f);
+        floodZone.GetComponent<Animation>().Stop();
+        floodZone.SetActive(false);
     }
 }

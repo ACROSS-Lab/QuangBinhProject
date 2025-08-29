@@ -16,7 +16,7 @@ MonoBehaviour:
   - key: 0
     value: Protect the city by building dikes
   - key: 1
-    value: Flood in Quang Binh!
+    value: "NH\u1EACT L\u1EC6 RIVER OVERFLOWS IN \u0110\u1ED2NG H\u1EDAI"
   - key: 2
     value: Waiting for other players...
   - key: 3
@@ -35,5 +35,6 @@ MonoBehaviour:
       Use the right
       grip button to destroy a dyke'
   - key: 9
-    value: Nice ! We need to build new dykes, press the right trigger button to start
-      building a dyke. Press again to confirm the building.
+    value: Nice ! We need to build new dykes, press and hold the right trigger button
+      to start building a dyke. Move your controller and release the trigger button
+      to confirm the dyke building.
