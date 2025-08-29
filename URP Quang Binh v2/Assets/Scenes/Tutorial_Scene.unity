@@ -11967,7 +11967,7 @@ Transform:
   m_GameObject: {fileID: 2034019685837501401}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 18.504, y: -1.19005, z: 8.1065}
+  m_LocalPosition: {x: 18.504, y: -1.27, z: 8.1065}
   m_LocalScale: {x: 1.495, y: 1.495, z: 1.495}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -13323,6 +13323,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 78007108f13069b47912b2573f5692ba, type: 2}
+    - target: {fileID: -1302698785941725951, guid: 9548627094eeea145a9ce549d35034fe, type: 3}
+      propertyPath: vertexMotionScale
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: -337276293664136674, guid: 9548627094eeea145a9ce549d35034fe, type: 3}
       propertyPath: m_Name
       value: FakeFlood_02
@@ -13333,7 +13337,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1130168024798930042, guid: 9548627094eeea145a9ce549d35034fe, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.78
+      value: 0.731
       objectReference: {fileID: 0}
     - target: {fileID: 1130168024798930042, guid: 9548627094eeea145a9ce549d35034fe, type: 3}
       propertyPath: m_LocalPosition.z
