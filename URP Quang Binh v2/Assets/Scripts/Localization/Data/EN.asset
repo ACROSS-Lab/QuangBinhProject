@@ -30,6 +30,10 @@ MonoBehaviour:
   - key: 7
     value: Play again
   - key: 8
-    value: Use the right grip button to destroy a dyke
+    value: 'This dyke is not protecting the city effectively,
+
+      Use the right
+      grip button to destroy a dyke'
   - key: 9
-    value: Use the right grip button to destroy a dyke
+    value: Nice ! We need to build new dykes, press the right trigger button to start
+      building a dyke. Press again to confirm the building.
