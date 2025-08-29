@@ -50,8 +50,9 @@ Material:
     - _Vertexcolor: 0
     m_Colors:
     - _Color: {r: 0, g: 0.5943396, b: 0.3501067, a: 0}
-    - _Color1: {r: 1, g: 0.849325, b: 0.28773582, a: 0}
+    - _Color1: {r: 1, g: 0.9241655, b: 0.6367924, a: 0}
     - _Light_Direction: {r: 0, g: 0, b: 0, a: 0}
+    - _OutlineColor: {r: 1, g: 0, b: 0, a: 0}
     - _UV_Tiling: {r: 1, g: 1, b: 0, a: 0}
     - _VC_ColorBlend: {r: 1, g: 1, b: 1, a: 0}
   m_BuildTextureStacks: []

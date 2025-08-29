@@ -114,12 +114,12 @@ public class SimulationManagerSolo : SimulationManager
                 if (status == -1)
                 {
                     obj.transform.GetChild(0).gameObject.SetActive(true);
-                    obj.transform.GetChild(1).localEulerAngles = new Vector3(90, 90, 0);
+                    // obj.transform.GetChild(1).localEulerAngles = Vector3.zero;
                 }
                 else if (status == 1)
                 {
                     obj.transform.GetChild(0).gameObject.SetActive(false);
-                    obj.transform.GetChild(1).localEulerAngles = new Vector3(0, 90, 0);
+                    // obj.transform.GetChild(1).localEulerAngles = new Vector3(0, 0, 0);
                 }
             }
             

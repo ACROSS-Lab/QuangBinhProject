@@ -48,18 +48,30 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7642395303509160917, guid: 10457704a11904c06bbc18953d73b6f9, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
     - target: {fileID: -3191766719375582254, guid: 10457704a11904c06bbc18953d73b6f9, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: e65a6cdca5a44914786ddc4f2a5ad3b6, type: 2}
+      objectReference: {fileID: 2100000, guid: c3ad3d105110abb4ea36a285b77c71f3, type: 2}
     - target: {fileID: 919132149155446097, guid: 10457704a11904c06bbc18953d73b6f9, type: 3}
       propertyPath: m_Name
       value: SM_Building_medium_01
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 10457704a11904c06bbc18953d73b6f9, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
       objectReference: {fileID: 0}
     - target: {fileID: 6405872887934314929, guid: 10457704a11904c06bbc18953d73b6f9, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: e65a6cdca5a44914786ddc4f2a5ad3b6, type: 2}
+    - target: {fileID: 8087607745638985312, guid: 10457704a11904c06bbc18953d73b6f9, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

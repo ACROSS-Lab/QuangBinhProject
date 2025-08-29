@@ -1156,7 +1156,7 @@ public class SimulationManager : MonoBehaviour
         Debug.Log("UpdateResources: " + remaining_resources);
         Debug.Log("Resources: " + init_resources);
         
-        UIController.Instance.resourceSlider.value = remaining_resources/init_resources;
+        UIController.Instance.resourceFill.fillAmount = remaining_resources/init_resources;
     }
 
     private void HandleConnectionAttempted(bool success)

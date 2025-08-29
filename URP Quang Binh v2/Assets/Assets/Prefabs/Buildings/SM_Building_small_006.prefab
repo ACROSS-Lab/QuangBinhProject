@@ -48,13 +48,25 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -8491897178829372647, guid: d1cd1f6fdfc7549ec8726b3284d67db1, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
     - target: {fileID: -8098274221537165789, guid: d1cd1f6fdfc7549ec8726b3284d67db1, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: e65a6cdca5a44914786ddc4f2a5ad3b6, type: 2}
+      objectReference: {fileID: 2100000, guid: c3ad3d105110abb4ea36a285b77c71f3, type: 2}
     - target: {fileID: 919132149155446097, guid: d1cd1f6fdfc7549ec8726b3284d67db1, type: 3}
       propertyPath: m_Name
       value: SM_Building_small_006
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: d1cd1f6fdfc7549ec8726b3284d67db1, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
+    - target: {fileID: 5673533792659977052, guid: d1cd1f6fdfc7549ec8726b3284d67db1, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
       objectReference: {fileID: 0}
     - target: {fileID: 9082875471602529897, guid: d1cd1f6fdfc7549ec8726b3284d67db1, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
