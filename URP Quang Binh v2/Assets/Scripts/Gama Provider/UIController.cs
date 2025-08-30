@@ -84,7 +84,7 @@ public class UIController : MonoBehaviour
         TimerForDisplayingFloodUI = TimeForDisplayingFloodUI;
         // UI_FloodingPhase.SetActive(true);
 
-        LogosUI.SetActive(true);
+        // LogosUI.SetActive(true);
         Timer_on.SetActive(false);
         Timer_off.SetActive(true);
         build_time.SetActive(false);
@@ -184,7 +184,7 @@ public class UIController : MonoBehaviour
         {
             floodZone.GetComponent<Animation>().Play();
         }
-        yield return new WaitForSeconds(3.0f);
+        yield return new WaitForSeconds(5.0f);
         floodZone.GetComponent<Animation>().Stop();
         floodZone.SetActive(false);
     }

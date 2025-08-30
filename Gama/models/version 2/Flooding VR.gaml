@@ -301,10 +301,10 @@ species unity_linker parent: abstract_unity_linker {
 				water_limit_well_ts << wl;
 			}
 		}
-		do add_background_geometries(water_limit_well_ts collect (each + 20),up_frontier_orange);
-		do add_background_geometries(water_limit_danger collect (each + 20),up_frontier_red);
-		do add_background_geometries(water_limit_drain collect (each + 20), up_frontier_green);
-	
+//		do add_background_geometries(water_limit_well_ts collect (each + 20),up_frontier_orange);
+//		do add_background_geometries(water_limit_danger collect (each + 20),up_frontier_red);
+//		do add_background_geometries(water_limit_drain collect (each + 20), up_frontier_green);
+//	
 //		do add_background_geometries(buildings, up_building );
 	}
 	

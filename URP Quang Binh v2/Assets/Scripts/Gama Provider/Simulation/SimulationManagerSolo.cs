@@ -111,15 +111,14 @@ public class SimulationManagerSolo : SimulationManager
             else if (status != 0)
             {
                 if (!obj.activeInHierarchy) obj.SetActive(true);
+                GameObject redIndicator = obj.transform.GetChild(0).gameObject;
                 if (status == -1)
                 {
-                    obj.transform.GetChild(0).gameObject.SetActive(true);
-                    // obj.transform.GetChild(1).localEulerAngles = Vector3.zero;
+                    if(!redIndicator.activeInHierarchy) redIndicator.SetActive(true);
                 }
                 else if (status == 1)
                 {
-                    obj.transform.GetChild(0).gameObject.SetActive(false);
-                    // obj.transform.GetChild(1).localEulerAngles = new Vector3(0, 0, 0);
+                    if(redIndicator.activeInHierarchy) redIndicator.SetActive(false);
                 }
             }
             
