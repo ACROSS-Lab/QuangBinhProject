@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
- 
+using TMPro;
 
 public abstract class UIController : MonoBehaviour
 {
@@ -17,6 +17,8 @@ public abstract class UIController : MonoBehaviour
     public GameObject flood_time;
     public GameObject people_safe_on;
     public GameObject people_safe_off;
+
+    public TextMeshProUGUI textDyking;
 
     public static UIController Instance = null; 
 

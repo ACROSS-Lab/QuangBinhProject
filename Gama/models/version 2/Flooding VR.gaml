@@ -8,6 +8,9 @@ global {
 	bool ready_to_build_dyke <- false;
 	 
 	bool diking_over <- false;
+	
+	float dyke_snapping_distance <- 100.0;
+	
 	/*************************************************************
 	 * Redefinition of initial parameters for people, water and obstacles
 	 *************************************************************/
@@ -30,7 +33,7 @@ global {
 				match_one [3,4] {color <- rgb(237, 155, 0);}
 				default {color <- rgb(176, 32, 19);}
 			}
-		}
+		} 
 	}
 	
 
@@ -221,7 +224,7 @@ species unity_linker parent: abstract_unity_linker {
 		unity_aspect dam_aspect <- prefab_aspect("Prefabs/DamBlock", 2.5, 0.0, 1.0, 0.0, precision);
 		unity_aspect water_aspect <- geometry_aspect(5.0, "Materials/Water2/WaterVoronoi",precision);
 		unity_aspect shelter_aspect <- prefab_aspect("Prefabs/Shelter",80.0,0,1.0,0.0, precision);
-		
+		 
 		up_people<- geometry_properties("people", "people", people_aspect, #no_interaction, false);
 		up_dyke <- geometry_properties("dyke", "dyke", dyke_aspect, #ray_interactable, false);
 		up_dam <- geometry_properties("dam", "dam", dam_aspect, #ray_interactable, false);
@@ -231,19 +234,19 @@ species unity_linker parent: abstract_unity_linker {
 		unity_aspect frontier_green_aspect <- geometry_aspect(15.0, rgb(#green,0.1),  precision);
 		unity_aspect frontier_orange_aspect <- geometry_aspect(50.0, #orange,  precision);
 		unity_aspect frontier_red_aspect <- geometry_aspect(50.0, #red,  precision);
-	
+		
 		up_frontier_green<- geometry_properties("frontier_green", string(nil), frontier_green_aspect, #no_interaction, false);
 		up_frontier_orange<- geometry_properties("frontier_orange", string(nil), frontier_orange_aspect, #no_interaction, false);
 		up_frontier_red<- geometry_properties("frontier_red", string(nil), frontier_red_aspect, #no_interaction, false);
 	
 		
 		unity_properties << up_frontier_green;
-		unity_properties << up_frontier_orange;
-		unity_properties << up_frontier_red;
+		unity_properties << up_frontier_orange;  
+		unity_properties << up_frontier_red; 
 
-		unity_properties << up_people;
+		unity_properties << up_people; 
 		unity_properties << up_dyke;
-		unity_properties << up_dam;
+		unity_properties << up_dam;  
 		unity_properties << up_water;
 		unity_properties << up_shelter;
 		
@@ -304,15 +307,22 @@ species unity_linker parent: abstract_unity_linker {
 	}
 	
 
-	
 	action action_management_with_unity(string unity_start_point, string unity_end_point) {
 		list<float> unity_start_point_float <- convert_string_to_array_of_float(unity_start_point);
 		list<float> unity_end_point_float <- convert_string_to_array_of_float(unity_end_point);
 		point converted_start_point <- {unity_start_point_float[0], unity_start_point_float[1], unity_start_point_float[2]};
 		point converted_end_point <- {unity_end_point_float[0], unity_end_point_float[1], unity_end_point_float[2]};
 		
-		
-		
+		list<dyke> close_dykes <- dyke overlapping (converted_start_point buffer dyke_snapping_distance) ;
+		if (not empty(close_dykes)) {
+			dyke d <- close_dykes closest_to converted_start_point;
+			converted_start_point <- (d closest_points_with converted_start_point)[0];
+		}
+		close_dykes <- dyke overlapping (converted_end_point buffer dyke_snapping_distance) ;
+		if (not empty(close_dykes)) {
+			dyke d <- close_dykes closest_to converted_end_point;
+			converted_end_point <- (d closest_points_with converted_start_point)[0];
+		}
 		//create dyke with: (shape: line([converted_start_point, converted_end_point])) ;
 		bool is_ok <- world.create_dyke(converted_start_point, converted_end_point);
 		do send_message players: unity_player as list mes: ["ok_build_dyke_with_unity " + converted_start_point + "   " + converted_end_point :: is_ok];

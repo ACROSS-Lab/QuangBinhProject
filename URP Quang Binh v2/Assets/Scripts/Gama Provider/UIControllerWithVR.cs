@@ -6,21 +6,20 @@ using TMPro;
 
 public class UIControllerWithVR : UIController
 {
-  // public TextMeshProUGUI TextEndEng;
-    // public TextMeshProUGUI TextEndViet;
+    // public TextMeshProUGUI TextEndEng;
+    // public GameObject UI_FinalScore;
 
-   
-    public GameObject UI_FinalScore;
-    public GameObject UI_HUD;
-    public GameObject UI_Hint;//, UI_Hint_viet, UI_Hint_eng; 
-    public GameObject UI_ScoreRound_viet, UI_ScoreRound_eng;
-    public GameObject UI_Length_viet, UI_Length_eng, UI_Length_data, UI_scoreRound_data;
+
+    public GameObject UI_Info;
+    public GameObject UI_Hint;//, UI_Hint_viet, UI_Hint_eng;
+                              // public GameObject UI_ScoreRound;
+                              // public GameObject UI_Length;
     public TextMeshProUGUI score, finalScore, bestScore;
     public TextMeshProUGUI roundTxt;
     public TextMeshProUGUI dykeLength, damLength;
-
     int round;
     bool isInit = false;
+    int bestScoreV = 0;
 
     protected float TimeForDisplayingFloodUI = 2.0f; // in second
     protected float TimerForDisplayingFloodUI = 0.0f;
@@ -58,7 +57,10 @@ public class UIControllerWithVR : UIController
         {
             RestartGame();
         }
-
+        if (DikingStart && Input.GetKeyDown(KeyCode.K))
+        {
+            SimulationManager.Instance.ToFloodingPhase();
+        }
         if (FloodingPhase)
         {
             if (TimerForDisplayingFloodUI > 0)
@@ -69,7 +71,7 @@ public class UIControllerWithVR : UIController
             {
                 if (InVietnamese)
                 {
-                    UI_FloodingPhase_viet.SetActive(false); 
+                    UI_FloodingPhase_viet.SetActive(false);
                 }
                 else
                 {
@@ -110,71 +112,78 @@ public class UIControllerWithVR : UIController
         if (InVietnamese)
         {
             UI_FloodingPhase_viet.SetActive(true);
-          //  UI_Hint_viet.SetActive(true);
-            UI_ScoreRound_viet.SetActive(true);
-            UI_Length_viet.SetActive(true);
         }
         else
         {
             UI_FloodingPhase_eng.SetActive(true);
-           // UI_Hint_eng.SetActive(true);
-            UI_ScoreRound_eng.SetActive(true);
-            UI_Length_eng.SetActive(true);
+
         }
 
-        UI_Length_data.SetActive(true);
-        UI_scoreRound_data.SetActive(true);
         FloodingPhase = true;
         LogosUI.SetActive(true);
-        Timer_on.SetActive(false);
-        Timer_off.SetActive(true);
+        //Timer_on.SetActive(true);
+        //Timer_on.SetActive(false);
+        //Timer_off.SetActive(true);
         build_time.SetActive(false);
         flood_time.SetActive(true);
+
         people_safe_on.SetActive(true);
         people_safe_off.SetActive(false);
-
-        flood_time.GetComponent<StatusEffectManager>().StartEnergizedEffect(SimulationManager.Instance.GetNumStep());
+        Timer_on.GetComponent<StatusEffectManager>().StartEnergizedEffect(SimulationManager.Instance.GetNumStep(), false);
 
     }
 
     public override void StartMenuDikingPhase()
     {
+        UI_Info.SetActive(false);
+        UI_Hint.SetActive(false);
         LogosUI.SetActive(false);
+        textDyking.SetText(score.text + "\nProtégez la ville en construisant des digues\net des barrages pour faire mieux");
         if (InVietnamese)
             UI_DykingPhase_viet.SetActive(true);
         else UI_DykingPhase_eng.SetActive(true);
+
     }
 
     public override void StartDikingPhase()
     {
         DikingStart = true;
+        if (round >= 3) UI_Hint.SetActive(true);
         Debug.Log("StartDikingPhase");
+
         if (InVietnamese)
             UI_DykingPhase_viet.SetActive(false);
         else UI_DykingPhase_eng.SetActive(false);
         SimulationManager.Instance.SetInDykeBuilding();
-
+        UI_Info.SetActive(true);
+        roundTxt.enabled = true;
+        damLength.enabled = true;
+        dykeLength.enabled = true;
+        if (round > 1)
+        {
+            score.enabled = true;
+        }
         LogosUI.SetActive(true);
         Timer_on.SetActive(true);
-        Timer_off.SetActive(false);
+        //Timer_off.SetActive(false);
         build_time.SetActive(true);
         flood_time.SetActive(false);
         people_safe_on.SetActive(false);
         people_safe_off.SetActive(true);
-        Timer_on.GetComponent<StatusEffectManager>().StartEnergizedEffect(SimulationManager.Instance.GetLastTime());
+
+        Timer_on.GetComponent<StatusEffectManager>().StartEnergizedEffect(SimulationManager.Instance.GetLastTime(), true);
     }
 
     public override void StartFloodingPhase()
     {
         LogosUI.SetActive(true);
-        Timer_on.SetActive(false);
-        Timer_off.SetActive(true);
+        Timer_on.SetActive(true);
+        //  Timer_off.SetActive(true);
         build_time.SetActive(false);
         flood_time.SetActive(true);
         people_safe_on.SetActive(true);
         people_safe_off.SetActive(false);
         DikingStart = false;
-
         SimulationManager.Instance.DisplayFutureDike = false;
         if (SimulationManager.Instance.FutureDike != null)
         {
@@ -194,14 +203,20 @@ public class UIControllerWithVR : UIController
         {
             UI_FloodingPhase_eng.SetActive(true);
         }
+        // Debug.Log("Timer_on: " + Timer_on);
 
-        flood_time.GetComponent<StatusEffectManager>().StartEnergizedEffect(SimulationManager.Instance.GetNumStep());
+        //Debug.Log(" Timer_on.GetComponentInChildren<CircularProgressBar>(): " + Timer_on.GetComponentInChildren<CircularProgressBar>());
+
+        Timer_on.GetComponent<StatusEffectManager>().StartEnergizedEffect(SimulationManager.Instance.GetNumStep(), false);
+
     }
 
     public void EndGame()
     {
         Debug.Log("endthegame");
         LogosUI.SetActive(false);
+        UI_Info.SetActive(false);
+        UI_Hint.SetActive(false);
 
         if (InVietnamese)
         {
@@ -213,7 +228,7 @@ public class UIControllerWithVR : UIController
         }
 
         finalScore.text = score.text;
-        UI_FinalScore.SetActive(true);
+        //  UI_FinalScore.SetActive(true);
 
     }
 
@@ -224,49 +239,50 @@ public class UIControllerWithVR : UIController
         else
             UI_EndingPhase_eng.SetActive(false);
 
-        UI_HUD.SetActive(false);
+        UI_Info.SetActive(false);
         UI_Hint.SetActive(false);
         //UI_Hint_viet.SetActive(false);
-       // UI_Hint_eng.SetActive(false);
-        UI_ScoreRound_viet.SetActive(false);
-        UI_ScoreRound_eng.SetActive(false);
-        UI_Length_viet.SetActive(false);
-        UI_Length_eng.SetActive(false);
-        UI_FinalScore.SetActive(false);
-        UI_Length_data.SetActive(false);
-        UI_scoreRound_data.SetActive(false);
-
+        //UI_Hint_eng.SetActive(false);
+        // UI_FinalScore.SetActive(false);
 
         UI_ChoiceOfLanguage.SetActive(true);
-        score.text = "0";
-        dykeLength.text = "0";
-        damLength.text = "0";
+        score.text = "Dernier score: 0";
+        dykeLength.text = "Longueur de digues: 0m";
+        damLength.text = "Longueur de barrages: 0m";
+        roundTxt.text = "Tour: 1/3";
     }
 
-    public override void UpdateScore(int score)
+    public override void UpdateScore(int scor)
     {
-        this.score.text = score.ToString();
-        if (score > int.Parse(bestScore.text)) bestScore.text = score.ToString();
+        this.score.text = "Dernier score: " + scor.ToString();
+        if (scor > bestScoreV)
+        {
+            bestScore.text = "Meilleur score: " + scor.ToString();
+            bestScoreV = scor;
+        }
         if (round >= 3) EndGame();
     }
 
     public override void UpdateRound(int round)
     {
-        if (!UI_HUD.activeInHierarchy) UI_HUD.SetActive(true);
-        roundTxt.text = "" + round;
-        this.round = int.Parse(roundTxt.text);
-        if (round >= 3) UI_Hint.SetActive(true);
+
+        roundTxt.text = "Tour: " + round + "/3";
+        this.round = round;
+
     }
+
 
     public override void UpdateLength(bool is_dyke, float length)
     {
         if (is_dyke)
         {
-            dykeLength.text = ((int)length).ToString() + "m";
+            dykeLength.text = "Longueur de digues: " + ((int)length).ToString() + "m";
+
+
         }
         else
         {
-            damLength.text = ((int)length).ToString() + "m";
+            damLength.text = "Longueur de barrages: " + ((int)length).ToString() + "m";
         }
     }
-} 
+}

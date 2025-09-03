@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 namespace Gama_Provider.Simulation
 {
@@ -11,6 +12,8 @@ namespace Gama_Provider.Simulation
         private float _maxIndicator;
         public bool isTimer = true;
         private Image _radialProgressBar;
+        public TextMeshProUGUI value = null;
+
 
         private void Awake()
         {
@@ -27,7 +30,10 @@ namespace Gama_Provider.Simulation
                 if (isTimer) 
                     _indicator -= Time.deltaTime;
 
-
+                if (value != null)
+                {
+                    value.SetText("" + Mathf.Max(0,((int)_indicator)));
+                }
                 // Debug.Log("_indicator: " + _indicator);
                 var currentRatio = _indicator / _maxIndicator;
 

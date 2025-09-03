@@ -352,14 +352,14 @@ public class SimulationManager : MonoBehaviour
                 } 
 
          
-                if (UseKeyboard) //UIController.Instance.Timer_on.activeSelf)
-                {
+              //  if (UseKeyboard) //UIController.Instance.Timer_on.activeSelf)
+               // {
                     UIController.Instance.Timer_on.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(infoWorld.num_step - infoWorld.current_step);
-                } else
-                {
+             //   } else
+               // {
                     UIController.Instance.flood_time.GetComponent<StatusEffectManager>().UpdateEnergizedEffect(infoWorld.num_step - infoWorld.current_step);
 
-                }
+               // }
             }
             // else if (infoWorld.state == "s_diking")
             // {
@@ -410,6 +410,16 @@ public class SimulationManager : MonoBehaviour
         }
     }
 
+    public void ToFloodingPhase()
+    {
+        Dictionary<string, string> args = new Dictionary<string, string>()
+            {
+                { "player_id", StaticInformation.getId() },
+                { "status", GAMAGameStatus.IN_DYKE_BUILDING.ToString() }
+            };
+
+       // ConnectionManager.Instance.SendExecutableAsk("set_status", args);
+    }
     public void SetInDykeBuilding()
     {
         Dictionary<string, string> args = new Dictionary<string, string>()

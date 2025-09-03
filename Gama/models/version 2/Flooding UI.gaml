@@ -138,6 +138,7 @@ experiment Run  type:gui autorun: true{
 		display map type: 3d axes: false background: background_color antialias: false{
 			//camera 'default' location: {1441.2246,3297.5234,8595.6544} target: {1441.2246,3297.3733,0.0};
 			//	grid cell border: #black;
+			
 		 	species river visible:!river_in_3D{
 				draw shape_to_export border: brighter(brighter(river_color)) width: 5 color: river_color;
 			}	 

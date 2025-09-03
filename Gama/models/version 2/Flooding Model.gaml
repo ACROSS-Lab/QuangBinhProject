@@ -19,10 +19,10 @@ global control: fsm {
 		
  	bool save_results <- true;
  	
- 	int num_step <- 350;
+ 	int num_step <- 230;
  	int num_step_add <- num_step;// 50;
  	
- 	float diking_duration <- 60.0;
+ 	float diking_duration <- 120.0;
  	
  	float max_distance_to_be_saved <- 50 #m;
 	
@@ -34,7 +34,7 @@ global control: fsm {
 	
 	bool use_tell <- true;
 	
-	int G_evacuation_time <- 60;
+	int G_evacuation_time <- 20;
 	
 	float waiting_time_in_s <- 1.5;
 	
@@ -141,14 +141,14 @@ global control: fsm {
 	int nb_of_people <- 1000;
 	
 	// The average speed of people
-	float speed_of_people <- 20 #m / #h;
+	float speed_of_people <- 30 #m / #h;
 	
 	// The maximum water input
-	float max_water_input <- 0.6 const: true;
+	float max_water_input <- 1.0 const: true;
 
 	
 	// The height of water in the river at the beginning
-	float initial_water_height <- 2.5 const: true;
+	float initial_water_height <- 3.0 const: true;
 	
 	//Diffusion rate
 	float diffusion_rate <- 0.4 const: true;
@@ -198,7 +198,7 @@ global control: fsm {
 	//file dem_file <- file("../../includes/dem/terrain_small.tif");
 	
 	
-	shape_file drain_shape_file <- shape_file("../../includes/gis/drain.shp");
+	shape_file drain_shape_file <- shape_file("../../includes/gis/drains.shp");
 
 	//Shape of the environment using the bounding box of Quang Binh
 	geometry shape <- envelope(dem_file);
@@ -226,6 +226,7 @@ global control: fsm {
 	
 	state s_init {
 		enter {
+			save "round,dyke_length,dam_length,evacuated,casualties,score" to:id_sim+"/evacuated_casualties.csv" rewrite: true format:"text";
 			do enter_init();
 			score <- init_score;	
 			ask cell {

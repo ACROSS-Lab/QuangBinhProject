@@ -57,7 +57,10 @@ public class UIControllerWithoutVR : UIController
         {
             RestartGame();
         }
-
+        if (DikingStart && Input.GetKeyDown(KeyCode.K))
+        {
+            SimulationManager.Instance.ToFloodingPhase();
+        }
         if (FloodingPhase)
         {
             if (TimerForDisplayingFloodUI > 0)
@@ -135,6 +138,7 @@ public class UIControllerWithoutVR : UIController
         UI_Info.SetActive(false);
         UI_Hint.SetActive(false);
         LogosUI.SetActive(false);
+        textDyking.SetText(score.text+"\nProtégez la ville en construisant des digues\net des barrages pour faire mieux");
         if (InVietnamese)
             UI_DykingPhase_viet.SetActive(true);
         else UI_DykingPhase_eng.SetActive(true);
@@ -146,6 +150,7 @@ public class UIControllerWithoutVR : UIController
         DikingStart = true;
         if (round >= 3) UI_Hint.SetActive(true);
         Debug.Log("StartDikingPhase");
+       
         if (InVietnamese)
             UI_DykingPhase_viet.SetActive(false);
         else UI_DykingPhase_eng.SetActive(false);
