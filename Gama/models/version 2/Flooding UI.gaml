@@ -144,7 +144,8 @@ experiment Run  type:gui autorun: true{
 			}	 
 
 			species road {
-				draw drowned ? shape : shape + 10 color: drowned ? darker(river_color) : road_color ;
+				draw  shape  color:#white ;
+			//	draw drowned ? shape : shape + 10 color: drowned ? darker(river_color) : road_color ;
 			}
 		 	species buildings {
 		 		draw shape color: drowned ? river_color : color border: drowned ? darker(river_color):color;	

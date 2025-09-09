@@ -48,7 +48,7 @@ public class UIControllerWithVR : UIController
             SetInVietnamese(false);
         }
 
-        if (Input.GetKeyDown(KeyCode.Space) && UI_DykingPhase_eng.activeInHierarchy)
+        if (Input.GetKeyDown(KeyCode.Space) && (UI_DykingPhase_eng.activeInHierarchy || UI_DykingPhase_last_eng.activeInHierarchy))
         {
             StartDikingPhase();
         }
@@ -138,10 +138,19 @@ public class UIControllerWithVR : UIController
         UI_Info.SetActive(false);
         UI_Hint.SetActive(false);
         LogosUI.SetActive(false);
-        textDyking.SetText(score.text + "\nProtégez la ville en construisant des digues\net des barrages pour faire mieux");
-        if (InVietnamese)
-            UI_DykingPhase_viet.SetActive(true);
-        else UI_DykingPhase_eng.SetActive(true);
+        Debug.Log("StartMenuDikingPhase : " + round);
+        if (round >= 2)
+        {
+            UI_DykingPhase_last_eng.SetActive(true);
+        } else
+        {
+            textDyking.SetText(score.text + "\nProtégez la ville en construisant des digues\net des barrages pour faire mieux");
+            if (InVietnamese)
+                UI_DykingPhase_viet.SetActive(true);
+            else UI_DykingPhase_eng.SetActive(true);
+        }
+
+       
 
     }
 
@@ -154,6 +163,7 @@ public class UIControllerWithVR : UIController
         if (InVietnamese)
             UI_DykingPhase_viet.SetActive(false);
         else UI_DykingPhase_eng.SetActive(false);
+        UI_DykingPhase_last_eng.SetActive(false);
         SimulationManager.Instance.SetInDykeBuilding();
         UI_Info.SetActive(true);
         roundTxt.enabled = true;

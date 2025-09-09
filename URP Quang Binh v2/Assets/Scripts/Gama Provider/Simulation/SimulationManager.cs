@@ -72,6 +72,8 @@ public class SimulationManager : MonoBehaviour
     protected AnimationInfo infoAnimation = null;
     protected GameState currentState;
 
+    protected int defaultStepValue = 230;
+
     public static SimulationManager Instance = null;
 
     // allows to define the minimal time bewteen two interactions
@@ -212,7 +214,7 @@ public class SimulationManager : MonoBehaviour
     public int GetNumStep()
     {
         if(infoWorld != null) return infoWorld.num_step;
-        else return 350; //this is a temporary fix
+        else return defaultStepValue; //this is a temporary fix
     }
 
     void OnEnable()
@@ -275,6 +277,8 @@ public class SimulationManager : MonoBehaviour
             GenerateGeometries(true, null);
             handleGeometriesRequested = false;
             UpdateGameState(GameState.GAME);
+            if (infoWorld.num_step > 0)
+                defaultStepValue = infoWorld.num_step;
         }
 
         if (infoWorld != null && !infoWorld.isInit && IsGameState(GameState.LOADING_DATA))
@@ -878,7 +882,9 @@ public class SimulationManager : MonoBehaviour
 
 
     private void UpdateAgentsList()
-    {
+    { 
+        if (infoWorld.num_step > 0)
+            defaultStepValue = infoWorld.num_step;
         ManageOtherInformation();
         toRemove.Clear();
         toRemove.UnionWith(geometryMap.Keys);

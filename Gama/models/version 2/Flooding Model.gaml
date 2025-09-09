@@ -184,6 +184,8 @@ global control: fsm {
 	
 	//if defined, used to create people agents
 
+	shape_file people_shape_file <- shape_file("../../includes/gis/people.shp");
+
 	//Shapefile for the buildings
 	file buildings_shapefile <- file("../../includes/gis/buildings.shp");
 	
@@ -191,7 +193,7 @@ global control: fsm {
 	file shape_file_evacuation <- file("../../includes/gis/evacuation_point.shp");
 	
 	//Shapefile for the roads
-	file shape_file_roads <- file("../../includes/gis/road.shp");
+	file shape_file_roads <- file("../../includes/gis/roads.shp");
 	
 	//Data elevation file : small, medium and large definition files are availables
 	file dem_file <- file("../../includes/dem/dem.tif");
@@ -425,7 +427,7 @@ global control: fsm {
 	}
 	action exit_flooding_base {
 		if (save_results) {
-			save ""+current_round+","+ dyke_length+ ","+ dam_length +","+evacuated+"," +casualties +','+score to:id_sim+"/evacuated_casualties.csv" rewrite: false format:"text";
+			save "\nx"+current_round+","+ dyke_length+ ","+ dam_length +","+evacuated+"," +casualties +','+score to:id_sim+"/evacuated_casualties.csv" rewrite: false format:"text";
 		}
 		current_round <- current_round +1;
 		if (current_round > num_rounds) {
@@ -507,9 +509,11 @@ global control: fsm {
 	}
 	
 	action init_people {
-		create people number: nb_of_people {
+		/*create people number: nb_of_people {
 			location <- init_loc != nil ?init_loc : any_location_in(one_of(buildings));
-		}
+		}*/
+		create people from: people_shape_file;
+		//save people format: "shp" to: "../../includes/gis/people.shp";
 		int cpt <- 0;
 		ask people {
 			cpt <- cpt + 1;
@@ -520,7 +524,7 @@ global control: fsm {
 	}
 
 	action init_roads {
-		if (empty(road)) {create road from: clean_network(list<geometry>(shape_file_roads.contents), 0.0, false, true);}
+		if (empty(road)) {create road from: shape_file_roads;}
 		road_network <- as_edge_graph(road) with_shortest_path_algorithm "NBAStar";
 		road_weights <- road as_map (each::each.shape.perimeter);
 	}

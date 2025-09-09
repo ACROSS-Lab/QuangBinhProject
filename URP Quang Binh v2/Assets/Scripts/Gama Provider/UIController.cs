@@ -5,6 +5,7 @@ public abstract class UIController : MonoBehaviour
 {
     public GameObject UI_ChoiceOfLanguage;
     public GameObject UI_DykingPhase_eng;
+    public GameObject UI_DykingPhase_last_eng;
     public GameObject UI_FloodingPhase_eng;
     public GameObject UI_EndingPhase_eng;
     public GameObject UI_DykingPhase_viet;
