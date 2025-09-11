@@ -168,7 +168,7 @@ PlayerSettings:
   androidMinAspectRatio: 1
   applicationIdentifier:
     Android: com.ACROSSLab.QuangBinhProject
-    Standalone: com.Unity-Technologies.VR-Template
+    Standalone: com.ACROSS-Lab.Quang-Binh-Project
   buildNumber:
     Standalone: 0
     VisionOS: 0

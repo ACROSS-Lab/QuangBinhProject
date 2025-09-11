@@ -508,7 +508,7 @@ public class SimulationManager : MonoBehaviour
         UpdateGame();
         if (scoreM != null)
         {
-            UIController.Instance.UpdateScore(scoreM.score);
+            UIController.Instance.UpdateScore(scoreM.score, scoreM.lostPtI, scoreM.lostPtDa, scoreM.lostPtDy, scoreM.lostPtSA);
             scoreM = null;
         }
         if(roundM != null)
@@ -1360,10 +1360,14 @@ public enum GameState
 public class ScoreMessage
 {
     public int score;
+    public int lostPtI, lostPtDa, lostPtDy, lostPtSA;
+
 
     public static ScoreMessage CreateFromJSON(string jsonString)
     {
-        return JsonUtility.FromJson<ScoreMessage>(jsonString);
+        ScoreMessage m = JsonUtility.FromJson<ScoreMessage>(jsonString);
+        Debug.Log("lostPtI: " + m.lostPtI);
+        return m;
     }
 }
 

@@ -14,6 +14,7 @@
 model Flooding
 
 global control: fsm {
+	list<point> injured_loc;
 	
 	bool vr_player <- false;
 		
@@ -22,7 +23,7 @@ global control: fsm {
  	int num_step <- 230;
  	int num_step_add <- num_step;// 50;
  	
- 	float diking_duration <- 120.0;
+ 	float diking_duration <- 30;//180.0;
  	
  	float max_distance_to_be_saved <- 50 #m;
 	
@@ -42,6 +43,10 @@ global control: fsm {
 	list<geometry> all_river_parts; // NEW: Store all river parts
 	
 	float score min: 0.0;
+	int lostPtDa;
+	int lostPtDy;
+	int lostPtSA;
+	int lostPtI;
 	
 	float init_score <- 1000.0;	
 	float casualties_impact <- 5.0;
@@ -228,7 +233,8 @@ global control: fsm {
 	
 	state s_init {
 		enter {
-			save "round,dyke_length,dam_length,evacuated,casualties,score" to:id_sim+"/evacuated_casualties.csv" rewrite: true format:"text";
+			save "round,dyke_length,dam_length,evacuated,casualties,score,lostScoreInj,lostScoreDam,lostScoreDy,lostScoreStArea" to:id_sim+"/evacuated_casualties.csv" rewrite: true format:"text";
+	
 			do enter_init();
 			score <- init_score;	
 			ask cell {
@@ -247,8 +253,8 @@ global control: fsm {
 		current_step <- current_step +1;
 		exit {
 			do exit_init();
+			do restart();
 			
-			do restart;
 		}
 		transition to: s_diking when: init_over();
 	}
@@ -278,6 +284,12 @@ global control: fsm {
 	
 	state wait_flooding {
 		transition to: s_flooding when: flooding_ready() ;
+		exit {
+			/*ask people {
+				do die;
+			}*/
+		}
+		
 	}
 	
 	/**
@@ -317,9 +329,12 @@ global control: fsm {
 		 
 	}
 	action update_score {
-		float dyke_price <- dyke_length * price_meter_dyke + dam_length * price_meter_dam ;	
 		float impact_border <- (cells_at_stake where (each.water_height > limit_drown)) sum_of (each.water_height *border_impact); 
-		score <- init_score - casualties_impact * casualties - dyke_price - impact_border;
+		lostPtDa <- round(dam_length * price_meter_dam);
+		lostPtDy <- round(dyke_length * price_meter_dyke);
+		lostPtSA <- round(impact_border);
+		lostPtI <- round(casualties_impact * casualties );
+		score <- init_score - lostPtI - lostPtDa - lostPtDy - lostPtSA ;
 	} 
 
 	/*************************************************************
@@ -409,7 +424,7 @@ global control: fsm {
 	 action reset_game {
 	 	if (save_results) {
 	 		id_sim <- (vr_player ? "VR_": "Desktop_") + "Game_" + (#now).year +"_" + (#now).month+"_"+(#now).day+ "_"+(#now).hour+ "_"+(#now).minute;
-	 		save "round,dyke_length,dam_length,evacuated,casualties,score" to:id_sim+"/evacuated_casualties.csv" rewrite: true format:"text";
+	 		save "round,dyke_length,dam_length,evacuated,casualties,score,lostScoreInj,lostScoreDam,lostScoreDy,lostScoreStArea" to:id_sim+"/evacuated_casualties.csv" rewrite: true format:"text";
 		}
 	 	current_round <- 1;
 	 	if (use_tell) {
@@ -427,7 +442,7 @@ global control: fsm {
 	}
 	action exit_flooding_base {
 		if (save_results) {
-			save "\nx"+current_round+","+ dyke_length+ ","+ dam_length +","+evacuated+"," +casualties +','+score to:id_sim+"/evacuated_casualties.csv" rewrite: false format:"text";
+			save "\nx"+current_round+","+ dyke_length+ ","+ dam_length +","+evacuated+"," +casualties +','+score+','+lostPtI+','+lostPtDa+','+lostPtDy+','+lostPtSA to:id_sim+"/evacuated_casualties.csv" rewrite: false format:"text";
 		}
 		current_round <- current_round +1;
 		if (current_round > num_rounds) {
@@ -487,7 +502,8 @@ global control: fsm {
 			drowned <- false;
 			do build();
 		}
-		ask people+(!keep_dykes ? dyke: []) {
+		injured_loc <- (people where (each.state = "s_drowned")) collect copy(each.location);
+		ask people + (!keep_dykes ? dyke: []) {
 			do die;
 		}
 		do initialize_agents;

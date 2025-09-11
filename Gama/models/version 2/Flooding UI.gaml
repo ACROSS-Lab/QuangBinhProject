@@ -40,7 +40,7 @@ global {
 		diking_over <- false;
 		current_timeout <- gama.machine_time + diking_duration * 1000;
 	}
-	
+	 
 	action enter_flooding {
 		do enter_flooding_base;
 		restart_requested <- false;	

@@ -27,6 +27,7 @@ public class WorldJSONInfo
     public int remaining_time;
 
     public int score;
+    public int lostPtI, lostPtDa, lostPtDy, lostPtSA;
 
     public int casualties;
     public int num_step, current_step;

@@ -82,16 +82,21 @@ global {
 	 	//ask unity_linker {do sendEndGame;}
 	 }
 	
-	action exit_flooding {
+	action exit_flooding { 
 		do exit_flooding_base;
-		ask unity_linker {do send_message players: unity_player as list mes: ["score":: round(world.score)];}
+	
+		ask unity_linker {do send_message players: unity_player as list mes: ["score":: round(world.score), "lostPtI"::lostPtI,"lostPtDa"::lostPtDa, "lostPtDy"::lostPtDy, "lostPtSA"::lostPtSA ];}
 	}
 	
 	action exit_init {
 		//write "exit_init";
 		ask unity_linker {
 			do send_message players: unity_player as list mes: ["end_init"::""];
+			
 		}
+				
+		ask unity_linker {do send_message players: unity_player as list mes: ["score":: round(world.score), "lostPtI"::lostPtI,"lostPtDa"::lostPtDa, "lostPtDy"::lostPtDy, "lostPtSA"::lostPtSA ];}
+		
 	}
 	
 	
@@ -216,6 +221,7 @@ species unity_linker parent: abstract_unity_linker {
 	unity_property up_frontier_red;
 	bool do_send_world <- true;
 	
+		 
 	map<string, dyke> dykes;
 	init {
 		
@@ -276,20 +282,24 @@ species unity_linker parent: abstract_unity_linker {
 
 	action sendEndGame { 
 		//write "send_message score : " +  int(100*evacuated/nb_of_people);
-		
-		do send_message players: unity_player as list mes: ["score":: int(100* (1 - casualties/nb_of_people)), "round":: current_round, "endgame"::current_round >= num_rounds];
+	
+		do send_message players: unity_player as list mes: ["score":: int(100* (1 - casualties/nb_of_people)), "lostPtI"::lostPtI,"lostPtDa"::lostPtDa, "lostPtDy"::lostPtDy, "lostPtSA"::lostPtSA, "round":: current_round, "endgame"::current_round >= num_rounds];
 	}
 	 
 	action sendLengthData {
 		do send_message players: unity_player as list mes: ["dykeLength":: round(world.dyke_length)];
 		do send_message players: unity_player as list mes: ["damLength":: round(world.dam_length)];
-		write "send length:"+ round(world.dyke_length) ;
+		
 	}
 	
 	action add_to_send_world(map map_to_send) {
 		map_to_send["remaining_time"] <- max(0, int((current_timeout - gama.machine_time)/1000));
 		map_to_send["state"] <- world.state;
 		map_to_send["score"] <- round(world.score);
+		map_to_send["lostPtI"]<-world.lostPtI;
+		map_to_send["lostPtDa"]<-world.lostPtDa;
+		map_to_send["lostPtDy"]<-world.lostPtDy;
+		map_to_send["lostPtSA"]<-world.lostPtSA; 
 		map_to_send["casualties"] <- world.casualties;
 		//map_to_send["winning"] <- winning;
 	//	map_to_send["playback_finished"] <- playback_finished;
@@ -388,7 +398,6 @@ species unity_linker parent: abstract_unity_linker {
 	 * What are the agents to send to Unity, and what are the agents that remain unchanged ? 
 	 */
 	reflex send_agents when: not empty(unity_player) {
-		write sample(state);
 		if (state = "s_init") {
 			do add_people;
 			// We send the river (supposed to change every step)
@@ -407,8 +416,14 @@ species unity_linker parent: abstract_unity_linker {
 			map<string, list<float>> dams_atts <- ["length" :: dams_length ,"rotation" :: dams_rotation];
 			do add_geometries_to_send(dams_, up_dam, dams_atts);
 			
+			
+			list<int> status <- injured_loc collect ( -1 );
+			map<string, list<int>> people_atts <- ["status"::status];
+			do add_geometries_to_send(injured_loc, up_people, people_atts);
 //			do add_geometries_to_keep(dyke);
 			do sendLengthData;
+			
+			
 			// The river is not changed so we keep it unchanged
 //			if (river_already_sent_in_diking_phase) {do add_geometries_to_keep(river);} 
 //			else {do add_geometries_to_send(river collect each.shape_to_export, up_water); river_already_sent_in_diking_phase <- true;}
