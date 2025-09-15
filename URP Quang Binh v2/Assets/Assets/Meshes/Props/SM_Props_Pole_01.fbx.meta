@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 3514e66e954c0492e82a4aca68720ea1
+guid: 48c107861ac7bee40860cc8d5d1ef198
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -104,6 +104,6 @@ ModelImporter:
   importBlendShapeDeformPercent: 1
   remapMaterialsIfMaterialImportModeIsNone: 0
   additionalBone: 0
-  userData: NoMaterialsApplied
+  userData: 
   assetBundleName: 
   assetBundleVariant: 
