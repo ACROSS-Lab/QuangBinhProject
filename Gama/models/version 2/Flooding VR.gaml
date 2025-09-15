@@ -254,7 +254,7 @@ species unity_linker parent: abstract_unity_linker {
 		unity_aspect people_aspect <- prefab_aspect("Prefabs/People/FleeingMan",1,0,1.0,0, precision);
 		unity_aspect dyke_aspect <- prefab_aspect("Prefabs/Blocks/DikeBlock", 1.5, 0.0, 1.0, 0.0, precision);
 		unity_aspect dam_aspect <- prefab_aspect("Prefabs/Blocks/DamBlock", 1.5, 0.0, 1.0, 0.0, precision);
-		unity_aspect water_aspect <- geometry_aspect(5.0, "Materials/Water/M_RiverGenerated",precision);
+		unity_aspect water_aspect <- geometry_aspect(7.0, "Materials/Water/M_RiverGenerated",precision);
 		unity_aspect shelter_aspect <- prefab_aspect("Prefabs/Shelter/Shelter",150,0,1.0,0.0, precision);
 		unity_aspect building_aspect <- geometry_aspect(5.0, "Materials/KeyMaterial",precision);
 //		unity_aspect player_aspect <- prefab_aspect("Prefabs/Players/Player", 90, 1000, 1.0, 0.0, precision);
@@ -301,10 +301,10 @@ species unity_linker parent: abstract_unity_linker {
 				water_limit_well_ts << wl;
 			}
 		}
-		do add_background_geometries(water_limit_well_ts collect (each + 20),up_frontier_orange);
-		do add_background_geometries(water_limit_danger collect (each + 20),up_frontier_red);
-		do add_background_geometries(water_limit_drain collect (each + 20), up_frontier_green);
-	
+//		do add_background_geometries(water_limit_well_ts collect (each + 20),up_frontier_orange);
+//		do add_background_geometries(water_limit_danger collect (each + 20),up_frontier_red);
+//		do add_background_geometries(water_limit_drain collect (each + 20), up_frontier_green);
+//	
 //		do add_background_geometries(buildings, up_building );
 	}
 	

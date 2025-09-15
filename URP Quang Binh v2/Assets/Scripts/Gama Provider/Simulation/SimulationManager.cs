@@ -111,7 +111,6 @@ public class SimulationManager : MonoBehaviour
     protected GameObject startPoint;
     protected GameObject endPoint;
 
-    protected EndFloodingMessage endFloodingM;
     protected ResourcesMessage resourceM;
 
     protected Vector3 originalStartPosition;
@@ -152,6 +151,7 @@ public class SimulationManager : MonoBehaviour
     protected Dictionary<string, bool> modifiedDykes;
     Dictionary<GameObject, Material> selectedHoveringDykes = new Dictionary<GameObject, Material>();
     [SerializeField] Material selectedMaterial;
+    public GameObject floodZone;
 
     //Cache
     Dictionary<string, string> connectionID;
@@ -453,11 +453,6 @@ public class SimulationManager : MonoBehaviour
         //UpdateTimeLeftToBuildDykes();
         OtherUpdate();
         UpdateGame();
-        if (endFloodingM != null)
-        {
-            UIController.Instance.EndFlooding(endFloodingM.score, endFloodingM.casualties);
-            endFloodingM = null;
-        }
         if (resourceM != null)
         {
             if(resourceM.player_id == StaticInformation.getId())
@@ -1013,10 +1008,6 @@ public class SimulationManager : MonoBehaviour
                 handleGeometriesRequested = true;
 
                 break;
-            case "score":
-                endFloodingM = EndFloodingMessage.CreateFromJSON(content);
-
-                break;
 
             case "player_id":
                 resourceM = ResourcesMessage.CreateFromJSON(content);
@@ -1227,19 +1218,6 @@ public enum GameState
     GAME,
     END,
     CRASH
-}
-
-
-[Serializable]
-public class EndFloodingMessage
-{
-    public int score;
-    public int casualties;
-
-    public static EndFloodingMessage CreateFromJSON(string jsonString)
-    {
-        return JsonUtility.FromJson<EndFloodingMessage>(jsonString);
-    }
 }
 
 [Serializable]
