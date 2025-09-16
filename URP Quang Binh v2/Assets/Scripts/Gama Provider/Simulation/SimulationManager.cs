@@ -492,15 +492,6 @@ public class SimulationManager : MonoBehaviour
                 if (initGame || !geometryMap.ContainsKey(name))
                 {
                     obj = instantiatePrefab(name, prop, initGame);
-
-                    if (obj.name.Contains("Player"))
-                    {
-                        string id = name.Substring(name.Length - 3);
-                        int colorCode = int.Parse(id);
-                        float hue = (colorCode % 256) / 256f;
-                        Color color = Color.HSVToRGB(hue, 1f, 1f);
-                        obj.GetComponent<MeshRenderer>().material.color = color;
-                    }
                 }
                 else
                 {
@@ -793,7 +784,7 @@ public class SimulationManager : MonoBehaviour
     }
 
 
-    private GameObject instantiatePrefab(String name, PropertiesGAMA prop, bool initGame)
+    private GameObject instantiatePrefab(string name, PropertiesGAMA prop, bool initGame)
     {
         if (prop.prefabObj == null)
         {
@@ -964,7 +955,7 @@ public class SimulationManager : MonoBehaviour
     {
     }
 
-    private void HandleServerMessageReceived(String firstKey, String content)
+    private void HandleServerMessageReceived(string firstKey, string content)
     {
         if (content == null || content.Equals("{}")) return;
         if (firstKey == null)

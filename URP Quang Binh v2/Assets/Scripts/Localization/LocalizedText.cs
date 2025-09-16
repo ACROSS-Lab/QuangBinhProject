@@ -1,11 +1,11 @@
-using TMPro;
 using UnityEngine;
+using TMPro;
 
 [RequireComponent(typeof(TextMeshProUGUI))] 
 public class LocalizedText : MonoBehaviour
 {
-    [SerializeField] KeyString localizationKey;
-    TextMeshProUGUI textComponent;
+    public string localizationKey;
+    private TextMeshProUGUI textComponent; 
 
     private void Start()
     {
