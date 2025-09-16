@@ -38,3 +38,9 @@ MonoBehaviour:
     value: Nice ! We need to build new dykes, press and hold the right trigger button
       to start building a dyke. Move your controller and release the trigger button
       to confirm the dyke building.
+  - key: 10
+    value: 'Congratulations !
+
+      You''re ready to play the game'
+  - key: 11
+    value: Start

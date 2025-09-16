@@ -72,4 +72,6 @@ public enum KeyString
     Button_Restart,
     Tutorial_Dyke_Destroying,
     Tutorial_Dyke_Building,
+    Start_Game_Text,
+    Start_Button,
 }
