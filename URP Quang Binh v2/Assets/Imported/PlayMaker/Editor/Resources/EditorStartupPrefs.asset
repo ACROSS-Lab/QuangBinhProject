@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   welcomeScreenVersion: '1.9.7 '
   playmakerVersion: 
-  showWelcomeScreen: 1
+  showWelcomeScreen: 0
   showUpgradeGuide: 0
-  lastAutoUpdateSignature: 6000.0.28f1__C:/Git/QuangBinhProject/URP Quang Binh v2/Assets__0.0.0.0
+  lastAutoUpdateSignature: 6000.0.28f1__/Users/noelojkine-acrosslab/Documents/QuangBinhProject/URP
+    Quang Binh v2/Assets__0.0.0.0
   useLegacyNetworking: 0
