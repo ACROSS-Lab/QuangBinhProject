@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using HutongGames.PlayMaker.ActionsInternal;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
@@ -8,6 +9,7 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
 public class DykeManagerTutorial : MonoBehaviour
 {
+    [Header("Input Actions")]
     [SerializeField] InputActionReference primaryRightHandButton = null;
     [SerializeField] InputActionReference rightHandTriggerButton = null;
     [SerializeField] XRRayInteractor rightXRRayInteractor;
@@ -18,6 +20,11 @@ public class DykeManagerTutorial : MonoBehaviour
     [SerializeField] int heightDivision = 10;
     [SerializeField] float scaleMultiplier = 0.1f;
     [SerializeField] GameObject dykeToDestroy;
+
+    [Header("For PlayMaker")]
+    public int dykeBuilt = 0;
+    public int dykeDestroyed = 0;
+
     bool inTriggerPress, displayFutureDike;
     Vector3 startPoint, endPoint;
     Collider startCollider;
@@ -140,9 +147,11 @@ public class DykeManagerTutorial : MonoBehaviour
         dyke.transform.rotation = quaternion;
 
         float distance = Vector3.Distance(startPoint, endPoint);
-        dyke.transform.localScale = new Vector3(dyke.transform.localScale.x * scaleMultiplier, dyke.transform.localScale.y * scaleMultiplier, distance/ 36);
+        dyke.transform.localScale = new Vector3(dyke.transform.localScale.x * scaleMultiplier, dyke.transform.localScale.y * scaleMultiplier, distance / 36);
 
         AddInteraction(dyke);
+
+        dykeBuilt++;
     }   
 
     void AddInteraction(GameObject dyke)
@@ -186,6 +195,8 @@ public class DykeManagerTutorial : MonoBehaviour
             interaction.hoverExited.RemoveListener(HoverExitInteraction);
 
             Destroy(interaction.gameObject);
+
+            dykeDestroyed++;
         }
     }
 }
