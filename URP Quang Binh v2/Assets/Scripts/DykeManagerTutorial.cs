@@ -17,6 +17,7 @@ public class DykeManagerTutorial : MonoBehaviour
     [SerializeField] float perMultiplier = 0.1f;
     [SerializeField] int heightDivision = 10;
     [SerializeField] float scaleMultiplier = 0.1f;
+    [SerializeField] GameObject dykeToDestroy;
     bool inTriggerPress, displayFutureDike;
     Vector3 startPoint, endPoint;
     Collider startCollider;
@@ -40,6 +41,8 @@ public class DykeManagerTutorial : MonoBehaviour
         };
 
         selectedHoveringDykes = new Dictionary<GameObject, Material>();
+
+        AddInteraction(dykeToDestroy);
     }
 
     void Update()
@@ -139,6 +142,11 @@ public class DykeManagerTutorial : MonoBehaviour
         float distance = Vector3.Distance(startPoint, endPoint);
         dyke.transform.localScale = new Vector3(dyke.transform.localScale.x * scaleMultiplier, dyke.transform.localScale.y * scaleMultiplier, distance/ 36);
 
+        AddInteraction(dyke);
+    }   
+
+    void AddInteraction(GameObject dyke)
+    {
         dyke.AddComponent<BoxCollider>();
         XRBaseInteractable interaction = dyke.AddComponent<XRSimpleInteractable>();
         interaction.selectEntered.AddListener(SelectInteraction);
@@ -170,7 +178,14 @@ public class DykeManagerTutorial : MonoBehaviour
 
     void SelectInteraction(SelectEnterEventArgs ev)
     {
-        GameObject obj = ev.interactableObject.transform.gameObject;
-        Destroy(obj);
+        XRSimpleInteractable interaction = ev.interactableObject as XRSimpleInteractable;
+        if (interaction != null)
+        {
+            interaction.selectEntered.RemoveListener(SelectInteraction);
+            interaction.firstHoverEntered.RemoveListener(HoverEnterInteraction);
+            interaction.hoverExited.RemoveListener(HoverExitInteraction);
+
+            Destroy(interaction.gameObject);
+        }
     }
 }
