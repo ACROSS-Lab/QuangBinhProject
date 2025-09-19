@@ -119,7 +119,6 @@ public class SimulationManager : MonoBehaviour
     [HideInInspector] public bool newPhase = true;
     private bool showEndFlooding = false;
     private string _currentStage = "s_start";
-    protected bool buildFirstDyke;
 
     private bool _inTriggerPress = false;
 
@@ -127,10 +126,6 @@ public class SimulationManager : MonoBehaviour
     
     public bool DisplayFutureDike = false;
     protected bool StartFloodingDone = false;
-
-    [SerializeField] protected GameObject FinalScene;
-    [SerializeField] protected GameObject WinAnimtion;
-    [SerializeField] protected GameObject LooseAnimtion;
 
     [SerializeField] protected InputActionReference mainButton = null;
     [SerializeField] protected InputActionReference secondButton = null;
@@ -144,7 +139,7 @@ public class SimulationManager : MonoBehaviour
     protected float LastTime;
     protected float RemainingSeconds;
     private int casualties;
-    private bool readyToBuild, isInit;
+    protected bool readyToBuild, isInit;
 
     protected float init_resources, remaining_resources;
     [SerializeField] protected List<PlayerColor> playerColors;
@@ -333,7 +328,6 @@ public class SimulationManager : MonoBehaviour
                     }
 
                     DisplayFutureDike = false;
-                    buildFirstDyke = false;
                     Debug.Log("Display future dike is false at wait flooding");
                     transformToKeep = new List<string>();
                     modifiedDykes = new Dictionary<string, bool>();

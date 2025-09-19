@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -5,6 +6,10 @@ using UnityEngine;
 public class SimulationManagerSolo : SimulationManager
 {
     PropertiesGAMA propFutureDike, propFalseDike;
+    float hintWaitTime;
+    [SerializeField] GameObject controllerHint;
+    [SerializeField] float fadeWaitTime = 10.0f;
+    [SerializeField] float fadeDuration = 1.0f;
 
     void Start()
     {
@@ -51,6 +56,8 @@ public class SimulationManagerSolo : SimulationManager
                 GameObject.DestroyImmediate(FutureDike);
             }
 
+            hintWaitTime = 0;
+
             Vector2[] pts = new Vector2[5];
             Vector3 _endPoint = raycastHit.point;
             float distance = Vector3.Distance(StartPoint, _endPoint);
@@ -76,6 +83,8 @@ public class SimulationManagerSolo : SimulationManager
             // Debug.Log("Display future dike is true at other update");
             GenerateFutureDike();
         }
+
+        ShowControllerHint();
     }
 
     protected override void ManageAttributes(List<Attributes> attributes)
@@ -83,10 +92,10 @@ public class SimulationManagerSolo : SimulationManager
         for (int i = 0; i < infoWorld.names.Count; i++)
         {
             string name = infoWorld.names[i];
-            if(!geometryMap.ContainsKey(name)) return;
+            if (!geometryMap.ContainsKey(name)) return;
             object[] o = geometryMap[name];
             GameObject obj = (GameObject)o[0];
-            
+
             float length = attributes[i].length;
             float rotation = attributes[i].rotation;
             int status = attributes[i].status;
@@ -95,15 +104,15 @@ public class SimulationManagerSolo : SimulationManager
             if (length != 0)
             {
                 obj.transform.localScale = new Vector3(obj.transform.localScale.y, obj.transform.localScale.y, length / 36);
-                
-                if(modifiedDykes.ContainsKey(name) && !modifiedDykes[name])
+
+                if (modifiedDykes.ContainsKey(name) && !modifiedDykes[name])
                 {
                     obj.transform.localEulerAngles = new Vector3(0, -rotation, 0);
-                    
+
                     PlayerColor playerColor = playerColors[color_id];
-                    if(obj.CompareTag("dyke")) obj.GetComponent<MeshRenderer>().material = playerColor.dykeMaterial;
-                    else if(obj.CompareTag("dam")) obj.GetComponent<MeshRenderer>().material = playerColor.damMaterial;
-                    
+                    if (obj.CompareTag("dyke")) obj.GetComponent<MeshRenderer>().material = playerColor.dykeMaterial;
+                    else if (obj.CompareTag("dam")) obj.GetComponent<MeshRenderer>().material = playerColor.damMaterial;
+
                     modifiedDykes[name] = true;
                 }
             }
@@ -114,14 +123,65 @@ public class SimulationManagerSolo : SimulationManager
                 GameObject redIndicator = obj.transform.GetChild(0).gameObject;
                 if (status == -1)
                 {
-                    if(!redIndicator.activeInHierarchy) redIndicator.SetActive(true);
+                    if (!redIndicator.activeInHierarchy) redIndicator.SetActive(true);
                 }
                 else if (status == 1)
                 {
-                    if(redIndicator.activeInHierarchy) redIndicator.SetActive(false);
+                    if (redIndicator.activeInHierarchy) redIndicator.SetActive(false);
                 }
             }
-            
+
+        }
+    }
+
+    void ShowControllerHint()
+    {
+        if (readyToBuild)
+        {
+            hintWaitTime += Time.deltaTime;
+            if (hintWaitTime > fadeWaitTime)
+            {
+                if (!controllerHint.activeInHierarchy) StartCoroutine(FadingHint(true));
+            }
+            else
+            {
+                if (controllerHint.activeInHierarchy) StartCoroutine(FadingHint(false));
+            }
+        }
+        else
+        {
+            if (controllerHint.activeInHierarchy) controllerHint.SetActive(false);
+        }
+
+    }
+
+    IEnumerator FadingHint(bool fadeIn)
+    {
+        if (fadeIn)
+        {
+            controllerHint.SetActive(true);
+        }
+
+        float currentTime = 0.0f;
+
+        CanvasGroup canvasGroup = controllerHint.GetComponent<CanvasGroup>();
+
+        float startAlpha = fadeIn ? 0.0f : 1.0f;
+        float endAlpha = fadeIn ? 1.0f : 0.0f;
+
+        while (currentTime < fadeDuration)
+        {
+            currentTime += Time.deltaTime;
+            float alpha = Mathf.Lerp(startAlpha, endAlpha, currentTime / fadeDuration);
+            canvasGroup.alpha = alpha;
+            yield return null;
+        }
+
+        canvasGroup.alpha = endAlpha;
+
+        if (!fadeIn)
+        {
+            controllerHint.SetActive(false);
         }
     }
 }
