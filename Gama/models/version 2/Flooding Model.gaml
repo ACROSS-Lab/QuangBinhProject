@@ -23,7 +23,7 @@ global control: fsm {
  	int num_step <- 230;
  	int num_step_add <- num_step;// 50;
  	
- 	float diking_duration <- 30;//180.0;
+ 	float diking_duration <- 180.0;
  	
  	float max_distance_to_be_saved <- 50 #m;
 	
