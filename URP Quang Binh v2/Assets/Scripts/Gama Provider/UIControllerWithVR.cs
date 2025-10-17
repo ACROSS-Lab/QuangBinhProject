@@ -28,10 +28,16 @@ public class UIControllerWithVR : UIController
         {
             startAfterHint();
         }
-        if (Input.GetKeyDown(KeyCode.Space) && (UI_DykingPhase_eng.activeInHierarchy))
+        if (Input.GetKeyDown(KeyCode.Space) && (UI_DykingPhase_middle_eng.activeInHierarchy))
+        {
+            startAfterHint();
+        }
+        if (Input.GetKeyDown(KeyCode.Space) && (UI_DykingPhase_eng.activeInHierarchy) && !done)
         {
             StartDikingPhase();
+            done = true;
         }
+
 
         if (Input.GetKeyDown(KeyCode.Space) && UI_EndingPhase_eng.activeInHierarchy)
         {
@@ -46,6 +52,7 @@ public class UIControllerWithVR : UIController
             if (TimerForDisplayingFloodUI > 0)
             {
                 TimerForDisplayingFloodUI -= Time.deltaTime;
+                done = false;
             }
             else
             {

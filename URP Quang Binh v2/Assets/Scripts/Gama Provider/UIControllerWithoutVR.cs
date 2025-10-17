@@ -7,15 +7,11 @@ using TMPro;
 public class UIControllerWithoutVR : UIController
 {
 
-    // public GameObject UI_FinalScore;
 
-
-
-
-   
-
+  
     public void Update()
     {
+        
         if (Input.GetKeyDown(KeyCode.Space) && UI_ChoiceOfLanguage.activeInHierarchy)
         {
             SetInVietnamese(false);
@@ -24,9 +20,14 @@ public class UIControllerWithoutVR : UIController
         {
             startAfterHint();
         }
-        if (Input.GetKeyDown(KeyCode.Space) && (UI_DykingPhase_eng.activeInHierarchy))
+        if (Input.GetKeyDown(KeyCode.Space) && (UI_DykingPhase_middle_eng.activeInHierarchy))
+        {
+            startAfterHint();
+        }
+        if (Input.GetKeyDown(KeyCode.Space) && (UI_DykingPhase_eng.activeInHierarchy) && ! done)
         {
             StartDikingPhase();
+            done = true;
         }
        
 
@@ -43,6 +44,7 @@ public class UIControllerWithoutVR : UIController
             if (TimerForDisplayingFloodUI > 0)
             {
                 TimerForDisplayingFloodUI -= Time.deltaTime;
+                done = false;
             }
             else
             {

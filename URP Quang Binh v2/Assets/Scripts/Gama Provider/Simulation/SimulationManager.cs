@@ -277,7 +277,7 @@ public class SimulationManager : MonoBehaviour
             GenerateGeometries(true, null);
             handleGeometriesRequested = false;
             UpdateGameState(GameState.GAME);
-            if (infoWorld.num_step > 0)
+            if (infoWorld != null && infoWorld.num_step > 0)
                 defaultStepValue = infoWorld.num_step;
         }
 
@@ -500,7 +500,7 @@ public class SimulationManager : MonoBehaviour
         }
 
         // Debug.Log("currentStage: " + currentStage + " IsGameState(GameState.GAME) :" +IsGameState(GameState.GAME));
-        if (IsGameState(GameState.GAME) && _currentStage == "s_diking")
+        if (IsGameState(GameState.GAME) && _currentStage == "s_diking" && UIController.Instance.DikingStart)
             ProcessRightHandTrigger();
 
         //UpdateTimeLeftToBuildDykes();
@@ -1199,7 +1199,7 @@ public class SimulationManager : MonoBehaviour
                         DrawDykeWithParams(StartPoint, EndPoint);
                         if (!buildFirstDyke)
                         {
-                            UIController.Instance.StartDikingPhase();
+                           // UIController.Instance.StartDikingPhase();
                             buildFirstDyke = true;
                         }
                         StartPoint = Vector3.zero;
@@ -1262,7 +1262,7 @@ public class SimulationManager : MonoBehaviour
                         DrawDykeWithParams(StartPoint, EndPoint);
                         if (!buildFirstDyke)
                         {
-                            UIController.Instance.StartDikingPhase();
+                          //  UIController.Instance.StartDikingPhase();
                             buildFirstDyke = true;
                         }
                     }

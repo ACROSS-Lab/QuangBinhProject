@@ -8,6 +8,7 @@ public abstract class UIController : MonoBehaviour
     public GameObject UI_ChoiceOfLanguage;
     public GameObject UI_DykingPhase_eng;
     public GameObject UI_DykingPhase_last_eng;
+    public GameObject UI_DykingPhase_middle_eng;
     public GameObject UI_FloodingPhase_eng;
     public GameObject UI_EndingPhase_eng;
     public GameObject UI_DykingPhase_viet;
@@ -49,6 +50,7 @@ public abstract class UIController : MonoBehaviour
 
     public static UIController Instance = null;
 
+    public bool done = false;
     // Use this for initialization
     void Start()
     {
@@ -133,7 +135,6 @@ public abstract class UIController : MonoBehaviour
 
     public void startDiking()
     {
-        DikingStart = true;
         Debug.Log("StartDikingPhase");
 
         SimulationManager.Instance.SetInDykeBuilding();
@@ -151,11 +152,19 @@ public abstract class UIController : MonoBehaviour
         build_time.SetActive(true);
 
         Timer_on.GetComponent<StatusEffectManager>().StartEnergizedEffect(SimulationManager.Instance.GetLastTime(), true);
+        DikingStart = true;
+
     }
     public void startAfterHint()
     {
+        
         Debug.Log("startAfterHint");
-        UI_Hint.SetActive(true);
+        if (round == 3)
+        {
+            UI_Hint.SetActive(true);
+        }
+       
+        UI_DykingPhase_middle_eng.SetActive(false);
         UI_DykingPhase_last_eng.SetActive(false);
         startDiking(); 
     }
@@ -169,7 +178,11 @@ public abstract class UIController : MonoBehaviour
             UI_DykingPhase_viet.SetActive(false);
         else UI_DykingPhase_eng.SetActive(false);
         Debug.Log("round: " + round);
-        if (round >= 3)
+        if (round == 2)
+        {
+            UI_DykingPhase_middle_eng.SetActive(true);
+        }
+        else if (round >= 3)
         {
             UI_DykingPhase_last_eng.SetActive(true);
         } else

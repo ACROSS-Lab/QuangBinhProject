@@ -29,7 +29,7 @@ global {
 		button_image_unselected <- nil;
 		button_image_selected <- nil; 
 		check_image_unselected <- nil;
-		check_image_selected <- nil;  		
+		check_image_selected <- nil;  		 
 	}  
 	
 	action enter_start {
@@ -327,7 +327,7 @@ experiment Run  type:gui autorun: true{
 						//\n\n" + "Casualties: " + casualties + '/' + nb_of_people;
 						timer <- "End in " +max(0,(num_step - current_step)) + " minutes";
 						indicators <- "Casualties: " + casualties + '/' + nb_of_people + "\n\nScore: " + round(score);
-						if (score <= 900 and score > 700) or (casualties > 0 and casualties< 10){
+						if (score <= 850 and score > 700) or (casualties > 0 and casualties< 10){
 							color_indicators <- #yellow;
 						} else if (score <= 700 and score > 500) or (casualties >= 10 and casualties< 100) {
 							color_indicators <- #orange;

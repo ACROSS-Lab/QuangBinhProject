@@ -49,10 +49,10 @@ global control: fsm {
 	int lostPtI;
 	
 	float init_score <- 1000.0;	
-	float casualties_impact <- 5.0;
-	float border_impact <- 0.1;
-	float price_meter_dyke <- 0.01;
-	float price_meter_dam <- 0.1;
+	float casualties_impact <- 20.0;
+	float border_impact <- 0.25;
+	float price_meter_dyke <- 0.025;
+	float price_meter_dam <- 0.05;
 	
 	float best_score <- 0.0;
 	
@@ -159,7 +159,7 @@ global control: fsm {
 	float diffusion_rate <- 0.4 const: true;
 	
 	//Height of the dykes 
-	float dyke_height <- 150.0 const: true;
+	float dyke_height <- 175.0 const: true;
 	
 	//Width of the dyke (15 m by default)
 	float dyke_width <- 15.0 const: true;
@@ -178,6 +178,7 @@ global control: fsm {
 	// Weights associated with the road network
 	map<road, float> road_weights;
 	
+	float seed <- 1.0; 
 	bool is_ok_dyke_construction <- false;
 	
 	/*************************************************************
