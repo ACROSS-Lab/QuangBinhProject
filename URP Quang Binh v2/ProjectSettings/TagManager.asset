@@ -15,6 +15,7 @@ TagManager:
   - dam
   - people
   - camera
+  - Art
   layers:
   - Default
   - TransparentFX

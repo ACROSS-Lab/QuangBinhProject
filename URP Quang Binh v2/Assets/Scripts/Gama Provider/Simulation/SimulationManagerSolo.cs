@@ -42,7 +42,7 @@ public class SimulationManagerSolo : SimulationManager
                 obj.transform.localEulerAngles = new Vector3(0, -rotation, 0);
             }
 
-            else if(status != 0)
+            else if(status != 0) 
             {
                 if(!obj.activeInHierarchy) obj.SetActive(true);
                 if(status == -1)
