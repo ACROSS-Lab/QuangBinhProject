@@ -1,0 +1,4 @@
+round,dyke_length,dam_length,evacuated,casualties,score,lostScoreInj,lostScoreDam,lostScoreDy,lostScoreStArea
+x1,11238.43148800435,-5.684341886080802E-14,1000,0,719.0,0,0,281,0
+x2,9579.008480814146,0.0,1000,0,740.0,0,0,239,21
+x3,3871.0328210335233,283.4040361230161,1000,0,856.0,0,14,97,33

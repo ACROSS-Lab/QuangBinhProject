@@ -229,6 +229,7 @@ species unity_linker parent: abstract_unity_linker {
 		unity_aspect dyke_aspect <- prefab_aspect("Prefabs/DikeBlock", 2.5, 0.0, 1.0, 0.0, precision);
 		unity_aspect dam_aspect <- prefab_aspect("Prefabs/DamBlock", 2.5, 0.0, 1.0, 0.0, precision);
 		unity_aspect water_aspect <- geometry_aspect(5.0, "Materials/Water2/WaterVoronoi",precision);
+		//unity_aspect water_aspect <- geometry_aspect(5.0, "Materials/eau/M_River_01",precision);
 		unity_aspect shelter_aspect <- prefab_aspect("Prefabs/Shelter",80.0,0,1.0,0.0, precision);
 		 
 		up_people<- geometry_properties("people", "people", people_aspect, #no_interaction, false);
