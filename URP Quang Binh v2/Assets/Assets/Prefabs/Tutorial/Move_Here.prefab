@@ -126,6 +126,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6162644725793272266}
   - component: {fileID: 2600187195643763469}
+  - component: {fileID: 5078323758200326812}
   m_Layer: 2
   m_Name: ColliderZone
   m_TagString: Untagged
@@ -171,6 +172,19 @@ CapsuleCollider:
   m_Height: 4.21
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &5078323758200326812
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1780093913938219615}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 82786459, guid: e743331561ef77147ae48cda9bcb8209, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  TargetFSMs: []
 --- !u!1 &6975078155630382654
 GameObject:
   m_ObjectHideFlags: 0
@@ -669,7 +683,7 @@ MonoBehaviour:
     manualUpdate: 0
     outVariableIndices: 
     keepDelayedEventsOnStateExit: 0
-    preprocessed: 0
+    preprocessed: 1
     ExposedEvents: []
     OutputEvents: []
     RestartOnEnable: 1
@@ -705,4 +719,4 @@ MonoBehaviour:
     handleAnimatorMove: 0
     handleAnimatorIK: 0
   fsmTemplate: {fileID: 0}
-  eventHandlerComponentsAdded: 0
+  eventHandlerComponentsAdded: 1

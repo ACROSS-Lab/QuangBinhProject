@@ -7,6 +7,7 @@ using UnityEngine.UI;
 public class IpManager : MonoBehaviour
 {
     [SerializeField] private double delay = 2000;
+    [SerializeField] string mainSceneName; 
 
     private static System.Timers.Timer aTimer;
     private static bool ready = false;
@@ -64,7 +65,7 @@ public class IpManager : MonoBehaviour
         {
             PlayerPrefs.SetString("IP", playerTextOutput.text);
             PlayerPrefs.Save();
-            SceneManager.LoadScene("Startup Menu");
+            SceneManager.LoadScene(mainSceneName);
         }
     }
 
@@ -72,7 +73,7 @@ public class IpManager : MonoBehaviour
     {
         if (ready)
         {
-            SceneManager.LoadScene("Startup Menu");
+            SceneManager.LoadScene(mainSceneName);
         }
     }
 

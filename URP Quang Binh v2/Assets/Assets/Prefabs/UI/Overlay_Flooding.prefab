@@ -161,8 +161,10 @@ GameObject:
   - component: {fileID: 8502509175698809820}
   - component: {fileID: 899150009404493455}
   - component: {fileID: 7853361667279599763}
+  - component: {fileID: 4289099525027553432}
+  - component: {fileID: 849258131191354321}
   m_Layer: 5
-  m_Name: Live
+  m_Name: Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -215,7 +217,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: NHAT LE RIVER OVERFLOWS IN DONG HOI
+  m_text: "NH\u1EACT L\u1EC6 RIVER OVERFLOWS IN \u0110\u1ED2NG H\u1EDAI"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 5d7466c3cc8eeb64f9d55ea7f045aee0, type: 2}
   m_sharedMaterial: {fileID: -2269715565744013307, guid: 5d7466c3cc8eeb64f9d55ea7f045aee0, type: 2}
@@ -286,6 +288,32 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &4289099525027553432
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2550254703105307544}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b716f285080a10847b43a250b34d933c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  localizationKey: mainScene.Text.FloodingPhase
+--- !u!114 &849258131191354321
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2550254703105307544}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b716f285080a10847b43a250b34d933c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  localizationKey: mainScene.Text.FloodingPhase
 --- !u!1 &3199646555705611990
 GameObject:
   m_ObjectHideFlags: 0
@@ -321,9 +349,9 @@ RectTransform:
   - {fileID: 3322511431104123387}
   m_Father: {fileID: 437182013325129177}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0}
-  m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: 100}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: -500}
   m_SizeDelta: {x: 2000, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2631864809976587641
@@ -418,7 +446,7 @@ RectTransform:
   m_GameObject: {fileID: 7704329250237148797}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3544659174788602680}
@@ -439,7 +467,7 @@ Canvas:
   m_GameObject: {fileID: 7704329250237148797}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 0
+  m_RenderMode: 2
   m_Camera: {fileID: 0}
   m_PlaneDistance: 100
   m_PixelPerfect: 0
@@ -475,7 +503,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 0
+  m_PresetInfoIsWorld: 1
 --- !u!114 &9185438354211628095
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -664,10 +692,10 @@ RectTransform:
   - {fileID: 3391188906741355279}
   m_Father: {fileID: 437182013325129177}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 300, y: -200}
-  m_SizeDelta: {x: 244.59, y: 100}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -300, y: 600}
+  m_SizeDelta: {x: 250, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3048947507576443427
 CanvasRenderer:

@@ -1,3 +1,7 @@
+//MAKE SURE THAT THE CSV FILE IS IN THE "Resources/Localizaion" FOLDER IN YOUR UNITY PROJECT 
+//AND THE FILE ITSELF MUST NOT CONTAIN COMMAS (,) OR LINE BREAKS (\n, \r)
+//IN THE LOCALIZED STRINGS TO AVOID PARSING ISSUES.
+
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -5,10 +9,8 @@ public class LocalizationManager : MonoBehaviour
 {
     public static LocalizationManager Instance { get; private set; }
 
-    // The path to the CSV file within any "Resources" folder.
     private const string CsvFilePath = "Localization/LocalizationData"; 
 
-    // Data structure: Dictionary<Language, Dictionary<Key, Value>>
     private Dictionary<string, Dictionary<string, string>> localizedData;
     private string currentLanguage = "English";
 
@@ -33,7 +35,6 @@ public class LocalizationManager : MonoBehaviour
     {
         localizedData = new Dictionary<string, Dictionary<string, string>>();
         
-        // Load the TextAsset from the Resources folder.
         TextAsset csvFile = Resources.Load<TextAsset>(CsvFilePath);
 
         if (csvFile == null)
@@ -42,18 +43,15 @@ public class LocalizationManager : MonoBehaviour
             return;
         }
 
-        // Split the file into lines.
         string[] lines = csvFile.text.Split(new[] { '\r', '\n' }, System.StringSplitOptions.RemoveEmptyEntries);
         if (lines.Length < 2) return;
 
-        // Parse the header to get language names.
         string[] headers = lines[0].Split(',');
         for (int i = 1; i < headers.Length; i++)
         {
             localizedData[headers[i].Trim()] = new Dictionary<string, string>();
         }
 
-        // Parse each data row.
         for (int i = 1; i < lines.Length; i++)
         {
             string[] values = lines[i].Split(',');

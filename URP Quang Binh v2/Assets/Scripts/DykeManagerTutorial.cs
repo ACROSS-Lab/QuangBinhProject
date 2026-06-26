@@ -3,6 +3,7 @@ using System.Linq;
 using HutongGames.PlayMaker.ActionsInternal;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
@@ -107,7 +108,7 @@ public class DykeManagerTutorial : MonoBehaviour
 
     void GenerateFutureDike()
     {
-        if(polyGen == null)
+        if (polyGen == null)
         {
             polyGen = PolygonGenerator.GetInstance();
         }
@@ -149,10 +150,10 @@ public class DykeManagerTutorial : MonoBehaviour
         float distance = Vector3.Distance(startPoint, endPoint);
         dyke.transform.localScale = new Vector3(dyke.transform.localScale.x * scaleMultiplier, dyke.transform.localScale.y * scaleMultiplier, distance / 36);
 
-        AddInteraction(dyke);
+        // AddInteraction(dyke);
 
         dykeBuilt++;
-    }   
+    }
 
     void AddInteraction(GameObject dyke)
     {
@@ -167,7 +168,7 @@ public class DykeManagerTutorial : MonoBehaviour
     {
         if (ev.interactableObject == null) return;
         GameObject obj = ev.interactableObject.transform.gameObject;
-        if(selectedHoveringDykes.ContainsKey(obj))
+        if (selectedHoveringDykes.ContainsKey(obj))
         {
             obj.GetComponent<MeshRenderer>().material = selectedHoveringDykes[obj];
             selectedHoveringDykes.Remove(obj);
@@ -198,5 +199,15 @@ public class DykeManagerTutorial : MonoBehaviour
 
             dykeDestroyed++;
         }
+    }
+
+    public void ActivateMainScene()
+    {
+        SceneManager.LoadScene("Main Scene - ArtUpdate_Flood");
+    }
+
+    public void OnTriggerActivate()
+    {
+        Debug.Log("Trigger Pressed");
     }
 }

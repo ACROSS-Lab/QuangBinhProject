@@ -5,6 +5,8 @@ using System.Text;
 using UnityEngine;
 using WebSocketSharp;
 using System.Text.Json;
+using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class ConnectionManager : WebSocketConnector
 {
@@ -29,6 +31,10 @@ public class ConnectionManager : WebSocketConnector
     protected string MessageSeparator = "|||";
 
     private string AgentToSendInfo = "simulation[0].unity_linker[0]";
+
+    public float connectionTimeout = 10f;
+
+    Coroutine timeoutCoroutine;
 
     // ############################################# UNITY FUNCTIONS #############################################
     void Awake()
@@ -69,10 +75,17 @@ public class ConnectionManager : WebSocketConnector
     // ############################################# CONNECTION HANDLER #############################################
     public void UpdateConnectionState(ConnectionState newState)
     {
+        if (timeoutCoroutine != null)
+        {
+            StopCoroutine(timeoutCoroutine);
+            timeoutCoroutine = null;
+        }
+
         switch (newState)
         {
             case ConnectionState.PENDING:
                 Debug.Log("ConnectionManager: UpdateConnectionState -> PENDING");
+                timeoutCoroutine = StartCoroutine(TimeoutCoroutine());
                 break;
             case ConnectionState.CONNECTED:
                 Debug.Log("ConnectionManager: UpdateConnectionState -> CONNECTED");
@@ -220,7 +233,7 @@ public class ConnectionManager : WebSocketConnector
             connectionRequested = true;
             UpdateConnectionState(ConnectionState.PENDING);
 
-            GetSocket().Connect();
+            GetSocket().ConnectAsync();
 
             if (!UseMiddleware)
             {
@@ -246,7 +259,7 @@ public class ConnectionManager : WebSocketConnector
         if (!IsConnectionState(ConnectionState.DISCONNECTED))
         {
             Debug.Log("ConnectionManager: Disconnecting from middleware...");
-            GetSocket().Close();
+            GetSocket().CloseAsync();
             UpdateConnectionState(ConnectionState.DISCONNECTED);
         }
         else
@@ -371,6 +384,15 @@ public class ConnectionManager : WebSocketConnector
         Debug.Log("Reconnect");
         currentState = ConnectionState.DISCONNECTED;
         TryConnectionToServer();
+    }
+
+    IEnumerator TimeoutCoroutine()
+    {
+        Debug.Log("ConnectionManager: Starting connection timeout coroutine for " + connectionTimeout + " seconds.");
+        yield return new WaitForSeconds(connectionTimeout);
+        Debug.Log("ConnectionManager: Connection attempt timed out.");
+        DisconnectFromServer();
+        SceneManager.LoadScene("IP Menu");
     }
 }
 

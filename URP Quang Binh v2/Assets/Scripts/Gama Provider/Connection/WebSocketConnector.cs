@@ -5,9 +5,8 @@ using WebSocketSharp;
 
 public abstract class WebSocketConnector : MonoBehaviour
 {
-    protected string DefaultIP = "192.168.68.50";
+    [SerializeField] string DefaultIP = "192.168.68.50";
     protected string DefaultPort = "8080";
-     
 
     protected string host;
     protected string port;
@@ -19,7 +18,7 @@ public abstract class WebSocketConnector : MonoBehaviour
 
     protected int HeartbeatInMs = 5000; //only for middleware mode
     protected bool DesktopMode = false;
-    public bool fixedProperties = true;
+    [Tooltip("Select true if you're using localhost or a fixed IP")] public bool fixedProperties = true;
     protected bool UseMiddlewareDM = true;
 
     protected int numErrorsBeforeDeconnection = 10;
@@ -30,10 +29,11 @@ public abstract class WebSocketConnector : MonoBehaviour
         // port = PlayerPrefs.GetString("PORT"); 
         host = PlayerPrefs.GetString("IP");
         port = DefaultPort;
+        UseMiddleware = UseMiddlewareDM;
 
         if (DesktopMode)
         {
-            UseMiddleware = UseMiddlewareDM;
+            
             host = "localhost";
 
             if (UseMiddleware)
@@ -47,15 +47,16 @@ public abstract class WebSocketConnector : MonoBehaviour
         }
         else if (fixedProperties)
         {
-            UseMiddleware = UseMiddlewareDM;
             host = DefaultIP;
             port = DefaultPort;
         }
         else
         {
-            if (host == null && host.Length == 0)
+            Debug.Log("current IP: " + host);
+            if (string.IsNullOrEmpty(host) || ValidIp(host))
             {
                 host = DefaultIP;
+                Debug.Log("IP not set, using default: " + host);
             }
         }
 
@@ -75,7 +76,7 @@ public abstract class WebSocketConnector : MonoBehaviour
 
     void OnDestroy()
     {
-        socket.Close();
+        socket.CloseAsync();
     }
 
     // ############################## HANDLERS ##############################
@@ -103,5 +104,10 @@ public abstract class WebSocketConnector : MonoBehaviour
         if (ip == null || ip.Length == 0) return false;
         string[] ipb = ip.Split(".");
         return (ipb.Length != 4);
+    }
+
+    public void SetNewIP(string ip)
+    {
+        DefaultIP = ip;
     }
 }

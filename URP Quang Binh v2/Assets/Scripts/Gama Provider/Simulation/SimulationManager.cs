@@ -130,12 +130,6 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] protected InputActionReference mainButton = null;
     [SerializeField] protected InputActionReference secondButton = null;
 
-    //[SerializeField] protected GameObject tutorial;
-
-    // [SerializeField] protected StatusEffectManager timer;
-    // [SerializeField] protected StatusEffectManager safeRateCount;
-    // [SerializeField] private TextMeshProUGUI timerText;
-
     protected float LastTime;
     protected float RemainingSeconds;
     private int casualties;
@@ -400,20 +394,6 @@ public class SimulationManager : MonoBehaviour
         ConnectionManager.Instance.SendExecutableAsk("set_status", args);
     }
 
-    // private IEnumerator CountdownCoroutine()
-    // {
-    //     do
-    //     {
-    //         TimeSpan timeSpan = TimeSpan.FromSeconds(RemainingSeconds);
-    //         timerText.text = timeSpan.ToString(@"mm\:ss");
-    //         yield return new WaitForSecondsRealtime(1f); // Wait for 1 second, unaffected by time scale
-    //         RemainingSeconds--; // Decrease time
-    //     } while (RemainingSeconds >= 0);
-
-    //     RemainingSeconds = 0;
-    //     yield return null;
-    // }
-
     private void Update()
     {
         if (remainingTime > 0)
@@ -456,9 +436,6 @@ public class SimulationManager : MonoBehaviour
             resourceM = null;
         }
     }
-
-    
-
 
     void GenerateGeometries(bool initGame, HashSet<string> toRemove)
     {
@@ -584,8 +561,6 @@ public class SimulationManager : MonoBehaviour
 
         infoWorld = null;
     }
-
-
 
     // ############################################ GAMESTATE UPDATER ############################################
     public void UpdateGameState(GameState newState)
